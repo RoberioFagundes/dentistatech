@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Feriado extends Model
+{
+    // Define explicitamente o nome da tabela no plural
+    protected $table = "feriados";
+
+    protected $fillable = [
+        'titulo',       // Ex: 'Natal', 'Aniversário da Cidade'
+        'data',         // Tipo date (AAAA-MM-DD)
+        'tipo',         // Ex: 'Nacional', 'Estadual', 'Municipal', 'Recesso'
+        'bloqueia_agenda' // Booleano (true/false) para saber se impede marcações
+    ];
+
+    /**
+     * Opcional: Garante que o campo 'data' seja tratado como um objeto Carbon/DateTime
+     * e o campo 'bloqueia_agenda' seja tratado como booleano puro no PHP.
+     */
+    protected $casts = [
+        'data' => 'date',
+        'bloqueia_agenda' => 'boolean'
+    ];
+}
