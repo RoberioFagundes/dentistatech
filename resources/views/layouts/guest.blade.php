@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<<<<<<< Updated upstream
 <html lang="en">
 
 <head>
@@ -336,4 +337,41 @@
 
 </body>
 
+=======
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        <!-- SEO Básico -->
+        <title>{{ config('app.name', 'Laravel') }}</title>
+        <meta name="description" content="Página de autenticação do {{ config('app.name', 'Laravel') }}.">
+
+        <!-- Favicon (Opcional, mas altamente recomendado) -->
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
+        <!-- Fonts (Pré-carregamento otimizado) -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" />
+
+        <!-- Scripts & Styles (Vite) -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    </head>
+    <body class="font-sans text-gray-900 antialiased bg-gray-100 min-h-full flex flex-col justify-center items-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8" style="background-color: #7d9ec9;">
+        
+        <!-- Logo com melhor acessibilidade -->
+        <header class="mb-6 layout-header text-center">
+            <a href="{{ url('/') }}" aria-label="Ir para a página inicial">
+                <x-application-logo class="w-32 h-32 sm:w-40 sm:h-40 fill-current text-gray-500 hover:text-gray-700 transition-colors duration-200" />
+            </a>
+        </header>
+
+        <!-- Container do Formulário (Slot) -->
+        <main class="w-full sm:max-w-md bg-white shadow-md rounded-xl border border-gray-100 overflow-hidden px-6 py-8 sm:px-8">
+            {{ $slot }}
+        </main>
+
+    </body>
+>>>>>>> Stashed changes
 </html>

@@ -17,9 +17,9 @@
             <x-input-label for="password" :value="__('senha')" />
 
             <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+                type="password"
+                name="password"
+                required autocomplete="current-password" />
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
@@ -34,6 +34,7 @@
 
         <div class="flex items-center justify-end mt-4">
             @if (Route::has('password.request'))
+<<<<<<< Updated upstream
                 <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
                     {{ __('Esqueceu a senha?') }}
                 </a>
@@ -42,6 +43,16 @@
             <button class="btn btn-primary ms-3">
                 {{ __('Conecte-se') }}
             </button>
+=======
+            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
+                {{ __('Forgot your password?') }}
+            </a>
+            @endif
+
+            <x-primary-button class="ms-4 bg-[#0d3b66] hover:bg-[#0a2e50] active:bg-[#07213a] focus:ring-[#0d3b66]">
+                {{ __('Conecte-se') }}
+            </x-primary-button>
+>>>>>>> Stashed changes
         </div>
     </form>
 </x-guest-layout>
