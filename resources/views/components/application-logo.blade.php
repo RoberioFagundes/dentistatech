@@ -1,1 +1,1 @@
-<img src="{{ asset('favicon.ico') }}" alt="DentistaTech Logo" class="w-20 h-20 object-contain" style="width: 150px;">
+<img src="{{ asset('favicon.ico') }}" alt="Logo" width="290px" height="290px" class="{{ $class }}" />
