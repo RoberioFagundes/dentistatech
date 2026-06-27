@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nome');
             $table->string('sobrenome');
             $table->string('cro');
+            $table->string('cro_uf', 2);
             $table->string('especialidade');
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

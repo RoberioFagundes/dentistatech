@@ -11,9 +11,15 @@ class EnderecoDentistaAtendimento extends Model
     protected $table = "endereco_dentista_atendimentos";
 
     protected $fillable = [
+        "cep",
+        "país",
+        "estado",
+        "cidade",
+        "bairro",
+        "rua",
+        "numero",
         'dentista_id',       // ID do dentista associado
-        'atendimento_id',    // ID do atendimento associado (ou endereco_dentista_id, adapte conforme sua migration)
-        'status',            // Ex: 'Ativo', 'Inativo' (se aplicável)
+             // Ex: 'Ativo', 'Inativo' (se aplicável)
     ];
 
     /**

@@ -42,7 +42,7 @@ class PacienteController extends Controller
      */
     public function create()
     {
-        // Retorna a view para cadastrar um novo paciente
+        return view('dentista.paciente.create');
     }
 
     /**
@@ -155,7 +155,7 @@ class PacienteController extends Controller
                 ['paciente_id' => $paciente->id],
                 $request->endereco
             );
-        ]);
+        });
 
         return response()->json([
             'message' => 'Ficha cadastral do paciente atualizada com sucesso!'

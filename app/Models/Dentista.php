@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Models;
-
+use App\Models\Agendamento;
+use App\Models\EnderecoDentistaAtendimento;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -13,9 +14,12 @@ class Dentista extends Model
 
     protected $fillable = [
         'nome',
+        'sobrenome',
+        'cro_uf',
         'cro',            // Conselho Regional de Odontologia
         'especialidade',
-        'status'          // Ex: 'Ativo', 'Inativo'
+        'status',  
+        'user_id'        // Ex: 'Ativo', 'Inativo'
     ];
 
     /**
@@ -33,7 +37,7 @@ class Dentista extends Model
      */
     public function endereco(): HasOne
     {
-        return $this->hasOne(EnderecoDentista::class, 'dentista_id');
+        return $this->hasOne(EnderecoDentistaAtendimento::class, 'dentista_id');
     }
 
     /**

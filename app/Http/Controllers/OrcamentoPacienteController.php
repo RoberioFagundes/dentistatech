@@ -189,7 +189,7 @@ class OrcamentoPacienteController extends Controller
                 'valor_liquido'   => max(0, $valorLiquidoFinal),
                 'observacoes'     => $request->observacoes
             ]);
-        ]);
+        });
 
         return response()->json([
             'message' => 'Orçamento atualizado e recalculado com sucesso!'

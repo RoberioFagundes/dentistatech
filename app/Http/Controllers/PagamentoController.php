@@ -56,17 +56,17 @@ class PagamentoController extends Controller
     {
         // 1. Validação rigorosa dos dados financeiros de entrada
         $request->validate([
-            'paciente_id'        => 'required|exists:pacientes,id',
-            'orcamento_id'       => 'required|exists:orcamento_pacientes,id',
+            'paciente_id' => 'required|exists:pacientes,id',
+            'orcamento_id' => 'required|exists:orcamento_pacientes,id',
             'forma_pagamento_id' => 'required|exists:forma_pagamentos,id',
-            'valor_pago'         => 'required|numeric|min:0.01',
-            'status_pagamento'   => 'required|string|in:Pendente,Pago',
-            'observacoes'        => 'nullable|string|max:255'
+            'valor_pago' => 'required|numeric|min:0.01',
+            'status_pagamento' => 'required|string|in:Pendente,Pago',
+            'observacoes' => 'nullable|string|max:255'
         ]);
 
         // 2. Regra de Negócio: Impede que o pagamento ultrapasse o saldo devedor do orçamento
         $orcamento = OrcamentoPaciente::find($request->orcamento_id);
-        
+
         // Calcula quanto já foi pago neste orçamento anteriormente (apenas considerando status 'Pago')
         $totalJaPago = Pagamento::where('orcamento_id', $orcamento->id)
             ->where('status_pagamento', 'Pago')
@@ -82,15 +82,15 @@ class PagamentoController extends Controller
 
         // 3. Processamento atômico do pagamento
         $pagamento = DB::transaction(function () use ($request, $orcamento, $saldoDevedor) {
-            
+
             $pagamento = Pagamento::create([
-                'paciente_id'        => $request->paciente_id,
-                'orcamento_id'       => $request->orcamento_id,
+                'paciente_id' => $request->paciente_id,
+                'orcamento_id' => $request->orcamento_id,
                 'forma_pagamento_id' => $request->forma_pagamento_id,
-                'valor_pago'         => $request->valor_pago,
-                'data_pagamento'     => now(),
-                'status_pagamento'   => $request->status_pagamento,
-                'observacoes'        => $request->observacoes
+                'valor_pago' => $request->valor_pago,
+                'data_pagamento' => now(),
+                'status_pagamento' => $request->status_pagamento,
+                'observacoes' => $request->observacoes
             ]);
 
             // Se o valor pago liquidar o saldo devedor exato, altera o status do orçamento pai para 'Finalizado'
@@ -99,7 +99,7 @@ class PagamentoController extends Controller
             }
 
             return $pagamento;
-        ]);
+        });
 
         return response()->json([
             'message' => 'Pagamento registrado com sucesso!',
@@ -135,12 +135,12 @@ class PagamentoController extends Controller
         }
 
         $request->validate([
-            'status_pagamento'   => 'required|string|in:Pendente,Pago,Estornado',
-            'observacoes'        => 'nullable|string|max:255'
+            'status_pagamento' => 'required|string|in:Pendente,Pago,Estornado',
+            'observacoes' => 'nullable|string|max:255'
         ]);
 
         DB::transaction(function () use ($request, $pagamento) {
-            
+
             // Se o status mudou para 'Estornado', precisamos reavaliar o status do orçamento pai
             if ($request->status_pagamento === 'Estornado' && $pagamento->status_pagamento === 'Pago') {
                 $orcamento = $pagamento->orcamento;
@@ -152,9 +152,9 @@ class PagamentoController extends Controller
 
             $pagamento->update([
                 'status_pagamento' => $request->status_pagamento,
-                'observacoes'      => $request->observacoes
+                'observacoes' => $request->observacoes
             ]);
-        ]);
+        });
 
         return response()->json([
             'message' => 'Registro de pagamento atualizado com sucesso!'

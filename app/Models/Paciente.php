@@ -13,10 +13,13 @@ class Paciente extends Model
 
     protected $fillable = [
         'nome',
+        'sobrenome',
         'cpf',
+        'rg',
+        'sexo',
         'data_nascimento',
-        'genero',
-        'status' // Ex: 'Ativo', 'Inativo'
+        'dentista_id'
+        // 'status' // Ex: 'Ativo', 'Inativo'
     ];
 
     /**

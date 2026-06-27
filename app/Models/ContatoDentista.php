@@ -12,6 +12,7 @@ class ContatoDentista extends Model
 
     protected $fillable = [
         'telefone',
+        'whatsapp',
         'celular',
         'email',
         'dentista_id'
