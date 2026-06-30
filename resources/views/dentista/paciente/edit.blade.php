@@ -25,7 +25,7 @@
                         @endif
 
                         {{-- Define a URL e o Método corretos dinamicamente --}}
-                        <form action="{{ isset($paciente) ? url('/dentista/paciente/' . $paciente->id) : url('/dentista/paciente') }}" method="POST">
+                        <form action="{{ isset($paciente) ? route('paciente.update', $paciente->id) : route('paciente.store') }}" method="POST">
                             @csrf
                             @if(isset($paciente))
                                 @method('PUT') {{-- Diretiva necessária para o update no Laravel --}}
