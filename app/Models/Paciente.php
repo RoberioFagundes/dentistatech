@@ -38,7 +38,7 @@ class Paciente extends Model
     /**
      * Retorna o endereço residencial do paciente.
      */
-    public function endereco(): HasOne
+    public function enderecoPaciente(): HasOne
     {
         return $this->hasOne(EnderecoPaciente::class, 'paciente_id');
     }
@@ -46,7 +46,7 @@ class Paciente extends Model
     /**
      * Retorna os registros de contato do paciente (Telefone, celular, e-mail).
      */
-    public function contatos(): HasMany
+    public function contatosPaciente(): HasMany
     {
         return $this->hasMany(ContatoPaciente::class, 'paciente_id');
     }

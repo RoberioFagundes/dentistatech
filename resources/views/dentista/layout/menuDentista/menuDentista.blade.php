@@ -33,7 +33,7 @@
 
     <li class="sidebar-item">
         <a class="sidebar-link d-flex align-items-center gap-3 py-2 px-3 rounded-2 text-decoration-none {{ request()->routeIs('paciente.*') ? 'active bg-primary text-white' : 'text-dark' }}"
-           href="{{ route('paciente.create') }}">
+           href="{{ route('paciente.index') }}">
             <i class="bi bi-heart-pulse fs-5"></i> <span class="fw-medium">Pacientes</span>
         </a>
     </li>
