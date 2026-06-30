@@ -174,10 +174,11 @@ class PacienteController extends Controller
             return $paciente;
         });
 
+        return view('dentista.paciente.show', compact('paciente'));
         // Retorna resposta JSON de sucesso
         return response()->json([
             'message' => 'Paciente cadastrado com sucesso no sistema!',
-            'data' => $paciente->load('endereco') // Certifique-se de carregar os outros relacionamentos aqui se precisar no retorno, ex: load(['endereco', 'historicoBucal'])
+            'data' => $paciente->load('enderecoPaciente') // Certifique-se de carregar os outros relacionamentos aqui se precisar no retorno, ex: load(['enderecoPaciente', 'historicoBucal'])
         ], 201);
     }
 
@@ -188,9 +189,8 @@ class PacienteController extends Controller
     {
         // Carrega todas as dependências mapeadas no Modelo (Ficha completa de uma só vez)
         $paciente->load([
-            'endereco',
-            'contatos',
-            'historicoSaude',
+            'enderecoPaciente',
+            'contatosPaciente',
             'historicoMedico',
             'habitoSaudavel',
             'historicoBucal',
@@ -204,8 +204,8 @@ class PacienteController extends Controller
      */
     public function edit(Paciente $paciente)
     {
-        $paciente->load(['endereco', 'contatos']);
-        return response()->json($paciente);
+        $paciente->load(['enderecoPaciente', 'contatosPaciente', 'historicoBucal', 'historicoMedico', 'habitoSaudavel']);
+        return view('dentista.paciente.edit', compact('paciente'));
     }
 
     /**

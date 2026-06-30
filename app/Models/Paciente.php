@@ -60,25 +60,30 @@ class Paciente extends Model
     /**
      * Retorna a ficha de Hábitos Bucais (Bruxismo, fumo, etc.).
      */
-    public function habitoBucal(): HasOne
+    public function historicoBucal(): HasOne
     {
-        return $this->hasOne(HabitoBucal::class, 'paciente_id');
+        return $this->hasOne(HistoricoBucal::class, 'paciente_id');
     }
 
     /**
      * Retorna o Histórico de Saúde geral (Alergias, diabetes, hipertensão).
      */
-    public function historicoSaude(): HasOne
+    public function historicoMedico(): HasOne
     {
-        return $this->hasOne(HistoricoSaude::class, 'paciente_id');
+        return $this->hasOne(HistoricoMedico::class, 'paciente_id');
     }
 
     /**
      * Retorna o histórico de internações/hospitalizações do paciente.
      */
-    public function hospitalizacoes(): HasMany
+    public function historicoSaudavel(): HasMany
     {
-        return $this->hasMany(Hospitalizado::class, 'paciente_id');
+        return $this->hasMany(HistoricoSaudavel::class, 'paciente_id');
+    }
+
+    public function habitoSaudavel(): HasMany
+    {
+        return $this->hasMany(HabitoSaudavel::class, 'paciente_id');
     }
 
     /**
