@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PacienteController;
 use App\Http\Controllers\DentistaController;
+use App\Http\Controllers\AgendamentoController;
+use App\Http\Controllers\ProcedimentoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -32,9 +34,11 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::resource('paciente', PacienteController::class);
-
-Route::resource('dentista', DentistaController::class);
+// Protegendo os recursos para que o Auth::user() nunca venha vazio
+Route::resource('paciente', PacienteController::class)->middleware('auth');
+Route::resource('dentista', DentistaController::class)->middleware('auth');
+Route::resource('agendamento', AgendamentoController::class)->middleware('auth');
+Route::resource('procedimento', ProcedimentoController::class)->middleware(['auth']);
 
 
 

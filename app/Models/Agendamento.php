@@ -4,23 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Agendamento extends Model
 {
     protected $table = "agendamentos";
-    
+
     protected $fillable = [
-        'data_agendamento',
-        'hora_agendamento',
-        'paciente_id',
+        'data',
+        'hora_inicio',
+        'hora_fim',
+        'status',
+        'observacao',
         'dentista_id',
-        'status' // Ex: 'Pendente', 'Confirmado', 'Em Atendimento', 'Concluido', 'Faltou'
+        'paciente_id',
+        'atendimento_id'
+    ];
+
+    // Garante que o Laravel entenda os campos de hora/data corretamente
+    protected $casts = [
+        'data' => 'date',
     ];
 
     /**
      * Retorna o Paciente que realizou este agendamento.
-     * (Um agendamento PERTENCE A um paciente)
      */
     public function paciente(): BelongsTo
     {
@@ -29,7 +35,6 @@ class Agendamento extends Model
 
     /**
      * Retorna o Dentista responsável por este agendamento.
-     * (Um agendamento PERTENCE A um dentista)
      */
     public function dentista(): BelongsTo
     {
@@ -37,12 +42,11 @@ class Agendamento extends Model
     }
 
     /**
-     * Retorna o Atendimento clínico gerado a partir deste agendamento.
-     * (Um agendamento POSSUI UM atendimento quando o paciente comparece)
+     * Retorna o Procedimento/Atendimento vinculado a este agendamento.
+     * AJUSTADO: Como o agendamento possui a coluna 'atendimento_id', ele belongsTo Atendimento.
      */
-    public function atendimento(): HasOne
+    public function atendimento(): BelongsTo
     {
-        // Se na sua migration de atendimentos a chave se chama 'agendamento_id'
-        return $this->hasOne(Atendimento::class, 'agendamento_id');
+        return $this->belongsTo(Atendimento::class, 'atendimento_id');
     }
-} 
+}

@@ -13,20 +13,18 @@ return new class extends Migration
     {
         Schema::create('procedimentos', function (Blueprint $table) {
             $table->id();
-            // Campos de dados da consulta
-            $table->date('data')->nullable();
-            $table->string('procedimento', 100)->nullable(); // Ex: 'Canal', 'Restabelecimento', 'Limpeza'
-
-            // Chave Estrangeira vinculando ao Odontograma
-            $table->unsignedBigInteger('odontograma_id')->nullable(); // Permite nulo caso o procedimento não esteja vinculado a um odontograma específico
-
-            // Definição do relacionamento (Foreign Key)
-            $table->foreign('odontograma_id')
-                ->references('id')
-                ->on('odontogramas') // ATENÇÃO: Verifique se sua migration do odontograma cria a tabela como 'odontogramas'
-                ->onDelete('restrict')
-                ->onUpdate('cascade');
-
+            $table->string('nome');
+            $table->text('descricao')->nullable();
+            
+            // Valor do procedimento (ex: 999999.99)
+            $table->decimal('valor', 8, 2)->default(0.00);
+            
+            // Duração estimada em minutos (ex: 30, 60, 90)
+            $table->integer('duracao_minutos')->default(30);
+            
+            // Permite desativar um procedimento sem deletar o histórico
+            $table->boolean('ativo')->default(true); 
+            
             $table->timestamps();
         });
     }

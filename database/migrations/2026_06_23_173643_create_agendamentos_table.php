@@ -31,6 +31,13 @@ return new class extends Migration
                 ->onDelete('restrict') // impede apagar o atendimento se houver agendamento
                 ->onUpdate('cascade');
 
+            $table->unsignedBigInteger('procedimento_id')->nullable();
+            $table->foreign('procedimento_id')
+                ->references('id')
+                ->on('procedimentos')
+                ->onDelete('restrict')
+                ->onUpdate('cascade');
+
             $table->timestamps();
         });
     }

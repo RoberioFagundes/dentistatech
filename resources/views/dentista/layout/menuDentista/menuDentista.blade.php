@@ -32,6 +32,13 @@
     </li>
 
     <li class="sidebar-item">
+        <a class="sidebar-link d-flex align-items-center gap-3 py-2 px-3 rounded-2 text-decoration-none {{ request()->routeIs('procedimento.*') ? 'active bg-primary text-white' : 'text-dark' }}"
+           href="{{ route('procedimento.index') }}">
+            <i class="bi bi-capsule fs-5"></i> <span class="fw-medium">Procedimentos</span>
+        </a>
+    </li>
+
+    <li class="sidebar-item">
         <a class="sidebar-link d-flex align-items-center gap-3 py-2 px-3 rounded-2 text-decoration-none {{ request()->routeIs('paciente.*') ? 'active bg-primary text-white' : 'text-dark' }}"
            href="{{ route('paciente.index') }}">
             <i class="bi bi-heart-pulse fs-5"></i> <span class="fw-medium">Pacientes</span>
@@ -40,7 +47,7 @@
 
     <li class="sidebar-item">
         <a class="sidebar-link d-flex align-items-center gap-3 py-2 px-3 rounded-2 text-decoration-none {{ request()->routeIs('agendamentos.*') ? 'active bg-primary text-white' : 'text-dark' }}"
-           href="#">
+           href="{{ route('agendamento.index') }}">
             <i class="bi bi-calendar-event fs-5"></i>
             <span class="fw-medium">Agendamentos</span>
         </a>
