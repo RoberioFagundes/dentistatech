@@ -174,7 +174,7 @@ class PacienteController extends Controller
             return $paciente;
         });
 
-        return view('dentista.paciente.show', compact('paciente'));
+        return view('dentista.paciente.index', compact('paciente'));
         // Retorna resposta JSON de sucesso
         return response()->json([
             'message' => 'Paciente cadastrado com sucesso no sistema!',

@@ -36,7 +36,7 @@ class DentistaController extends Controller
             ->orderBy('nome', 'asc')
             ->paginate(10);
 
-        return response()->json($dentistas);
+        return view('dentista.dentista.index', compact('dentistas'));
         // Se usar Blade: return view('dentistas.index', compact('dentistas'));
     }
 
@@ -45,7 +45,7 @@ class DentistaController extends Controller
      */
     public function create()
     {
-        return view('dentista.dentista.create');
+        return view('dentista.dentista.formulario');
     }
 
     /**
@@ -113,10 +113,7 @@ class DentistaController extends Controller
         });
 
         // 3. Retorna a resposta JSON com o dentista e suas relações carregadas
-        return response()->json([
-            'message' => 'Dentista cadastrado com sucesso com endereço e contatos!',
-            'data' => $dentista->load(['endereco', 'contatos'])
-        ], 201);
+        return view('dentista.dentista.index', compact('dentista'));
     }
     /**
      * Exibe o perfil detalhado de um dentista específico (incluindo contatos e endereço).
@@ -126,36 +123,52 @@ class DentistaController extends Controller
         // Carrega os relacionamentos através do Route Model Binding do Laravel
         $dentista->load(['contatos', 'endereco']);
 
-        return response()->json($dentista);
+        return view('dentista.dentista.show', compact('dentista'));
     }
 
     /**
      * Exibe o formulário de edição pré-carregando os dados do profissional.
      */
-    public function edit(Dentista $dentista)
+    public function edit($id)
     {
-        return view('dentista.dentista.edit', compact('dentista'));
+        // Busca o dentista pelo ID bruto enviado pela URL (ex: /dentista/1/edit)
+        $dentista = Dentista::findOrFail($id);
+
+        return view('dentista.dentista.formulario', compact('dentista'));
     }
 
     /**
      * Atualiza os dados cadastrais do dentista.
      */
-    public function update(Request $request, Dentista $dentista)
+    public function update(Request $request, $id)
     {
+        // 1. Busca o dentista pelo ID bruto enviado pela rota
+        $dentista = Dentista::findOrFail($id);
+
+        // 2. Validação com as regras corretas (incluindo os campos de contato e endereço do formulário)
         $dadosValidados = $request->validate([
             'nome' => 'required|string|max:255',
-            'cro' => 'required|string|max:20|unique:dentistas,cro,' . $dentista->id, // Ignora o próprio ID na validação de unique
+            'sobrenome' => 'required|string|max:255',
+            'cro' => 'required|string|max:20|unique:dentistas,cro,' . $dentista->id, // Ignora o próprio ID
             'cro_uf' => 'required|string|size:2',
             'especialidade' => 'required|string|max:150',
-            'status' => 'required|string|in:Ativo,Inativo,Afastado',
+            'telefone' => 'required|string|max:20',
+            'whatsapp' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+            'cep' => 'required|string|max:10',
+            'pais' => 'required|string|max:100',
+            'estado' => 'required|string|max:100',
+            'cidade' => 'required|string|max:100',
+            'bairro' => 'required|string|max:100',
+            'rua' => 'required|string|max:255',
+            'numero' => 'required|integer',
         ]);
 
+        // 3. Atualiza os dados no banco
         $dentista->update($dadosValidados);
 
-        return response()->json([
-            'message' => 'Cadastro do dentista atualizado com sucesso!',
-            'data' => $dentista
-        ]);
+        // 4. Redireciona de volta para a listagem com mensagem de sucesso
+        return redirect()->route('dentista.index')->with('success', 'Cadastro do dentista atualizado com sucesso!');
     }
 
     /**
@@ -171,16 +184,12 @@ class DentistaController extends Controller
             // Em vez de deletar, altera o status para 'Inativo' salvaguardando os dados históricos da clínica
             $dentista->update(['status' => 'Inativo']);
 
-            return response()->json([
-                'message' => 'O dentista possui históricos no sistema e não pode ser excluído. Seu status foi alterado para Inativo.'
-            ], 200);
+            return view('dentista.dentista.show', compact('dentista'));
         }
 
         // Se não houver histórico atrelado, a exclusão física é liberada
         $dentista->delete();
 
-        return response()->json([
-            'message' => 'Registro do dentista removido com sucesso do sistema.'
-        ]);
+        return view('dentista.dentista.index', compact('dentistas'));
     }
 }

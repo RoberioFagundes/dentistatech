@@ -12,8 +12,8 @@ class Procedimento extends Model
 
     protected $fillable = [
         'nome',             // Ex: 'Restauração de Resina', 'Tratamento de Canal'
-        'codigo_clinico',   // Opcional: Código interno ou TUSS (Ex: 85100012)
-        'valor_base',       // Valor padrão sugerido do procedimento
+        'descricao',   // Opcional: Código interno ou TUSS (Ex: 85100012)
+        'valor',       // Valor padrão sugerido do procedimento
         'tempo_estimado',   // Tempo estimado em minutos (Ex: 45) para auxiliar a agenda
         'ativo'             // Booleano para ativar/desativar o procedimento no catálogo
     ];
@@ -22,7 +22,7 @@ class Procedimento extends Model
      * Define a conversão de tipos para garantir a consistência dos dados.
      */
     protected $casts = [
-        'valor_base' => 'float',
+        'valor' => 'float',
         'tempo_estimado' => 'integer',
         'ativo' => 'boolean'
     ];

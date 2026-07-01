@@ -31,16 +31,34 @@ class ProcedimentoController extends Controller
         // Traz os procedimentos ordenados em ordem alfabética e paginados
         $procedimentos = $query->orderBy('nome', 'asc')->paginate(20);
 
-        return response()->json($procedimentos);
+        return view('dentista.procedimento.index', compact('procedimentos'));
+       
+        // return response()->json($procedimentos);
         // Se usar Blade: return view('configuracoes.procedimentos.index', compact('procedimentos'));
     }
 
     /**
      * Exibe o formulário de criação (Útil caso use views Blade).
      */
-    public function create()
+   public function create()
     {
-        // Retorna a view para cadastrar um novo procedimento
+        return view('dentista.procedimento.formulario');
+    }
+
+    // Atualiza o registro no banco
+    public function update(Request $request, Procedimento $procedimento)
+    {
+        $dadosValidados = $request->validate([
+            'nome' => 'required|max:255',
+            'descricao' => 'nullable|string',
+            'valor' => 'required|numeric|min:0',
+            'duracao_minutos' => 'required|integer|min:1',
+            'ativo' => 'required|in:0,1',
+        ]);
+
+        $procedimento->update($dadosValidados);
+
+        return redirect()->route('procedimento.index')->with('success', 'Procedimento atualizado com sucesso!');
     }
 
     /**
@@ -48,20 +66,22 @@ class ProcedimentoController extends Controller
      */
     public function store(Request $request)
     {
-        $dadosValidados = $request->validate([
-            'nome'            => 'required|string|max:255|unique:procedimentos,nome', // Evita duplicar nomes
-            'codigo_clinico'   => 'nullable|string|max:50',                          // Código interno ou TUSS
-            'valor_base'       => 'required|numeric|min:0',                          // Valor padrão sugerido
-            'tempo_estimado'   => 'required|integer|min:10',                         // Duração em minutos (mínimo de 10 min)
-            'ativo'            => 'required|boolean'
+         $dadosValidados = $request->validate([
+            'nome' => 'required|max:255',
+            'descricao' => 'nullable|string',
+            'valor' => 'required|numeric|min:0',
+            'duracao_minutos' => 'required|integer|min:1',
+            'ativo' => 'required|in:0,1',
         ]);
 
         $procedimento = Procedimento::create($dadosValidados);
 
-        return response()->json([
-            'message' => 'Procedimento cadastrado com sucesso no catálogo!',
-            'data' => $procedimento
-        ], 201);
+         return redirect()->route('procedimento.index')->with('success', 'Procedimento criado com sucesso!');
+
+        // return response()->json([
+        //     'message' => 'Procedimento cadastrado com sucesso no catálogo!',
+        //     'data' => $procedimento
+        // ], 201);
     }
 
     /**
@@ -77,29 +97,13 @@ class ProcedimentoController extends Controller
      */
     public function edit(Procedimento $procedimento)
     {
-        return response()->json($procedimento);
+        return view('dentista.procedimento.formulario', compact('procedimento'));
     }
 
     /**
      * Atualiza os dados de um procedimento no catálogo.
      */
-    public function update(Request $request, Procedimento $procedimento)
-    {
-        $dadosValidados = $request->validate([
-            'nome'            => 'required|string|max:255|unique:procedimentos,nome,' . $procedimento->id, // Ignora o próprio ID
-            'codigo_clinico'   => 'nullable|string|max:50',
-            'valor_base'       => 'required|numeric|min:0',
-            'tempo_estimado'   => 'required|integer|min:10',
-            'ativo'            => 'required|boolean'
-        ]);
-
-        $procedimento->update($dadosValidados);
-
-        return response()->json([
-            'message' => 'Procedimento atualizado com sucesso!',
-            'data' => $procedimento
-        ]);
-    }
+   
 
     /**
      * Remove ou desativa um procedimento do catálogo.
