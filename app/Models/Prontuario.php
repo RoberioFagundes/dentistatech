@@ -16,6 +16,7 @@ class Prontuario extends Model
         'atendimento_id', // Opcional: Viniciona a evolução à consulta específica do dia
         'descricao',      // Texto contendo o relato clínico (ex: "Realizada exodontia do dente 18...")
         'prescricao',     // Opcional: Medicamentos receitados na consulta
+        'user_id',
         'data_registro'   // Data e hora em que a evolução foi registrada/assinada
     ];
 

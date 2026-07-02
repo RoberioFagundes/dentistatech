@@ -12,12 +12,13 @@ class EnderecoPaciente extends Model
 
     protected $fillable = [
         'cep',
-        'País',
+        'pais',
         'estado',
         'cidade',
         'bairro',
         'rua',
         'numero',
+        'user_id',
         'paciente_id'
     ];
 

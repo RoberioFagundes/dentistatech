@@ -19,6 +19,9 @@ return new class extends Migration {
             $table->string('condicao', 45)->nullable(); // Ex: 'Cariado', 'Restaurado', 'Ausente'
             $table->string('observacao', 255)->nullable();
 
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
             // Chaves Estrangeiras do Relacionamento
             $table->unsignedBigInteger('paciente_id')->nullable();;
             $table->unsignedBigInteger('dentista_id')->nullable();;

@@ -15,6 +15,7 @@ class ContatoPaciente extends Model
         'whatsapp',
         'celular',
         'email',
+        'user_id',
         'paciente_id'
     ];
 

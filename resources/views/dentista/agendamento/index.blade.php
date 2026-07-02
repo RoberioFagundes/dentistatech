@@ -34,7 +34,7 @@
                         <tr>
                             <td class="px-4 py-3">
                                 <div class="font-weight-bold text-dark">
-                                    {{ \Carbon\Carbon::parse($item->datadate)->format('d/m/Y') }}
+                                    {{ \Carbon\Carbon::parse($item->data)->format('d/m/Y') }}
                                 </div>
                                 <div class="text-muted small">
                                     {{ \Carbon\Carbon::parse($item->hora_inicio)->format('H:i') }} - {{ \Carbon\Carbon::parse($item->hora_fim)->format('H:i') }}
@@ -46,11 +46,12 @@
                             </td>
 
                             <td class="px-3 py-3 text-secondary">
+                            
                                 Dr(a). {{ $item->dentista->nome ?? 'Não informado' }}
                             </td>
 
                             <td class="px-3 py-3 text-muted">
-                                {{ $item->atendimento->nome ?? '-' }}
+                                {{ $item->procedimento->nome ?? '-' }}
                             </td>
 
                             <td class="px-3 py-3">
@@ -65,6 +66,11 @@
                                             Em Atendimento
                                         </span>
                                         @break
+                                    @case('CANCELADO')
+                                        <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 rounded-pill small">
+                                            Cancelado
+                                        </span>
+                                     @break
                                     @default
                                         <span class="badge bg-warning-subtle text-warning px-2.5 py-1.5 rounded-pill small">
                                             Agendado

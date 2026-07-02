@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('rg')->nullable();
             $table->string('sexo');
             $table->date('data_nascimento');
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('dentista_id')->nullable();
             $table->foreign('dentista_id')->references('id')->on('dentistas')->onDelete('set null');
             $table->timestamps();

@@ -10,17 +10,7 @@ class EnderecoDentistaAtendimento extends Model
     // Define explicitamente o nome da tabela no plural conforme o padrão do Laravel
     protected $table = "endereco_dentista_atendimentos";
 
-    protected $fillable = [
-        "cep",
-        "país",
-        "estado",
-        "cidade",
-        "bairro",
-        "rua",
-        "numero",
-        'dentista_id',       // ID do dentista associado
-             // Ex: 'Ativo', 'Inativo' (se aplicável)
-    ];
+   protected $fillable = ['dentista_id', 'cep', 'pais', 'estado', 'cidade', 'bairro', 'rua', 'numero'];
 
     /**
      * Retorna o Dentista vinculado a este endereço de atendimento.

@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('qualidade_sono', 550)->nullable()->comment('indica a qualidade do sono do paciente.');
             $table->unsignedBigInteger('paciente_id')->nullable()->comment('ID do paciente ao qual o hábito saudável pertence.');
             $table->text('observacoes_estilo_vida', 550)->nullable()->comment('Observações estilo de vida sobre o hábito saudável do paciente.');
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('paciente_id')
                 ->references('id')
                 ->on('pacientes')

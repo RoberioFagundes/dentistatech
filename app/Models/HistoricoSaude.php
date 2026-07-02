@@ -20,6 +20,7 @@ class HistoricoSaude extends Model
         'pressao_arterial',
         'fumante',
         'observacoes_medicas',
+        'user_id',
         'paciente_id'
     ];
 

@@ -15,6 +15,7 @@ class ContatoDentista extends Model
         'whatsapp',
         'celular',
         'email',
+        'user_id',
         'dentista_id'
     ];
 

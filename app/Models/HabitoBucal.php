@@ -21,6 +21,7 @@ class HabitoBucal extends Model
         'AnsiedadeDentista',
         'ultimaVisitaDentista',
         'declaracao',
+        'user_id',
         'paciente_id'
     ];
 

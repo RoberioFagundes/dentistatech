@@ -12,15 +12,7 @@ class Dentista extends Model
     // Define explicitamente o nome da tabela caso o Laravel busque pelo plural padrão em inglês
     protected $table = "dentistas";
 
-    protected $fillable = [
-        'nome',
-        'sobrenome',
-        'cro_uf',
-        'cro',            // Conselho Regional de Odontologia
-        'especialidade',
-        'status',  
-        'user_id'        // Ex: 'Ativo', 'Inativo'
-    ];
+    protected $fillable = ['user_id', 'nome', 'sobrenome', 'cro', 'cro_uf', 'especialidade'];
 
     /**
      * Retorna os registros de contato deste profissional.

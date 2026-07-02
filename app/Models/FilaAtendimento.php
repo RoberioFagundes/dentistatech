@@ -14,6 +14,7 @@ class FilaAtendimento extends Model
         'paciente_id',
         'dentista_id',
         'agendamento_id',
+        'user_id',
         'posicao',           // Número da senha ou ordem numérica na fila
         'status_fila',       // Ex: 'Aguardando', 'Chamado', 'Em Atendimento', 'Ausente'
         'hora_chegada'

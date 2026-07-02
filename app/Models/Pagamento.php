@@ -15,6 +15,7 @@ class Pagamento extends Model
         'orcamento_id',       // ID do orçamento pai (OrcamentoPaciente)
         'forma_pagamento_id', // ID da modalidade (Pix, Crédito, etc.)
         'valor_pago',
+        'user_id',
         'data_pagamento',
         'status_pagamento',   // Ex: 'Pendente', 'Pago', 'Estornado'
         'observacoes'

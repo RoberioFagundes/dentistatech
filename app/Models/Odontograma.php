@@ -14,6 +14,7 @@ class Odontograma extends Model
         'paciente_id',
         'atendimento_id', // Opcional: para saber em qual consulta a alteração foi feita
         'numero_dente',   // Ex: 11, 12, 21, 48 (Notação FDI)
+        'user_id',
         'face_dente',     // Ex: 'Oclusal', 'Mesial', 'Distal', 'Vestibular', 'Lingual', 'Geral'
         'status_dente',   // Ex: 'Cárie', 'Restaurado', 'Tratamento de Canal', 'Ausente'
         'observacoes'

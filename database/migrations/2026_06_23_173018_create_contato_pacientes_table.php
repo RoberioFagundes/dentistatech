@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('whatsapp');
             $table->string('email')->nullable();
             $table->string('site')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('paciente_id')->nullable();
             $table->foreign('paciente_id')
                 ->references('id')

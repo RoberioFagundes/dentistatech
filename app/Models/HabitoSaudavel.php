@@ -15,6 +15,7 @@ class HabitoSaudavel extends Model
         'atividade_fisica',
         'qualidade_sono',
         'observacoes_estilo_vida',
+        'user_id',
         'paciente_id'
     ];
 

@@ -64,6 +64,17 @@
         </a>
     </li>
 
+     <li class="nav-small-cap mt-3 mb-1 text-uppercase text-muted fs-7 fw-bold" style="letter-spacing: 1px;">
+        <span class="hide-menu">Financeiro</span>
+    </li>
+
+    <li class="sidebar-item">
+        <a class="sidebar-link d-flex align-items-center gap-3 py-2 px-3 rounded-2 text-decoration-none {{ request()->routeIs('financeiro.*') ? 'active bg-primary text-white' : 'text-dark' }}"
+           href="{{ Route::has('financeiro.create') ? route('financeiro.index') : '#' }}">
+            <i class="bi bi-person-badge fs-5"></i> <span class="fw-medium">Pagamentos</span>
+        </a>
+    </li>
+
     <li class="nav-small-cap mt-3 mb-1 text-uppercase text-muted fs-7 fw-bold" style="letter-spacing: 1px;">
         <span class="hide-menu">Serviços</span>
     </li>

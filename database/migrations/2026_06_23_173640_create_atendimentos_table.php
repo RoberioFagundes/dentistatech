@@ -21,6 +21,8 @@ return new class extends Migration {
             $table->text('diagnostico')->nullable();
             $table->text('tratamento_executado')->nullable();
             $table->text('observacoes_clinicas')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
             $table->timestamps();
         });

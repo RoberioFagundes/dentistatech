@@ -14,6 +14,7 @@ class OrcamentoItem extends Model
         'orcamento_id',       // ID do orçamento pai (OrcamentoPaciente)
         'procedimento_id',    // ID do procedimento/serviço realizado
         'quantidade',         // Quantidade do procedimento (Ex: 2 extrações)
+        'user_id',
         'valor_unitario',     // Preço do procedimento no momento do orçamento
         'desconto',           // Valor ou porcentagem de desconto aplicado ao item
         'valor_total',        // Valor líquido (Quantidade * Valor Unitário - Desconto)

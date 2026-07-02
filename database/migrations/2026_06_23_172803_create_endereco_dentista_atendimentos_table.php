@@ -14,12 +14,14 @@ return new class extends Migration
         Schema::create('endereco_dentista_atendimentos', function (Blueprint $table) {
             $table->id();
             $table->string('cep');
-            $table->string('país');
+            $table->string('pais');
             $table->string('estado');
             $table->string('cidade');
             $table->string('bairro');
             $table->string('rua');
             $table->string('numero');
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('dentista_id');
             $table->foreign('dentista_id')->references('id')->on('dentistas')->onDelete('cascade');
             $table->timestamps();

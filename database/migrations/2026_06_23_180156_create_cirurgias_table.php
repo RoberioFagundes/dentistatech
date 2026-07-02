@@ -21,6 +21,9 @@ return new class extends Migration {
             // Chave Estrangeira vinculando diretamente ao Paciente
             $table->unsignedBigInteger('paciente_id')->nullable();
 
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
             // Definição da Restrição (Foreign Key)
             $table->foreign('paciente_id')
                 ->references('id')

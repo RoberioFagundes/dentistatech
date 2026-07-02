@@ -15,6 +15,7 @@ class Hospitalizado extends Model
         'data_internacao', // Data da entrada no hospital
         'data_alta',       // Data da saída do hospital
         'observacoes',     // Notas adicionais sobre o ocorrido
+        'user_id',
         'paciente_id'      // Chave estrangeira que aponta para o paciente
     ];
 

@@ -25,6 +25,8 @@ return new class extends Migration {
             $table->string('problemaNeurologico')->nullable();
             $table->string('doencaInfeciosa')->nullable();
             $table->string('hospitalizado')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('paciente_id')->nullable();
             $table->foreign('paciente_id')
                 ->references('id')

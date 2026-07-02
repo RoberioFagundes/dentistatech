@@ -15,21 +15,32 @@ class AgendamentoController extends Controller
     /**
      * Exibe a listagem de agendamentos (Agenda do Dia/Mês).
      */
-    public function index(Request $request)
-    {
-        // Permite filtrar por data específica ou pega a data de hoje por padrão
-        $dataFiltro = $request->get('data', today()->toDateString());
+ public function index(Request $request)
+{
+    // Captura a data se o usuário quiser filtrar, mas não a torna obrigatória por padrão
+    $dataFiltro = $request->get('data');
 
-        // Carrega os agendamentos com os dados de Paciente e Dentista acoplados (evita gargalo N+1)
-        $agendamentos = Agendamento::with(['paciente', 'dentista'])
-            ->whereDate('data', $dataFiltro)
-            ->orderBy('hora_inicio', 'asc')
-            ->get();
+    // Inicia a query trazendo as relações corretas e filtrando pelo usuário logado
+    $query = Agendamento::with([
+        'paciente',
+        'dentista',
+        'atendimento' // <-- Corrigido para 'atendimento', que é o nome real do método na sua Model Agendamento
+    ])
+    ->where('user_id', auth()->id()); // Filtra apenas os agendamentos do usuário autenticado
 
-        return view('dentista.agendamento.index', compact('agendamentos', 'dataFiltro'));
-        // return response()->json($agendamentos);
-        // Caso use Blade: return view('agendamentos.index', compact('agendamentos', 'dataFiltro'));
+    // Se o usuário passar uma data no filtro da tela, aplica o filtro. 
+    // Se não passar nada, traz TODOS os agendamentos de todas as datas.
+    if ($dataFiltro) {
+        $query->whereDate('data', $dataFiltro);
     }
+
+    // Ordena primeiro pela data mais recente e depois pelo horário de início
+    $agendamentos = $query->orderBy('data', 'desc')
+                          ->orderBy('hora_inicio', 'asc')
+                          ->get();
+
+    return view('dentista.agendamento.index', compact('agendamentos', 'dataFiltro'));
+}
 
     /**
      * Exibe o formulário de criação (Auxilia trazendo os seletores necessários).
@@ -53,18 +64,20 @@ class AgendamentoController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
-        // 1. Validação estruturada com regras seguras
+        // 1. Validação estruturada com regras seguras (dentista_id removido daqui)
         $dadosValidados = $request->validate([
             'paciente_id' => 'required|exists:pacientes,id',
-            'dentista_id' => 'required|exists:dentistas,id',
-            'atendimento_id' => 'nullable|exists:atendimentos,id',
+            'procedimento_id' => 'nullable|exists:procedimentos,id',
             'data' => 'required|date',
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fim' => 'required|date_format:H:i|after:hora_inicio',
             'status' => 'required|in:AGENDADO,CONFIRMADO,EM_ATENDIMENTO',
             'observacao' => 'nullable|string|max:45',
         ]);
+
+        // Injeta o ID do usuário autenticado como o dentista_id
+        $dadosValidados['dentista_id'] = auth()->id();
+        $dadosValidados['user_id']     = auth()->id();
 
         // 2. Regra de Negócio: Impede marcação em feriados/recessos que bloqueiam a agenda
         $eFeriado = Feriado::where('data', $dadosValidados['data'])
@@ -89,15 +102,15 @@ class AgendamentoController extends Controller
 
         if ($conflitoDentista) {
             return back()
-                ->withErrors(['hora_inicio' => 'O dentista já possui um agendamento neste horário ou há sobreposição de minutos.'])
+                ->withErrors(['hora_inicio' => 'Você já possui um agendamento neste horário ou há sobreposição de minutos.'])
                 ->withInput();
         }
 
-        // 4. Salva o registro usando a model tratada
+        // 4. Salva o registro usando a model tratada com o dentista_id injetado
         Agendamento::create($dadosValidados);
 
         return redirect()
-            ->route('agendamento.index')
+            ->route('dentista.agendamento.index') // Ajustado o nome da rota conforme o método index anterior
             ->with('success', 'Agendamento realizado com sucesso!');
     }
 
@@ -115,52 +128,73 @@ class AgendamentoController extends Controller
     /**
      * Exibe o formulário de edição pré-carregando os dados.
      */
-    public function edit(Agendamento $agendamento)
+  public function edit(Agendamento $agendamento)
     {
-        $pacientes = Paciente::where('nome', '!=', null)->orderBy('nome')->get();
-        $dentistas = Dentista::where('nome', '!=', null)->orderBy('nome')->get();
+        
+        if ($agendamento->user_id != auth()->id()) {
+            abort(404);
+        }
 
+        $pacientes = Paciente::where('user_id', auth()->id())
+            ->orderBy('nome')
+            ->get();
 
-        return view('dentista.agendamento.formulario', compact('agendamento', 'pacientes', 'dentistas'));
+        $dentistas = Dentista::where('user_id', auth()->id())
+            ->orderBy('nome')
+            ->get();
 
-        // return response()->json(compact('agendamento', 'pacientes', 'dentistas'));
+        $procedimentos = Procedimento::where('user_id', auth()->id())
+            ->orderBy('nome')
+            ->get();
+
+        return view('dentista.agendamento.formulario', compact(
+            'agendamento',
+            'pacientes',
+            'dentistas',
+            'procedimentos'
+        ));
     }
-
     /**
      * Atualiza os dados ou o Status do agendamento (Ex: Mudar de 'Agendado' para 'Confirmado').
      */
-    public function update(Request $request, Agendamento $agendamento)
+   public function update(Request $request, Agendamento $agendamento)
     {
-        $dadosValidados = $request->validate([
+        $dados = $request->validate([
+            'data' => 'required|date',
+            'hora_inicio' => 'required',
+            'hora_fim' => 'required|after:hora_inicio',
             'paciente_id' => 'required|exists:pacientes,id',
             'dentista_id' => 'required|exists:dentistas,id',
-            'data_hora_inicio' => 'required|date',
-            'data_hora_fim' => 'required|date|after:data_hora_inicio',
-            'status' => 'required|string|in:Agendado,Confirmado,Cancelado,Faltou,Atendido',
-            'observacoes' => 'nullable|string'
+            'procedimento_id' => 'nullable|exists:procedimentos,id',
+            'status' => 'required|in:AGENDADO,CONFIRMADO,EM_ATENDIMENTO,CANCELADO',
+            'observacao' => 'nullable|string|max:45',
         ]);
 
-        // Validação de conflito de horário ignorando o próprio ID do agendamento atual
-        $conflitoDentista = Agendamento::where('dentista_id', $request->dentista_id)
+        // Verifica conflito de horário
+        $conflito = Agendamento::where('dentista_id', $dados['dentista_id'])
             ->where('id', '!=', $agendamento->id)
-            ->where('status', '!=', 'Cancelado')
-            ->where(function ($query) use ($request) {
-                $query->whereBetween('data_hora_inicio', [$request->data_hora_inicio, $request->data_hora_fim])
-                    ->orWhereBetween('data_hora_fim', [$request->data_hora_inicio, $request->data_hora_fim]);
-            })->exists();
+            ->where('status', '!=', 'CANCELADO')
+            ->where('data', $dados['data'])
+            ->where(function ($query) use ($dados) {
+                $query->whereBetween('hora_inicio', [$dados['hora_inicio'], $dados['hora_fim']])
+                    ->orWhereBetween('hora_fim', [$dados['hora_inicio'], $dados['hora_fim']]);
+            })
+            ->exists();
 
-        if ($conflitoDentista) {
-            return response()->json(['error' => 'Não foi possível reagendar. O dentista possui outro compromisso neste horário.'], 422);
+        if ($conflito) {
+            return back()
+                ->withErrors([
+                    'hora_inicio' => 'Já existe outro agendamento para este dentista neste horário.'
+                ])
+                ->withInput();
         }
 
-        $agendamento->update($dadosValidados);
+        $agendamento->update($dados);
 
-        return response()->json([
-            'message' => 'Agendamento atualizado com sucesso!',
-            'data' => $agendamento
-        ]);
+        return redirect()
+            ->route('agendamento.index')
+            ->with('success', 'Agendamento atualizado com sucesso!');
     }
-
     /**
      * Remove ou cancela o agendamento do banco de dados.
      */
@@ -172,6 +206,8 @@ class AgendamentoController extends Controller
 
         $agendamento->update(['status' => 'Cancelado']);
 
-        return response()->json(['message' => 'Agendamento cancelado com sucesso no sistema.']);
+        return redirect()
+            ->route('agendamento.index') // Ajustado o nome da rota conforme o método index anterior
+            ->with('success', 'Agendamento cancelado com sucesso!');
     }
 }

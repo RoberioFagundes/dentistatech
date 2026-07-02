@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('telefone');
             $table->string('email');
             $table->string('whatsapp');
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('dentista_id');
             $table->foreign('dentista_id')->references('id')->on('dentistas')->onDelete('cascade');
             $table->timestamps();

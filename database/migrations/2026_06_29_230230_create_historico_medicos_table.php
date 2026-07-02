@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('historicoCirurgico')->nullable();
             $table->text('observacaoMedicaGeral')->nullable();
             $table->unsignedBigInteger('paciente_id')->nullable();
+
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            
              // Chave estrangeira apontando para os pacientes
             $table->foreign('paciente_id')
                 ->references('id')

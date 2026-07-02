@@ -17,7 +17,9 @@ class Agendamento extends Model
         'observacao',
         'dentista_id',
         'paciente_id',
-        'atendimento_id'
+        'atendimento_id',
+        'procedimento_id',
+        'user_id',
     ];
 
     // Garante que o Laravel entenda os campos de hora/data corretamente
@@ -49,4 +51,13 @@ class Agendamento extends Model
     {
         return $this->belongsTo(Atendimento::class, 'atendimento_id');
     }
+
+
+public function procedimento(){
+    
+    return $this->belongsTo(Procedimento::class, 'procedimento_id');
+}
+
+// existe essa?
+
 }

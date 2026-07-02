@@ -17,6 +17,7 @@ class Paciente extends Model
         'cpf',
         'rg',
         'sexo',
+        'user_id',
         'data_nascimento',
         'dentista_id'
         // 'status' // Ex: 'Ativo', 'Inativo'

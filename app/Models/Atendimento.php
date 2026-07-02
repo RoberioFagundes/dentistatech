@@ -14,7 +14,8 @@ class Atendimento extends Model
     protected $fillable = [
         'agendamento_id',
         'status_atendimento', // Ex: 'Em Andamento', 'Finalizado', 'Cancelado'
-        'observacoes_iniciais'
+        'observacoes_iniciais',
+        'user_id'
     ];
 
     /**

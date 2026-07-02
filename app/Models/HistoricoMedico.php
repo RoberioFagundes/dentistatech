@@ -14,6 +14,7 @@ class HistoricoMedico extends Model
         'condicaoCronica',
         'historicoCirurgico',
         'observacaoMedicaGeral',
+        'user_id',
         'paciente_id'
     ];
 

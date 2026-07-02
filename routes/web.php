@@ -40,6 +40,8 @@ Route::resource('dentista', DentistaController::class)->middleware('auth');
 Route::resource('agendamento', AgendamentoController::class)->middleware('auth');
 Route::resource('procedimento', ProcedimentoController::class)->middleware(['auth']);
 
+Route::resource('financeiro', AgendamentoController::class)->middleware(['auth']);
+
 
 
 

@@ -27,6 +27,8 @@ return new class extends Migration
             $table->string('AnsiedadeDentista')->nullable();
             $table->string('ultimaVisitaDentista')->nullable();
             $table->text('declaracao')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('paciente_id')->nullable();
             $table->foreign('paciente_id')
                 ->references('id')

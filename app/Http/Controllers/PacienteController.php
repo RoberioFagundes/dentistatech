@@ -16,16 +16,17 @@ class PacienteController extends Controller
     /**
      * Exibe a listagem de pacientes com busca global e paginação.
      */
-    public function index(Request $request)
+   public function index(Request $request)
     {
-        $query = Paciente::query();
+        // Inicia a query filtrando estritamente pelo ID do usuário autenticado
+        $query = Paciente::where('user_id', auth()->id()); // <-- Ajuste aqui se a coluna for 'dentista_id'
 
         // Filtro por Status (Ex: 'Ativo', 'Inativo')
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
 
-        // Busca global por Nome ou CPF
+        // Busca global por Nome ou CPF (Mantém o escopo isolado)
         if ($request->has('busca')) {
             $busca = $request->busca;
             $query->where(function ($q) use ($busca) {
@@ -34,19 +35,18 @@ class PacienteController extends Controller
             });
         }
 
-        // Retorna a listagem paginada de 15 em 15 registros
+        // Retorna a listagem paginada contendo apenas os dados do usuário logado
         $pacientes = $query->orderBy('nome', 'asc')->paginate(15);
 
-        // return response()->json($pacientes);
         return view('dentista.paciente.index', compact('pacientes'));
     }
-
     /**
      * Exibe o formulário de criação (Útil caso use views Blade).
      */
     public function create()
     {
-        return view('dentista.paciente.create');
+        $paciente = new Paciente(); // Cria uma instância vazia para o formulário
+        return view('dentista.paciente.formulario', compact('paciente'));
     }
 
     /**
@@ -66,7 +66,7 @@ class PacienteController extends Controller
             'whatsapp' => 'required|string|max:20',
             'email' => 'required|email|max:255',
 
-            // 3. LOCALIZAÇÃO RESIDENCIAL
+            // LOCALIZAÇÃO RESIDENCIAL
             'cep' => 'required|string|max:9',
             'pais' => 'required|string|max:100',
             'estado' => 'required|string|size:2',
@@ -75,14 +75,14 @@ class PacienteController extends Controller
             'rua' => 'required|string|max:255',
             'numero' => 'required|string|max:20',
 
-            // 4. HISTÓRICO MÉDICO
+            // HISTÓRICO MÉDICO
             'alergias' => 'nullable|string|max:255',
             'medicacaoEmUso' => 'nullable|string|max:255',
             'condicaoCronica' => 'nullable|string|max:255',
             'historicoCirurgico' => 'nullable|string|max:1000',
             'observacaoMedicaGeral' => 'nullable|string|max:1000',
 
-            // 5. HISTÓRICO BUCAL
+            // HISTÓRICO BUCAL
             'ultima_consulta' => 'nullable|date|before_or_equal:today',
             'motivo_consulta_atual' => 'nullable|string|max:255',
             'sangramento_gengival' => 'nullable|string|in:Sim,Não',
@@ -92,20 +92,21 @@ class PacienteController extends Controller
             'tratamento_bucal_anterior' => 'nullable|string|max:1000',
             'observacoes_bucal_adicionais' => 'nullable|string|max:1000',
 
-            // 6. HÁBITOS SAUDÁVEIS
+            // HÁBITOS SAUDÁVEIS
             'frequencia_escovacao' => 'nullable|string|in:1 vez ao dia,2 vezes ao dia,3 ou mais vezes ao dia',
             'usa_fio_dental' => 'nullable|string|in:Sim,Não,Às vezes',
             'habito_fumo' => 'nullable|string|in:Não fuma,Ex-fumante,Fuma ocasionalmente,Fumante regular',
             'atividade_fisica' => 'nullable|string|in:Não pratica,1-2 vezes por semana,3-4 vezes por semana,Diariamente',
-            'qualidade_sono' => 'nullable|string|in:Boa,Razoável,Ruim',
-            'observacoes_estilo_vida' => 'nullable|string|max:1000', // Corrigido a regra que estava errada aqui
+            'qualidade_sono' => 'nullable|string|in:Ruim,Regular,Bom,Ótimo',
+            'observacoes_estilo_vida' => 'nullable|string|max:1000', 
         ]);
 
-        // 2. Uso de Transaction usando a variável $validated
+        // 2. Uso de Transaction blindada
         $paciente = DB::transaction(function () use ($validated) {
 
-            // Salva os dados principais do paciente
+            // Salva os dados principais do paciente incluindo o usuário autenticado
             $paciente = Paciente::create([
+                'user_id' => auth()->id(), // <--- ADICIONADO: Injeta o ID do usuário logado com segurança
                 'nome' => $validated['nome'],
                 'sobrenome' => $validated['sobrenome'],
                 'cpf' => $validated['cpf'],
@@ -117,7 +118,7 @@ class PacienteController extends Controller
                 'email' => $validated['email'],
             ]);
 
-            //contato paciente 
+            // Contato paciente 
             ContatoPaciente::create([
                 'paciente_id' => $paciente->id,
                 'telefone' => $validated['telefone'],
@@ -129,7 +130,7 @@ class PacienteController extends Controller
             EnderecoPaciente::create([
                 'paciente_id' => $paciente->id,
                 'cep' => $validated['cep'],
-                'País' => $validated['pais'], // Removido o 'P' maiúsculo e acento para alinhar com o padrão
+                'pais' => $validated['pais'], 
                 'estado' => $validated['estado'],
                 'cidade' => $validated['cidade'],
                 'bairro' => $validated['bairro'],
@@ -166,20 +167,17 @@ class PacienteController extends Controller
                 'frequencia_escovacao' => $validated['frequencia_escovacao'] ?? null,
                 'usa_fio_dental' => $validated['usa_fio_dental'] ?? null,
                 'habito_fumo' => $validated['habito_fumo'] ?? null,
-                'consumo_alcool' => $validated['observacoes_estilo_vida'] ?? null, // Mapeado conforme o que restou na validação anterior
                 'pratica_atividade_fisica' => $validated['atividade_fisica'] ?? null,
                 'qualidade_sono' => $validated['qualidade_sono'] ?? null,
+                'observacoes_estilo_vida' => $validated['observacoes_estilo_vida'] ?? null, 
             ]);
 
             return $paciente;
         });
 
-        return view('dentista.paciente.index', compact('paciente'));
-        // Retorna resposta JSON de sucesso
-        return response()->json([
-            'message' => 'Paciente cadastrado com sucesso no sistema!',
-            'data' => $paciente->load('enderecoPaciente') // Certifique-se de carregar os outros relacionamentos aqui se precisar no retorno, ex: load(['enderecoPaciente', 'historicoBucal'])
-        ], 201);
+        return redirect()
+            ->route('paciente.index')
+            ->with('success', 'Paciente cadastrado com sucesso no sistema!');
     }
 
     /**
@@ -205,7 +203,7 @@ class PacienteController extends Controller
     public function edit(Paciente $paciente)
     {
         $paciente->load(['enderecoPaciente', 'contatosPaciente', 'historicoBucal', 'historicoMedico', 'habitoSaudavel']);
-        return view('dentista.paciente.edit', compact('paciente'));
+        return view('dentista.paciente.formulario', compact('paciente'));
     }
 
     /**

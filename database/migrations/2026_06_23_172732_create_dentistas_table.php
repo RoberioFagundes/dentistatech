@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('cro');
             $table->string('cro_uf', 2);
             $table->string('especialidade');
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });

@@ -17,6 +17,7 @@ class OrcamentoPaciente extends Model
         'valor_bruto',       // Soma do valor original de todos os itens
         'desconto_global',   // Desconto aplicado sobre o total do orçamento
         'valor_liquido',     // Valor final a ser pago (Bruto - Desconto)
+        'user_id',
         'status',            // Ex: 'Pendente', 'Aprovado', 'Recusado', 'Finalizado'
         'observacoes'
     ];

@@ -30,6 +30,9 @@ return new class extends Migration
                 ->onDelete('restrict') // Impede apagar o orçamento se houver histórico de pagamentos atrelado
                 ->onUpdate('cascade');
 
+                $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

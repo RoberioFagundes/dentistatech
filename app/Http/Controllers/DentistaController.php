@@ -55,7 +55,7 @@ class DentistaController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validação unificada (Ajustada para procurar o e-mail na tabela correta)
+        // 1. Validação unificada (Adicionado o 'cep' que faltava)
         $dadosValidados = $request->validate([
             // Dados do Dentista
             'nome' => 'required|string|max:255',
@@ -65,6 +65,7 @@ class DentistaController extends Controller
             'especialidade' => 'required|string|max:150',
 
             // Dados do Endereço
+            'cep' => 'required|string|max:10', // <-- Adicionado aqui!
             'pais' => 'required|string|max:255',
             'estado' => 'required|string|max:255',
             'cidade' => 'required|string|max:255',
@@ -72,48 +73,50 @@ class DentistaController extends Controller
             'rua' => 'required|string|max:255',
             'numero' => 'required|integer',
 
-            // Dados de Contato (CORRIGIDO: unique agora olha para 'contato_dentistas')
+            // Dados de Contato
             'telefone' => 'required|string|max:20',
             'whatsapp' => 'required|string|max:20',
             'email' => 'required|string|email|max:255|unique:contato_dentistas,email',
         ]);
 
-        // 2. Transaction para garantir que salve tudo ou dê rollback se algo falhar
-        $dentista = DB::transaction(function () use ($request) {
+        // 2. Transaction para garantir consistência dos dados
+        $dentista = DB::transaction(function () use ($dadosValidados) {
 
+            // Cria o dentista vinculando o usuário autenticado
             $dentista = Dentista::create([
-                'user_id' => auth()->id(), // <-- Pega automaticamente o ID do usuário logado
-                'nome' => $request->nome,
-                'sobrenome' => $request->sobrenome,
-                'cro' => $request->cro,
-                'cro_uf' => $request->cro_uf,
-                'especialidade' => $request->especialidade,
+                'user_id'       => auth()->id(), // <-- ID do usuário logado mantido com segurança
+                'nome'          => $dadosValidados['nome'],
+                'sobrenome'     => $dadosValidados['sobrenome'],
+                'cro'           => $dadosValidados['cro'],
+                'cro_uf'        => $dadosValidados['cro_uf'],
+                'especialidade' => $dadosValidados['especialidade'],
             ]);
 
-            // Vincula e salva o Endereço (Injeta automaticamente o dentista_id)
+            // Vincula e salva o Endereço utilizando os dados validados
             $dentista->endereco()->create([
-                'cep' => $request->cep,
-                'país' => $request->pais,
-                'estado' => $request->estado,
-                'cidade' => $request->cidade,
-                'bairro' => $request->bairro,
-                'rua' => $request->rua,
-                'numero' => $request->numero,
+                'cep'    => $dadosValidados['cep'],
+                'pais'   => $dadosValidados['pais'], // Removi o acento, ajuste se sua coluna tiver 'país'
+                'estado' => $dadosValidados['estado'],
+                'cidade' => $dadosValidados['cidade'],
+                'bairro' => $dadosValidados['bairro'],
+                'rua'    => $dadosValidados['rua'],
+                'numero' => $dadosValidados['numero'],
             ]);
 
-            // CORRIGIDO: Vincula e salva os Contatos incluindo o e-mail na tabela 'contato_dentistas'
-            // (Troque 'contato' pelo nome exato do método de relacionamento no seu Model Dentista.php se for diferente)
+            // Vincula e salva os Contatos utilizando os dados validados
             $dentista->contatos()->create([
-                'telefone' => $request->telefone,
-                'whatsapp' => $request->whatsapp,
-                'email' => $request->email, // Movido para cá!
+                'telefone' => $dadosValidados['telefone'],
+                'whatsapp' => $dadosValidados['whatsapp'],
+                'email'    => $dadosValidados['email'],
             ]);
 
             return $dentista;
         });
 
-        // 3. Retorna a resposta JSON com o dentista e suas relações carregadas
-        return view('dentista.dentista.index', compact('dentista'));
+        // 3. Redirecionamento com mensagem de sucesso
+        return redirect()
+            ->route('dentista.index')
+            ->with('success', 'Perfil de dentista vinculado e cadastrado com sucesso!');
     }
     /**
      * Exibe o perfil detalhado de um dentista específico (incluindo contatos e endereço).
@@ -140,36 +143,36 @@ class DentistaController extends Controller
     /**
      * Atualiza os dados cadastrais do dentista.
      */
-    public function update(Request $request, $id)
-    {
-        // 1. Busca o dentista pelo ID bruto enviado pela rota
-        $dentista = Dentista::findOrFail($id);
+   public function update(Request $request, $id)
+{
+    // 1. Busca o dentista pelo ID bruto enviado pela rota
+    $dentista = Dentista::findOrFail($id);
 
-        // 2. Validação com as regras corretas (incluindo os campos de contato e endereço do formulário)
-        $dadosValidados = $request->validate([
-            'nome' => 'required|string|max:255',
-            'sobrenome' => 'required|string|max:255',
-            'cro' => 'required|string|max:20|unique:dentistas,cro,' . $dentista->id, // Ignora o próprio ID
-            'cro_uf' => 'required|string|size:2',
-            'especialidade' => 'required|string|max:150',
-            'telefone' => 'required|string|max:20',
-            'whatsapp' => 'required|string|max:20',
-            'email' => 'required|email|max:255',
-            'cep' => 'required|string|max:10',
-            'pais' => 'required|string|max:100',
-            'estado' => 'required|string|max:100',
-            'cidade' => 'required|string|max:100',
-            'bairro' => 'required|string|max:100',
-            'rua' => 'required|string|max:255',
-            'numero' => 'required|integer',
-        ]);
+    // 2. Validação com as regras corretas (incluindo os campos de contato e endereço do formulário)
+    $dadosValidados = $request->validate([
+        'nome'          => 'required|string|max:255',
+        'sobrenome'     => 'required|string|max:255',
+        'cro'           => 'required|string|max:20|unique:dentistas,cro,' . $dentista->id, // Ignora o próprio ID
+        'cro_uf'        => 'required|string|size:2',
+        'especialidade' => 'required|string|max:150',
+        'telefone'      => 'required|string|max:20',
+        'whatsapp'      => 'required|string|max:20',
+        'email'         => 'required|email|max:255',
+        'cep'           => 'required|string|max:10',
+        'pais'          => 'required|string|max:100',
+        'estado'        => 'required|string|max:100',
+        'cidade'        => 'required|string|max:100',
+        'bairro'        => 'required|string|max:100',
+        'rua'           => 'required|string|max:255',
+        'numero'        => 'required|integer',
+    ]);
 
-        // 3. Atualiza os dados no banco
-        $dentista->update($dadosValidados);
+    // 3. Atualiza os dados no banco
+    $dentista->update($dadosValidados);
 
-        // 4. Redireciona de volta para a listagem com mensagem de sucesso
-        return redirect()->route('dentista.index')->with('success', 'Cadastro do dentista atualizado com sucesso!');
-    }
+    // 4. Redireciona de volta para a listagem com mensagem de sucesso
+    return redirect()->route('dentista.index')->with('success', 'Cadastro do dentista atualizado com sucesso!');
+}
 
     /**
      * Remove ou desativa o dentista do sistema.
@@ -184,12 +187,12 @@ class DentistaController extends Controller
             // Em vez de deletar, altera o status para 'Inativo' salvaguardando os dados históricos da clínica
             $dentista->update(['status' => 'Inativo']);
 
-            return view('dentista.dentista.show', compact('dentista'));
+            return redirect()->route('dentista.index')->with('success', 'Dentista desativado com sucesso!');
         }
 
         // Se não houver histórico atrelado, a exclusão física é liberada
         $dentista->delete();
 
-        return view('dentista.dentista.index', compact('dentistas'));
+        return redirect()->route('dentista.index')->with('success', 'Dentista removido com sucesso!');
     }
 }

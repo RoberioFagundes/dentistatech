@@ -22,6 +22,9 @@ return new class extends Migration {
             // Se for verdadeiro (true), o sistema sabe que todo ano naquele dia a agenda deve ser bloqueada
             $table->boolean('recorrente_anual')->default(false)->nullable();
 
+            $table->unsignedBigInteger('user_id')->nullable();;
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
             $table->timestamps();
 
         });

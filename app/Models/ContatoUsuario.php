@@ -14,6 +14,7 @@ class ContatoUsuario extends Model
         'telefone',
         'celular',
         'email',
+        'user_id',
         'usuario_id' // Altere para 'user_id' se sua tabela pai for 'users'
     ];
 

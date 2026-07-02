@@ -13,6 +13,7 @@ class Feriado extends Model
         'titulo',       // Ex: 'Natal', 'Aniversário da Cidade'
         'data',         // Tipo date (AAAA-MM-DD)
         'tipo',         // Ex: 'Nacional', 'Estadual', 'Municipal', 'Recesso'
+        'user_id',
         'bloqueia_agenda' // Booleano (true/false) para saber se impede marcações
     ];
 

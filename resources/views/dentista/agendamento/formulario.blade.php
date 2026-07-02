@@ -2,8 +2,8 @@
 
 @section('pagina')
     @php
-        $isEdit = isset($agenda);
-        $route = $isEdit ? route('agendamento.update', $agenda->id) : route('agendamento.store');
+        $isEdit = isset($agendamento);
+        $route = $isEdit ? route('agendamento.update', $agendamento->id) : route('agendamento.store');
     @endphp
 
     <div class="container my-5">
@@ -45,7 +45,7 @@
                         <div class="col-12 col-md-4">
                             <label for="data" class="form-label text-secondary small text-uppercase font-weight-bold">Data</label>
                             <input type="date" id="data" name="data" required
-                                value="{{ old('data', $isEdit ? $agenda->data : '') }}" 
+                                value="{{ old('data', $isEdit ? $agendamento->data->format('Y-m-d') : '') }}"
                                 class="form-control py-2 @error('data') is-invalid @enderror">
                             @error('data')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -55,7 +55,7 @@
                         <div class="col-12 col-md-4">
                             <label for="hora_inicio" class="form-label text-secondary small text-uppercase font-weight-bold">Hora Início</label>
                             <input type="time" id="hora_inicio" name="hora_inicio" required
-                                value="{{ old('hora_inicio', $isEdit ? $agenda->hora_inicio : '') }}"
+                                value="{{ old('hora_inicio', $isEdit ? $agendamento->hora_inicio : '') }}"
                                 class="form-control py-2 @error('hora_inicio') is-invalid @enderror">
                             @error('hora_inicio')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -65,7 +65,7 @@
                         <div class="col-12 col-md-4">
                             <label for="hora_fim" class="form-label text-secondary small text-uppercase font-weight-bold">Hora Fim</label>
                             <input type="time" id="hora_fim" name="hora_fim" required
-                                value="{{ old('hora_fim', $isEdit ? $agenda->hora_fim : '') }}" 
+                                value="{{ old('hora_fim', $isEdit ? $agendamento->hora_fim : '') }}" 
                                 class="form-control py-2 @error('hora_fim') is-invalid @enderror">
                             @error('hora_fim')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -77,7 +77,7 @@
                             <select id="paciente_id" name="paciente_id" required class="form-select py-2 @error('paciente_id') is-invalid @enderror">
                                 <option value="">Selecione o Paciente</option>
                                 @foreach($pacientes as $paciente)
-                                    <option value="{{ $paciente->id }}" {{ old('paciente_id', $isEdit ? $agenda->paciente_id : '') == $paciente->id ? 'selected' : '' }}>
+                                    <option value="{{ $paciente->id }}" {{ old('paciente_id', $isEdit ? $agendamento->paciente_id : '') == $paciente->id ? 'selected' : '' }}>
                                         👤 {{ $paciente->nome }}
                                     </option>
                                 @endforeach
@@ -91,7 +91,7 @@
                             <label for="status" class="form-label text-secondary small text-uppercase font-weight-bold">Status</label>
                             <select id="status" name="status" required class="form-select py-2 @error('status') is-invalid @enderror">
                                 @php
-                                    $statusAtual = old('status', $isEdit ? $agenda->status : 'AGENDADO');
+                                    $statusAtual = old('status', $isEdit ? $agendamento->status : 'AGENDADO');
                                 @endphp
                                 <option value="AGENDADO" {{ $statusAtual == 'AGENDADO' ? 'selected' : '' }}>🕒 AGENDADO</option>
                                 <option value="CONFIRMADO" {{ $statusAtual == 'CONFIRMADO' ? 'selected' : '' }}>✅ CONFIRMADO</option>
@@ -107,7 +107,7 @@
                             <select id="dentista_id" name="dentista_id" required class="form-select py-2 @error('dentista_id') is-invalid @enderror">
                                 <option value="">Selecione o Dentista</option>
                                 @foreach($dentistas as $dentista)
-                                    <option value="{{ $dentista->id }}" {{ old('dentista_id', $isEdit ? $agenda->dentista_id : '') == $dentista->id ? 'selected' : '' }}>
+                                    <option value="{{ $dentista->id }}" {{ old('dentista_id', $isEdit ? $agendamento->dentista_id : '') == $dentista->id ? 'selected' : '' }}>
                                         Dr(a). {{ $dentista->nome }}
                                     </option>
                                 @endforeach
@@ -122,7 +122,7 @@
                             <select id="procedimento_id" name="procedimento_id" class="form-select py-2 @error('procedimento_id') is-invalid @enderror">
                                 <option value="">Opcional</option>
                                 @foreach($procedimentos as $procedimento)
-                                    <option value="{{ $procedimento->id }}" {{ old('procedimento_id', $isEdit ? $agenda->procedimento_id : '') == $procedimento->id ? 'selected' : '' }}>
+                                    <option value="{{ $procedimento->id }}" {{ old('procedimento_id', $isEdit ? $agendamento->procedimento_id : '') == $procedimento->id ? 'selected' : '' }}>
                                         ✨ {{ $procedimento->nome }}
                                     </option>
                                 @endforeach
@@ -136,7 +136,7 @@
                             <label for="observacao" class="form-label text-secondary small text-uppercase font-weight-bold">Observação</label>
                             <textarea id="observacao" name="observacao" rows="3" maxlength="45"
                                 placeholder="Notas rápidas (máx. 45 caracteres)..."
-                                class="form-control @error('observacao') is-invalid @enderror">{{ old('observacao', $isEdit ? $agenda->observacao : '') }}</textarea>
+                                class="form-control @error('observacao') is-invalid @enderror">{{ old('observacao', $isEdit ? $agendamento->observacao : '') }}</textarea>
                             @error('observacao')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

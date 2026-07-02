@@ -12,6 +12,7 @@ class FormaPagamento extends Model
 
     protected $fillable = [
         'nome',            // Ex: 'Pix', 'Cartão de Crédito', 'Dinheiro'
+        'user_id',
         'taxa_desconto',   // Ex: 2.50 (Caso haja taxa da maquininha de cartão)
         'ativo'            // Booleano para ativar/desativar a forma de pagamento na recepção
     ];

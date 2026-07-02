@@ -16,6 +16,7 @@ class HistoricoBucal extends Model
         'tipo_aparelho_ou_protese',
         'tratamento_bucal_anterior',
         'observacoes_bucal_adicionais',
+        'user_id',
         'paciente_id'
     ];
 

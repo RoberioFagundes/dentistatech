@@ -14,6 +14,7 @@ class Procedimento extends Model
         'nome',             // Ex: 'Restauração de Resina', 'Tratamento de Canal'
         'descricao',   // Opcional: Código interno ou TUSS (Ex: 85100012)
         'valor',       // Valor padrão sugerido do procedimento
+        'user_id',
         'tempo_estimado',   // Tempo estimado em minutos (Ex: 45) para auxiliar a agenda
         'ativo'             // Booleano para ativar/desativar o procedimento no catálogo
     ];

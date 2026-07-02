@@ -17,6 +17,7 @@ class EnderecoUsuario extends Model
         'complemento',
         'bairro',
         'cidade',
+        'user_id',
         'estado',
         'usuario_id' // Altere para 'user_id' se sua tabela pai for 'users'
     ];

@@ -15,7 +15,8 @@ class Cirurgia extends Model
         'ano',
         'complicacoes',
         'observacoes',
-        'paciente_id' // Se na sua tabela você mudou para o padrão paciente_id
+        'paciente_id', // Se na sua tabela você mudou para o padrão paciente_id
+        'user_id', // Se na sua tabela você mudou para o padrão user_id
     ];
 
     /**
