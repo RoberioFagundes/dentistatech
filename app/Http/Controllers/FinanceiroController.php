@@ -1,6 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Agendamento;
+use App\Models\Atendimento;
+use App\Models\Procedimento;
+use App\Models\Paciente;
+use App\Models\Dentista;
+use App\Models\Pagamento;
+use App\Models\OrcamentoPaciente;
+use App\Models\Orcamentoitem;
 
 use Illuminate\Http\Request;
 

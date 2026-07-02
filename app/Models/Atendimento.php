@@ -12,9 +12,14 @@ class Atendimento extends Model
     protected $table = "atendimentos";
 
     protected $fillable = [
-        'agendamento_id',
-        'status_atendimento', // Ex: 'Em Andamento', 'Finalizado', 'Cancelado'
-        'observacoes_iniciais',
+        'queixa_principal',
+        'diagnostico',
+        'tratamento_executado',
+        'observacoes_clinicas',
+         'paciente_id', 
+        'dentista_id', 
+        'agendamento_id', 
+        'procedimento_dente_id',
         'user_id'
     ];
 
@@ -44,4 +49,29 @@ class Atendimento extends Model
     {
         return $this->hasOne(Prontuario::class, 'atendimento_id');
     }
+
+    /**
+     * Retorna o Paciente associado a este atendimento.
+     * (Um atendimento PERTENCE A um paciente)
+     */
+    public function paciente(): BelongsTo
+    {
+        return $this->belongsTo(Paciente::class, 'paciente_id');
+    }
+
+    public function dentista(): BelongsTo
+    {
+        return $this->belongsTo(Dentista::class, 'dentista_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function procedimentoDente(): BelongsTo
+    {
+        return $this->belongsTo(ProcedimentoDente::class, 'procedimento_dente_id');
+    }
+
 }

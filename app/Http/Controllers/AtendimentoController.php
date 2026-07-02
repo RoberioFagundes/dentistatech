@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Atendimento;
 use App\Models\Agendamento;
+use App\Models\Paciente;
+use App\Models\Dentista;
 use App\Models\FilaAtendimento;
 use App\Models\Prontuario;
+use App\Models\ProcedimentoDente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,114 +19,142 @@ class AtendimentoController extends Controller
      */
     public function index(Request $request)
     {
-        // Permite filtrar por paciente ou por dentista específico
-        $query = Atendimento::with(['paciente', 'dentista', 'agendamento']);
+        $query = Atendimento::with([
+            'paciente',
+            'dentista',
+            'agendamento'
+        ])
+        ->where('user_id', auth()->id());
 
-        if ($request->has('paciente_id')) {
+        if ($request->filled('paciente_id')) {
             $query->where('paciente_id', $request->paciente_id);
         }
 
-        if ($request->has('dentista_id')) {
+        if ($request->filled('dentista_id')) {
             $query->where('dentista_id', $request->dentista_id);
         }
 
-        $atendimentos = $query->orderBy('data_atendimento', 'desc')->paginate(15);
+        $atendimentos = $query
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
 
-        return response()->json($atendimentos);
+        $pacientes = Paciente::orderBy('nome')->get();
+
+        $dentistas = Dentista::orderBy('nome')->get();
+
+        return view(
+            'dentista.atendimento.index',
+            compact(
+                'atendimentos',
+                'pacientes',
+                'dentistas'
+            )
+        );
     }
 
     /**
-     * Não costuma ser muito utilizado em APIs de Clínicas, 
-     * pois o atendimento geralmente inicia a partir de um botão "Iniciar Consulta" na fila.
+     * Tela para abertura manual de atendimento.
      */
     public function create()
     {
-        // Retornaria dados para montar uma tela de abertura manual de atendimento
+        $pacientes = Paciente::orderBy('nome')->get();
+        $dentistas = Dentista::orderBy('nome')->get();
+        
+        // Busca agendamentos do dia que ainda não viraram atendimento
+        $agendamentos = Agendamento::whereDate('data', now())
+            ->where('status', 'Agendado')
+            ->get();
+
+        return view('dentista.atendimento.formulario', compact('pacientes', 'dentistas', 'agendamentos'));
     }
 
     /**
-     * Inicia oficialmente o atendimento clínico (Abertura da Consulta).
+     * Inicia oficialmente o atendimento clínico (Salva o rascunho/abertura).
      */
     public function store(Request $request)
     {
-        // Valida os dados iniciais do atendimento
         $dadosValidados = $request->validate([
-            'paciente_id'    => 'required|exists:pacientes,id',
-            'dentista_id'    => 'required|exists:dentistas,id',
-            'agendamento_id' => 'nullable|exists:agendamentos,id',
-            'observacoes_iniciais' => 'nullable|string'
+            'paciente_id'            => 'required|exists:pacientes,id',
+            'dentista_id'            => 'required|exists:dentistas,id',
+            'agendamento_id'         => 'nullable|exists:agendamentos,id',
+            'procedimento_dente_id'  => 'nullable|exists:procedimento_dentes,id',
+            'queixa_principal'       => 'required|string|max:255',
+            'diagnostico'            => 'nullable|string',
+            'tratamento_executado'   => 'nullable|string',
+            'observacoes_clinicas'   => 'nullable|string',
         ]);
 
-        // Usa uma Transaction para garantir que todas as tabelas sejam atualizadas juntas com segurança
-        $atendimento = DB::transaction(function () use ($dadosValidados, $request) {
-            
-            // 1. Cria o registro do atendimento com status 'Em Andamento'
-            $atendimento = Atendimento::create(array_merge($dadosValidados, [
-                'data_atendimento' => now(),
-                'status_atendimento' => 'Em Andamento'
-            ]));
+        $dadosValidados['user_id'] = auth()->id();
+        $dadosValidados['created_at'] = now();
+        $dadosValidados['status_atendimento'] = 'Em Andamento';
 
-            // 2. Se veio de um agendamento prévio, atualiza o status dele para 'Atendido'
-            if (!empty($dadosValidados['agendamento_id'])) {
-                Agendamento::where('id', $dadosValidados['agendamento_id'])
-                    ->update(['status' => 'Atendido']);
-            }
+        $atendimento = Atendimento::create($dadosValidados);
 
-            // 3. Se o paciente estava na fila eletrônica de espera da recepção, atualiza para 'Em Atendimento'
-            FilaAtendimento::where('paciente_id', $dadosValidados['paciente_id'])
-                ->where('status_fila', 'Chamado')
-                ->update(['status_fila' => 'Em Atendimento']);
-
-            return $atendimento;
-        });
-
-        return response()->json([
-            'message' => 'Atendimento iniciado com sucesso!',
-            'data' => $atendimento
-        ], 201);
+        return redirect()->route('atendimento.edit', $atendimento->id)
+            ->with('success', 'Atendimento iniciado! Agora você pode mapear os dentes ou finalizar o procedimento.');
     }
 
     /**
-     * Exibe os detalhes de um atendimento específico (útil para auditoria ou revisão).
-     */
-    public function show(Atendimento $atendimento)
-    {
-        $atendimento->load(['paciente', 'dentista', 'prontuario']);
-        return response()->json($atendimento);
-    }
-
-    /**
-     * Carrega a tela ou os dados para o dentista finalizar a consulta.
+     * Carrega a tela com os dados para o dentista editar ou finalizar a consulta.
      */
     public function edit(Atendimento $atendimento)
     {
         $atendimento->load(['paciente', 'dentista']);
-        return response()->json($atendimento);
+        
+        $pacientes = Paciente::orderBy('nome')->get();
+        $dentistas = Dentista::orderBy('nome')->get();
+        $agendamentos = Agendamento::where('id', $atendimento->agendamento_id)->get();
+
+        return view('dentista.atendimento.formulario', compact('atendimento', 'pacientes', 'dentistas', 'agendamentos'));
     }
 
     /**
-     * Finaliza o atendimento, salvando a evolução clínica no Prontuário.
+     * Salva as alterações intermediárias do atendimento (Salvar Rascunho).
      */
     public function update(Request $request, Atendimento $atendimento)
     {
-        // Valida o preenchimento obrigatório da evolução clínica (Prontuário) ao encerrar
+        $dadosValidados = $request->validate([
+            'paciente_id'            => 'required|exists:pacientes,id',
+            'dentista_id'            => 'required|exists:dentistas,id',
+            'agendamento_id'         => 'nullable|exists:agendamentos,id',
+            'procedimento_dente_id'  => 'nullable|exists:procedimento_dentes,id',
+            'queixa_principal'       => 'required|string|max:255',
+            'diagnostico'            => 'nullable|string',
+            'tratamento_executado'   => 'nullable|string',
+            'observacoes_clinicas'   => 'nullable|string',
+        ]);
+
+        $dadosValidados['user_id'] = auth()->id();
+
+        $atendimento->update($dadosValidados);
+
+        return redirect()->route('atendimento.index')
+            ->with('success', 'Alterações do atendimento salvas com sucesso!');
+    }
+
+    /**
+     * REGRA DE NEGÓCIO SEPARADA: Finaliza o atendimento de vez e gera o prontuário.
+     * Mapear esta função para uma rota específica, ex: Route::post('/atendimento/{atendimento}/finalizar', ...)
+     */
+    public function finalizar(Request $request, Atendimento $atendimento)
+    {
         $request->validate([
             'status_atendimento'  => 'required|string|in:Finalizado,Suspenso',
-            'evolucao_clinica'    => 'required|string|min:10', // Exige um relato mínimo do procedimento
+            'evolucao_clinica'    => 'required|string|min:10', 
             'prescricao_medica'   => 'nullable|string',
             'observacoes_finais'  => 'nullable|string'
         ]);
 
         DB::transaction(function () use ($request, $atendimento) {
             
-            // 1. Atualiza o status do Atendimento
+            // 1. Atualiza o status do Atendimento definitivo
             $atendimento->update([
                 'status_atendimento' => $request->status_atendimento,
-                'observacoes' => $request->observacoes_finais,
-                'hora_fim' => now() // Registra a hora exata do encerramento
+                'observacoes_clinicas' => $request->observacoes_finais, // Guardado no campo correto da tabela
+                'hora_fim' => now() 
             ]);
 
-            // 2. Cria automaticamente o Prontuário de evolução amarrado a este atendimento
+            // 2. Cria o Prontuário clínico permanente
             Prontuario::create([
                 'paciente_id'    => $atendimento->paciente_id,
                 'dentista_id'    => $atendimento->dentista_id,
@@ -133,15 +164,54 @@ class AtendimentoController extends Controller
                 'data_registro'  => now()
             ]);
 
-            // 3. Remove o paciente de vez da Fila de Atendimento do dia, marcando como concluído
+            // 3. Atualiza a fila de atendimento
             FilaAtendimento::where('paciente_id', $atendimento->paciente_id)
                 ->where('status_fila', 'Em Atendimento')
                 ->update(['status_fila' => 'Atendido']);
+                
+            // 4. Se veio de agendamento, marca o horário como concluído
+            if ($atendimento->agendamento_id) {
+                Agendamento::where('id', $atendimento->agendamento_id)->update(['status' => 'Concluido']);
+            }
         });
 
-        return response()->json([
-            'message' => 'Atendimento finalizado e prontuário registrado com sucesso!'
+        return redirect()->route('atendimento.index')
+            ->with('success', 'Atendimento finalizado e histórico clínico consolidado com sucesso!');
+    }
+
+    /**
+     * Salva via AJAX o dente clicado no Odontograma da View.
+     */
+    public function salvarProcedimentoDente(Request $request)
+    {
+        $request->validate([
+            'numero_dente' => 'required|integer',
+            'procedimento_id' => 'required|exists:procedimentos,id',
+            'observacao' => 'nullable|string'
         ]);
+
+        // Cria o registro na tabela que definimos no passo anterior
+        $procedimentoDente = ProcedimentoDente::create([
+            'numero_dente' => $request->numero_dente,
+            'procedimento_id' => $request->procedimento_id,
+            'observacao' => $request->observacao
+        ]);
+
+        // Retorna o ID criado para o JavaScript colocar no input oculto 'procedimento_dente_id'
+        return response()->json([
+            'success' => true, 
+            'id' => $procedimentoDente->id, 
+            'message' => 'Procedimento do dente mapeado!'
+        ]);
+    }
+
+    /**
+     * Exibe os detalhes de um atendimento específico (Modal ou Auditoria).
+     */
+    public function show(Atendimento $atendimento)
+    {
+        $atendimento->load(['paciente', 'dentista', 'prontuario']);
+        return response()->json($atendimento);
     }
 
     /**
@@ -149,20 +219,17 @@ class AtendimentoController extends Controller
      */
     public function destroy(Atendimento $atendimento)
     {
-        // Se o atendimento já foi finalizado e gerou prontuário legal, impede a exclusão física
         if ($atendimento->status_atendimento === 'Finalizado') {
-            return response()->json(['error' => 'Não é permitido excluir um atendimento já finalizado por motivos de histórico legal.'], 422);
+            return redirect()->back()->with('error', 'Não é permitido excluir um atendimento já finalizado por motivos de histórico legal.');
         }
 
-        // Caso contrário, desfaz os status e remove
         DB::transaction(function () use ($atendimento) {
             if ($atendimento->agendamento_id) {
-                // Devolve o agendamento para o estado anterior
                 Agendamento::where('id', $atendimento->agendamento_id)->update(['status' => 'Agendado']);
             }
             $atendimento->delete();
         });
 
-        return response()->json(['message' => 'Registro de atendimento removido com sucesso.']);
+        return redirect()->route('atendimento.index')->with('success', 'Registro de atendimento removido.');
     }
 }

@@ -5,6 +5,11 @@ use App\Http\Controllers\PacienteController;
 use App\Http\Controllers\DentistaController;
 use App\Http\Controllers\AgendamentoController;
 use App\Http\Controllers\ProcedimentoController;
+use App\Http\Controllers\AtendimentoController;
+use App\Http\Controllers\FinanceiroController;
+use App\Http\Controllers\FilaAgendamentoEsperaController;
+use App\Http\Controllers\MarcacaoController;
+use App\Http\Controllers\FilaAtendimentoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -40,7 +45,11 @@ Route::resource('dentista', DentistaController::class)->middleware('auth');
 Route::resource('agendamento', AgendamentoController::class)->middleware('auth');
 Route::resource('procedimento', ProcedimentoController::class)->middleware(['auth']);
 
-Route::resource('financeiro', AgendamentoController::class)->middleware(['auth']);
+Route::resource('financeiro', FinanceiroController::class)->middleware(['auth']);
+Route::resource('atendimento', AtendimentoController::class)->middleware(['auth']);
+Route::resource('filaAgendamentoEspera', FilaAgendamentoEsperaController::class)->middleware(['auth']);
+Route::resource('marcacao', MarcacaoController::class)->middleware(['auth']);
+Route::resource('filaAtendimento', FilaAtendimentoController::class)->middleware(['auth']);
 
 
 
