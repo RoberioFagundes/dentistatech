@@ -74,4 +74,8 @@ class Atendimento extends Model
         return $this->belongsTo(ProcedimentoDente::class, 'procedimento_dente_id');
     }
 
+    public function procedimento_dentes()
+    {
+        return $this->hasMany(ProcedimentoDente::class, 'atendimento_id');
+    }
 }

@@ -110,7 +110,7 @@ class AgendamentoController extends Controller
         Agendamento::create($dadosValidados);
 
         return redirect()
-            ->route('dentista.agendamento.index') // Ajustado o nome da rota conforme o método index anterior
+            ->route('agendamento.index') // Ajustado o nome da rota conforme o método index anterior
             ->with('success', 'Agendamento realizado com sucesso!');
     }
 

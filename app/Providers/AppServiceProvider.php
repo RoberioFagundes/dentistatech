@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Support\Facades\Event;
+// Adicione esta linha aqui:
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,5 +36,11 @@ class AppServiceProvider extends ServiceProvider
                 throw new \Exception("ALERTA: O comando '{$event->command}' está permanentemente desativado no ambiente de produção para proteger os dados.");
             }
         });
+
+         // Force Laravel to use Bootstrap 5 styling globally
+        Paginator::useBootstrapFive();
+
+        // Alternatively, use Bootstrap 4:
+        // Paginator::useBootstrapFour();
     }
 }
