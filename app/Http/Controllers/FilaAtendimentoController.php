@@ -1,28 +1,35 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers; // Verifique se este namespace está correto
 
+use App\Http\Controllers\Controller; // IMPORTANTE: Importe a classe base
+use Illuminate\Http\Request;
 use App\Models\FilaAtendimento;
 use App\Models\Agendamento;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FilaAtendimentoController extends Controller
 {
     /**
      * Exibe a listagem da fila de espera do dia atual.
      */
+
     public function index(Request $request)
     {
-        // Traz apenas os pacientes que deram entrada na fila HOJE
-        // Carrega os dados do paciente e o dentista com quem ele passará
-        $fila = FilaAtendimento::with(['paciente', 'dentista'])
-            ->whereDate('created_at', today())
-            ->whereIn('status_fila', ['Aguardando', 'Chamado', 'Em Atendimento'])
-            ->orderBy('prioridade', 'desc') // Prioridades maiores (Ex: Idosos, Urgências) vêm antes
-            ->orderBy('created_at', 'asc')   // Em caso de mesma prioridade, quem chegou primeiro é atendido antes
-            ->get();
+        // Verifica se o usuário está logado
+        $user = auth()->user();
 
-        return response()->json($fila);
+        // Consulta filtrando pela data, status e opcionalmente pelo ID do dentista
+        $fila = FilaAtendimento::with(['paciente', 'dentista'])
+            ->whereDate('chegada_em', today())
+            ->whereIn('status_fila', ['AGUARDANDO', 'EM_ATENDIMENTO'])
+            // Se você precisar que o dentista veja APENAS os pacientes dele:
+            // ->where('dentista_id', $user->dentista_id) 
+            ->orderBy('prioridade', 'desc')
+            ->orderBy('chegada_em', 'asc')
+            ->paginate(15);
+
+        return view('dentista.filaAtendimento.index', compact('fila'));
     }
 
     /**
