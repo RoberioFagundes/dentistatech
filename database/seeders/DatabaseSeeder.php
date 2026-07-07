@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Dentista; // <--- Adicione esta linha!
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,7 +16,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Agora o PHP reconhece a classe Dentista
+        Dentista::factory(20)->create();
 
         User::factory()->create([
             'name' => 'Test User',

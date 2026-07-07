@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FilaAgendamento;
 use Illuminate\Http\Request;
 
 class FilaAgendamentoController extends Controller
@@ -33,7 +34,7 @@ class FilaAgendamentoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(FilaAgendamento $filaAgendamento)
     {
         //
     }
@@ -41,7 +42,7 @@ class FilaAgendamentoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(FilaAgendamento $filaAgendamento)
     {
         //
     }
@@ -49,7 +50,7 @@ class FilaAgendamentoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, FilaAgendamento $filaAgendamento)
     {
         //
     }
@@ -57,7 +58,7 @@ class FilaAgendamentoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(FilaAgendamento $filaAgendamento)
     {
         //
     }

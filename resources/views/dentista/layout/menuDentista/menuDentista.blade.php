@@ -238,15 +238,15 @@
 
     <li class="sidebar-item">
         <a class="sidebar-link d-flex align-items-center gap-3 py-2 px-3 rounded-2 text-decoration-none {{ request()->routeIs('filaAgendamentoEspera.*') ? 'active bg-primary text-white' : 'text-dark' }}"
-           href="{{ route('filaAgendamentoEspera.index') }}">
+           href="{{ route('filaAgendamentoEspera.create') }}">
             <i class="bi bi-hourglass-split fs-5"></i>
             <span class="hide-menu fw-medium">Fila de Espera</span>
         </a>
     </li>
 
     <li class="sidebar-item">
-        <a class="sidebar-link d-flex align-items-center gap-3 py-2 px-3 rounded-2 text-decoration-none {{ request()->routeIs('marcacao.*') ? 'active bg-primary text-white' : 'text-dark' }}"
-           href="{{ route('marcacao.index') }}">
+        <a class="sidebar-link d-flex align-items-center gap-3 py-2 px-3 rounded-2 text-decoration-none {{ request()->routeIs('remarcacao.*') ? 'active bg-primary text-white' : 'text-dark' }}"
+           href="{{ route('remarcacao.index') }}">
             <i class="bi bi-calendar-range fs-5"></i>
             <span class="hide-menu fw-medium">Remarcação</span>
         </a>

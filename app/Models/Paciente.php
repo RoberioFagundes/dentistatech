@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Factories\HasFactory; // <--- ADICIONE ESTA IMPORTAÇÃO
+
 
 class Paciente extends Model
 {
+    use HasFactory;
     // Define explicitamente o nome da tabela (padrão em português)
     protected $table = "pacientes";
 

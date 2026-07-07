@@ -8,7 +8,8 @@ use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\AtendimentoController;
 use App\Http\Controllers\FinanceiroController;
 use App\Http\Controllers\FilaAgendamentoEsperaController;
-use App\Http\Controllers\MarcacaoController;
+// use App\Http\Controllers\FilaEsperaAgendamentoController;
+use App\Http\Controllers\RemacacaoController;
 use App\Http\Controllers\FilaAtendimentoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -39,18 +40,27 @@ Route::middleware('auth')->group(function () {
 });
 
 
-// Protegendo os recursos para que o Auth::user() nunca venha vazio
-Route::resource('paciente', PacienteController::class)->middleware('auth');
-Route::resource('dentista', DentistaController::class)->middleware('auth');
-Route::resource('agendamento', AgendamentoController::class)->middleware('auth');
-Route::resource('procedimento', ProcedimentoController::class)->middleware(['auth']);
+Route::middleware(['auth'])->group(function () {
+    // Recursos padrão
+    Route::resource('paciente', PacienteController::class);
+    Route::resource('dentista', DentistaController::class);
+    Route::resource('agendamento', AgendamentoController::class);
+    Route::resource('procedimento', ProcedimentoController::class);
+    Route::resource('financeiro', FinanceiroController::class);
+    Route::resource('atendimento', AtendimentoController::class);
+    Route::resource('remarcacao', RemacacaoController::class);
+    Route::resource('filaAtendimento', FilaAtendimentoController::class);
 
-Route::resource('financeiro', FinanceiroController::class)->middleware(['auth']);
-Route::resource('atendimento', AtendimentoController::class)->middleware(['auth']);
-Route::resource('filaAgendamentoEspera', FilaAgendamentoEsperaController::class)->middleware(['auth']);
-Route::resource('marcacao', MarcacaoController::class)->middleware(['auth']);
-Route::resource('filaAtendimento', FilaAtendimentoController::class)->middleware(['auth']);
-
+    // Rotas específicas da Fila de Espera (Mantendo apenas um grupo limpo)
+    Route::prefix('filaAgendamentoEspera')->group(function () {
+        Route::get('/', [FilaAgendamentoEsperaController::class, 'index'])->name('filaAgendamentoEspera.index');
+        Route::get('create', [FilaAgendamentoEsperaController::class, 'create'])->name('filaAgendamentoEspera.create');
+        Route::get('/{id}/editar', [FilaAgendamentoEsperaController::class, 'edit'])->name('filaAgendamentoEspera.edit');
+        Route::put('/{id}', [FilaAgendamentoEsperaController::class, 'updateFilaEsperaAgendamento'])->name('filaAgendamentoEspera.update');
+        Route::delete('/{id}', [FilaAgendamentoEsperaController::class, 'deleteFilaEsperaAgendamento'])->name('filaAgendamentoEspera.destroy');
+        Route::post('/salvar', [FilaAgendamentoEsperaController::class, 'storeFilaEsperaAgendamento'])->name('filaAgendamentoEspera.store');
+    });
+});
 
 
 

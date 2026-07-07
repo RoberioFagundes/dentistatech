@@ -17,9 +17,15 @@ class FinanceiroController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+   public function index()
     {
-        //
+        // Busca apenas os registros do usuário logado
+        // O 'latest()' ordena pelos mais recentes
+        $financeiros = \App\Models\Pagamento::where('user_id', auth()->id())
+            ->latest()
+            ->paginate(10);
+
+        return view('dentista.financeiro.index', compact('financeiros'));
     }
 
     /**
@@ -28,6 +34,7 @@ class FinanceiroController extends Controller
     public function create()
     {
         //
+        return view('dentista.financeiro.formulario');
     }
 
     /**
@@ -49,9 +56,9 @@ class FinanceiroController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        //
+   public function edit($id) { 
+    $financeiro = Financeiro::findOrFail($id);
+        return view('dentista.financeiro.formulario', compact('financeiro')); 
     }
 
     /**

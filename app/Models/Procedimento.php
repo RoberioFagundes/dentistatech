@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory; // <--- ADICIONE ESTA IMPORTAÇÃO
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Procedimento extends Model
 {
+    use HasFactory;
     // Define explicitamente o nome da tabela no plural
     protected $table = "procedimentos";
 
