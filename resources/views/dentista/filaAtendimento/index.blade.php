@@ -56,7 +56,7 @@
                                     
                                     <td>
                                         <div class="d-flex justify-content-center gap-2">
-                                            <form action="{{ route('filaAtendimento.confirmar', $filas->id) }}" method="POST" class="ajax-form">
+                                            <form action="#" method="POST" class="ajax-form">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-success d-flex align-items-center btn-acao">
                                                     <i class="fa fa-check me-1"></i> Confirmar

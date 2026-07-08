@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Remacacao;
+use App\Models\Agendamento;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,20 +12,19 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class RemacacaoFactory extends Factory
 {
+    protected $model = Remacacao::class;
+
     /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
+     * Define o estado padrão do modelo.
      */
     public function definition(): array
     {
         return [
-            //
-            'paciente_id' => Paciente::inRandomOrder()->first()->id ?? 1,
-            'descricao' => fake()->sentence(),
-            'created_at' => fake()->dateTime(),
-            'updated_at' => fake()->dateTime(),
-            
+            'agendamento_id' => Agendamento::factory(),
+            'data_anterior'  => fake()->dateTimeBetween('-1 month', 'now'),
+            'data_nova'      => fake()->dateTimeBetween('now', '+1 month'),
+            'motivo'         => fake()->optional()->sentence(),
+            'user_id'        => User::factory(),
         ];
     }
 }

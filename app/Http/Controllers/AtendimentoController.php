@@ -56,27 +56,24 @@ class AtendimentoController extends Controller implements HasMiddleware
      */
     public function create()
     {
-        // 1. Pega o ID do usuário que está logado agora
         $userId = auth()->id();
-
-        // 2. Busca na tabela de dentistas quem é o dentista que tem esse user_id
         $dentista = Dentista::where('user_id', $userId)->first();
 
-        // 3. Verifica se encontrou um dentista vinculado a este usuário
-        if ($dentista) {
-            // Filtra apenas os agendamentos que pertencem a este dentista
-            $agendamentos = Agendamento::where('status', 'AGENDADO')
-                ->where('dentista_id', $dentista->id)
-                ->orderBy('data', 'asc')
-                ->get();
-        } else {
-            // Caso o usuário logado não seja um dentista, deixa vazio
-            $agendamentos = collect();
-        }
+        // Filtro mais leve
+        $agendamentos = $dentista
+            ? Agendamento::where('status', 'AGENDADO')
+            ->where('dentista_id', $dentista->id)
+            ->limit(50) // Limite registros para não explodir a memória
+            ->get(['id', 'data', 'hora_inicio', 'paciente_id']) // Selecione apenas colunas necessárias
+            : collect();
 
-        $pacientes = Paciente::orderBy('nome')->get();
-        $procedimentoDentes = Procedimento::all();
-        $dentistas = Dentista::orderBy('nome')->get();
+        // BUSCA OTIMIZADA: Use ->select() para não trazer colunas 'text' pesadas (como histórico, descrições, etc)
+        $pacientes = Paciente::select('id', 'nome', 'sobrenome')->orderBy('nome')->get();
+
+        // ATENÇÃO: Procedimento::all() traz a descrição inteira. Se a descrição for texto longo, isso mata a memória.
+        $procedimentoDentes = Procedimento::select('id', 'nome', 'valor')->orderBy('nome')->get();
+
+        $dentistas = Dentista::select('id', 'nome', 'sobrenome')->orderBy('nome')->get();
 
         return view('dentista.atendimento.formulario', compact('pacientes', 'agendamentos', 'procedimentoDentes', 'dentistas'));
     }
@@ -117,25 +114,34 @@ class AtendimentoController extends Controller implements HasMiddleware
     /**
      * Carrega a tela com os dados para o dentista editar ou finalizar a consulta.
      */
-    public function edit(Atendimento $atendimento)
+    public function edit($id)
     {
+        // 1. Busca segura: Se não encontrar, redireciona com mensagem, sem erro 500
+        $atendimento = Atendimento::find($id);
+        if (!$atendimento) {
+            return redirect()->route('atendimento.index')->with('error', 'Atendimento não encontrado.');
+        }
+
         $userId = auth()->id();
         $dentista = Dentista::where('user_id', $userId)->first();
 
-        $agendamentos = $dentista 
-            ? Agendamento::where('status', 'AGENDADO')->where('dentista_id', $dentista->id)->get()
+        // 2. Otimização de consultas (Use 'select' para trazer só o que precisa)
+        $agendamentos = $dentista
+            ? Agendamento::where('status', 'AGENDADO')
+            ->where('dentista_id', $dentista->id)
+            ->get()
             : collect();
 
-        // Carregue os dados necessários para o formulário
-        $pacientes = Paciente::orderBy('nome')->get();
+        // 3. Garantia de dados: Se a lista estiver vazia, a view não quebra
+        $pacientes = Paciente::orderBy('nome')->get(['id', 'nome']);
         $procedimentoDentes = Procedimento::all();
-        $dentistas = Dentista::orderBy('nome')->get();
+        $dentistas = Dentista::orderBy('nome')->get(['id', 'nome']);
 
         return view('dentista.atendimento.formulario', compact(
-            'atendimento', 
-            'pacientes', 
-            'agendamentos', 
-            'procedimentoDentes', 
+            'atendimento',
+            'pacientes',
+            'agendamentos',
+            'procedimentoDentes',
             'dentistas'
         ));
     }
@@ -247,20 +253,14 @@ class AtendimentoController extends Controller implements HasMiddleware
     /**
      * Remove ou cancela um registro de atendimento.
      */
-    public function destroy(Atendimento $atendimento)
+    public function destroy($id)
     {
-        if ($atendimento->status_atendimento === 'Finalizado') {
-            return redirect()->back()->with('error', 'Não é permitido excluir um atendimento já finalizado por motivos de histórico legal.');
-        }
+        // 1. Primeiro, deleta os agendamentos vinculados
+        \App\Models\Agendamento::where('atendimento_id', $id)->delete();
 
-        DB::transaction(function () use ($atendimento) {
-            if ($atendimento->agendamento_id) {
-                Agendamento::where('id', $atendimento->agendamento_id)->update(['status' => 'Agendado']);
-            }
+        // 2. Depois, deleta o atendimento
+        \App\Models\Atendimento::destroy($id);
 
-            $atendimento->delete();
-        });
-
-        return redirect()->route('atendimento.index')->with('success', 'Registro de atendimento removido.');
+        return redirect()->back()->with('success', 'Atendimento e agendamentos removidos com sucesso!');
     }
 }

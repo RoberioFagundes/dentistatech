@@ -52,7 +52,7 @@
 
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="text-secondary fw-bold mb-0">Gerenciamento da Fila</h5>
-                            <a class="btn btn-success btn-sm px-3 shadow-sm" href="{{ route('create-fila-agendamento') }}"
+                            <a class="btn btn-success btn-sm px-3 shadow-sm" href="{{ route('filaAgendamentoEspera.create') }}"
                                 target="_blank">
                                 <i class="fa fa-plus me-1"></i> Novo Registro na Fila
                             </a>
@@ -97,26 +97,25 @@
                                         </thead>
 
                                         <tbody>
-                                            @forelse ($FilaEspera as $agend)
+                                            @forelse ($filas as $agend)
                                                 <tr>
                                                     <td class="p-2">
                                                         <input type="checkbox" name="selecionados[]"
                                                             value="{{ $agend->id }}"
                                                             class="form-check-input row-checkbox">
                                                     </td>
-                                                    <td class="p-2 fw-bold text-primary">
-                                                        {{ $FilaEspera->firstItem() + $loop->index }}
-                                                    </td>
+                                                    <td class="p-2 fw-semibold text-secondary">
+                                                        {{ $loop->iteration + ($filas->currentPage() - 1) * $filas->perPage() }}
                                                     <td class="text-start p-2">
                                                         <div class="fw-bold text-dark text-uppercase"
                                                             style="font-size: 0.85rem; line-height: 1.2;">
-                                                            {{ $agend->pessoa->nome }}
+                                                            {{ $agend->paciente->nome }}
                                                         </div>
                                                         <div class="d-flex flex-wrap gap-2 mt-1"
                                                             style="font-size: 0.75rem;">
                                                             <span class="text-muted">
                                                                 <i
-                                                                    class="fa fa-phone me-1"></i>{{ $agend->pessoa->telefone }}
+                                                                    class="fa fa-phone me-1"></i>{{ $agend->paciente->telefone }}
                                                             </span>
                                                             <span class="text-secondary">
                                                                 <i class="fa fa-calendar-o me-1"></i>Cad:
@@ -294,7 +293,11 @@
                                 <div
                                     class="p-3 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <div>
-                                        {{ $FilaEspera->withQueryString()->links() }}
+                                        @if ($filas->hasPages())
+                                            <div class="d-flex justify-content-center">
+                                                {{ $filas->links('pagination::bootstrap-5') }}
+                                            </div>
+                                        @endif
                                     </div>
                                     <button type="submit" class="btn btn-primary shadow-sm">
                                         <i class="fa fa-calendar-check-o me-1"></i> Agendar Selecionados
@@ -310,141 +313,65 @@
     </div>
 
     <script>
-    
-        document.querySelectorAll('.parecer-input').forEach(textarea => {
+    // Configurações e variáveis globais
+    const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
+    let debounceTimer;
 
-            textarea.addEventListener('blur', function() {
-
-                let id = this.dataset.id;
-                let parecer = this.value;
-
-                fetch(`/fila-espera/atualizar-parecer/${id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector(
-                                'meta[name="csrf-token"]'
-                            ).getAttribute('content')
-                        },
-                        body: JSON.stringify({
-                            parecer_telefonico: parecer
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Parecer salvo');
-                    })
-                    .catch(error => {
-                        console.error('Erro ao salvar parecer:', error);
-                    });
-
-            });
-
+    // --- FUNÇÃO DE SALVAMENTO (Parecer Telefônico) ---
+    function salvarParecer(inputElement) {
+        const id = inputElement.dataset.id;
+        const valor = inputElement.value;
+        
+        // Feedback visual: Indica que está salvando
+        inputElement.classList.add('border-warning');
+        
+        fetch(`/fila-espera/atualizar-parecer/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF_TOKEN
+            },
+            body: JSON.stringify({ parecer_telefonico: valor })
+        })
+        .then(response => response.json())
+        .then(() => {
+            // Sucesso: feedback visual de ok
+            inputElement.classList.replace('border-warning', 'border-success');
+            setTimeout(() => inputElement.classList.remove('border-success'), 2000);
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            inputElement.classList.remove('border-warning');
+            alert('Erro ao salvar o parecer.');
         });
-        document.addEventListener('DOMContentLoaded', function() {
-            const formAgendar = document.getElementById('formAgendarSelecionados');
-            const checkAll = document.getElementById('checkAll');
-            const checkboxes = document.querySelectorAll('.row-checkbox');
+    }
 
-            function inicializarInputs() {
-                checkboxes.forEach(cb => {
-                    atualizarEstadoLinha(cb);
-                });
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DELEGAÇÃO DE EVENTOS (Performance para listas longas) ---
+        document.querySelector('table').addEventListener('input', (e) => {
+            if (e.target.classList.contains('parecer-input')) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => salvarParecer(e.target), 600);
             }
-
-            function atualizarEstadoLinha(checkbox) {
-                const id = checkbox.value;
-                const dateInput = document.querySelector(`input[name="datas[${id}]"]`);
-                const motivoSelect = document.querySelector(`select[name="motivos[${id}]"]`);
-                // Seletor atualizado para bater com o novo nome da textarea
-                const parecerInput = document.querySelector(`textarea[name="pareceres_telefonicos[${id}]"]`);
-
-                if (dateInput) {
-                    dateInput.required = checkbox.checked;
-                    dateInput.disabled = !checkbox.checked;
-
-                    if (checkbox.checked) {
-                        dateInput.classList.add('border-primary');
-                    } else {
-                        dateInput.classList.remove('border-primary', 'is-invalid');
-                    }
-                }
-
-                if (motivoSelect) {
-                    motivoSelect.disabled = !checkbox.checked;
-                }
-
-                // Controla a digitação baseado no checkbox (Readonly em vez de Disabled)
-                if (parecerInput) {
-                    parecerInput.readOnly = !checkbox.checked;
-
-                    if (checkbox.checked) {
-                        parecerInput.classList.add('border-primary');
-                    } else {
-                        parecerInput.classList.remove('border-primary');
-                    }
-                }
-            }
-
-            checkboxes.forEach(cb => {
-                cb.addEventListener('change', function() {
-                    atualizarEstadoLinha(this);
-
-                    if (!this.checked && checkAll) {
-                        checkAll.checked = false;
-                    }
-
-                    if (checkAll && document.querySelectorAll('.row-checkbox:checked').length ===
-                        checkboxes.length) {
-                        checkAll.checked = true;
-                    }
-                });
-            });
-
-            if (checkAll) {
-                checkAll.addEventListener('change', function() {
-                    const isChecked = this.checked;
-                    checkboxes.forEach(cb => {
-                        cb.checked = isChecked;
-                        atualizarEstadoLinha(cb);
-                    });
-                });
-            }
-
-            if (formAgendar) {
-                formAgendar.addEventListener('submit', function(e) {
-                    const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
-
-                    if (checkedBoxes.length === 0) {
-                        e.preventDefault();
-                        alert('Por favor, selecione pelo menos uma pessoa para realizar o agendamento.');
-                        return false;
-                    }
-
-                    let invalid = false;
-                    checkedBoxes.forEach(cb => {
-                        const id = cb.value;
-                        const dateInput = document.querySelector(`input[name="datas[${id}]"]`);
-
-                        if (!dateInput || !dateInput.value) {
-                            invalid = true;
-                            dateInput.classList.add('is-invalid');
-                        } else {
-                            dateInput.classList.remove('is-invalid');
-                        }
-                    });
-
-                    if (invalid) {
-                        e.preventDefault();
-                        alert(
-                            'Você marcou uma ou mais linhas sem informar a data/hora. Por favor, preencha os campos destacados.'
-                            );
-                        return false;
-                    }
-                });
-            }
-
-            inicializarInputs();
         });
-    </script>
+
+        // --- LÓGICA DE AGENDAMENTO (Formulário) ---
+        const form = document.getElementById('formAgendarSelecionados');
+        
+        form.addEventListener('submit', function(e) {
+            const btn = this.querySelector('button[type="submit"]');
+            const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+            
+            if (checkboxes.length === 0) {
+                e.preventDefault();
+                alert('Selecione ao menos um paciente.');
+                return;
+            }
+
+            // Prevenir duplo clique
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processando...';
+        });
+    });
+</script>
 @endsection

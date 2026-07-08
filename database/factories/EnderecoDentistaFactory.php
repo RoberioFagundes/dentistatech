@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\EnderecoDentistaAtendimento;
+use App\Models\Dentista; // Importação necessária
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,22 +11,24 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class EnderecoDentistaFactory extends Factory
 {
+    protected $model = EnderecoDentistaAtendimento::class;
+
     /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
+     * Define o estado padrão do modelo.
      */
     public function definition(): array
     {
         return [
-            //
-            'rua' => fake()->streetName(),
-            'numero' => fake()->buildingNumber(),
-            'bairro' => fake()->neighborhood(),
-            'cidade' => fake()->city(),
-            'estado' => fake()->state(),
-            'cep' => fake()->postcode(),
-            'dentista_id' => Dentista::inRandomOrder()->first()->id ?? 1,
+            'rua'         => fake()->streetName(),
+            'numero'      => fake()->buildingNumber(),
+            'bairro'      => fake()->word(), // 'neighborhood' não existe no Faker padrão
+            'cidade'      => fake()->city(),
+            'estado'      => fake()->stateAbbr(), // 'stateAbbr' retorna siglas (ex: SP, RJ)
+            'cep'         => fake()->postcode(),
+            'pais'        => 'Brasil', // Ou fake()->country()
+            
+            // Relacionamento: cria um novo dentista se não existir nenhum
+            'dentista_id' => Dentista::factory(), 
         ];
     }
 }

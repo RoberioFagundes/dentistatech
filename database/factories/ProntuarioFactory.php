@@ -3,6 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Prontuario;
+use App\Models\Procedimento;
+use App\Models\Paciente;
+use App\Models\Agendamento;
+use App\Models\Dentista;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,20 +15,26 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ProntuarioFactory extends Factory
 {
+    protected $model = Prontuario::class;
+
     /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
+     * Define o estado padrão do modelo.
      */
     public function definition(): array
     {
         return [
-            //
-            'paciente_id' => Paciente::inRandomOrder()->first()->id ?? 1,
-            'descricao' => fake()->sentence(),
-            'created_at' => fake()->dateTime(),
-            'updated_at' => fake()->dateTime(),
+            'queixa_principal' => fake()->optional()->sentence(),
+            'historia_clinica' => fake()->optional()->paragraph(),
+            'diagnostico'      => fake()->optional()->sentence(),
+            'evolucao'         => fake()->optional()->paragraph(),
+            'observacoes'      => fake()->optional()->text(255),
             
+            // Relacionamentos Opcionais (Conforme seu esquema)
+            'procedimento_id'  => fake()->boolean(70) ? Procedimento::factory() : null,
+            'paciente_id'      => fake()->boolean(80) ? Paciente::factory() : null,
+            'agendamento_id'   => fake()->boolean(60) ? Agendamento::factory() : null,
+            'dentista_id'      => fake()->boolean(70) ? Dentista::factory() : null,
+            'user_id'          => fake()->boolean(50) ? User::factory() : null,
         ];
     }
 }

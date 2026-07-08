@@ -15,13 +15,13 @@ class FilaAtendimento extends Model
     protected $table = "fila_atendimentos";
 
     protected $fillable = [
-        'paciente_id',
-        'dentista_id',
         'agendamento_id',
-        'user_id',
-        'posicao',           // Número da senha ou ordem numérica na fila
-        'status_fila',       // Ex: 'Aguardando', 'Chamado', 'Em Atendimento', 'Ausente'
-        'hora_chegada'
+        'status_fila',
+        'prioridade',
+        'chegada_em',
+        'chamado_em',
+        'user_id'
+    
     ];
 
     /**

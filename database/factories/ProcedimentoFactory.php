@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Procedimento;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,21 +11,22 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ProcedimentoFactory extends Factory
 {
+    protected $model = Procedimento::class;
+
     /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
+     * Define o estado padrão do modelo.
      */
     public function definition(): array
     {
         return [
-            //
-            'nome' => fake()->word(),
-            'descricao' => fake()->sentence(),
-            'preco' => fake()->randomFloat(2, 10, 100),
-            'created_at' => fake()->dateTime(),
-            'updated_at' => fake()->dateTime(),
+            'nome'            => fake()->randomElement(['Limpeza', 'Restauração', 'Canal', 'Extração', 'Clareamento', 'Implante']),
+            'descricao'       => fake()->optional()->sentence(),
+            'valor'           => fake()->randomFloat(2, 50, 1500),
+            'duracao_minutos' => fake()->randomElement([30, 45, 60, 90]),
+            'ativo'           => fake()->boolean(90), // 90% de chance de estar ativo
             
+            // Relacionamento opcional
+            'user_id'         => fake()->boolean ? User::factory() : null,
         ];
     }
 }

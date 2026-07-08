@@ -45,40 +45,33 @@ class FilaAtendimentoController extends Controller
      */
     public function store(Request $request)
     {
-        // Validação dos dados de entrada
-        $dadosValidados = $request->validate([
-            'paciente_id'    => 'required|exists:pacientes,id',
-            'dentista_id'    => 'required|exists:dentistas,id',
-            'agendamento_id' => 'nullable|exists:agendamentos,id',
-            'prioridade'     => 'required|integer|in:0,1', // 0 = Normal, 1 = Prioritário (Idoso, Gestante, Dor Aguda)
-            'observacoes'    => 'nullable|string|max:255'
+        $request->validate([
+            'agendamento_id' => 'required|exists:agendamentos,id',
         ]);
 
-        // Regra de Negócio: Impede colocar o mesmo paciente duas vezes na fila ativa simultaneamente
-        $jaNaFila = FilaAtendimento::where('paciente_id', $request->paciente_id)
-            ->whereDate('created_at', today())
-            ->whereIn('status_fila', ['Aguardando', 'Chamado', 'Em Atendimento'])
-            ->exists();
+        // Verifica se o agendamento já está na fila
+        $filaExistente = FilaAtendimento::where('agendamento_id', $request->agendamento_id)
+            ->whereIn('status_fila', ['AGUARDANDO', 'EM_ATENDIMENTO'])
+            ->first();
 
-        if ($jaNaFila) {
-            return response()->json(['error' => 'Este paciente já se encontra na fila de espera de hoje.'], 422);
+        if ($filaExistente) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este paciente já está na fila.'
+            ], 422);
         }
 
-        // Se a entrada veio a partir de um agendamento prévio, atualiza o status na agenda para "Confirmado" ou "Presente"
-        if (!empty($request->agendamento_id)) {
-            Agendamento::where('id', $request->agendamento_id)->update(['status' => 'Confirmado']);
-        }
+        $fila = FilaAtendimento::create([
+            'agendamento_id' => $request->agendamento_id,
+            'status_fila'    => 'AGUARDANDO',
+            'prioridade'     => 0,
+            'chegada_em'     => now(),
+            'user_id'        => auth()->id(),
+        ]);
 
-        // Cria o registro na fila com o estado inicial
-        $entradaFila = FilaAtendimento::create(array_merge($dadosValidados, [
-            'status_fila' => 'Aguardando',
-            'hora_chegada' => now()
-        ]));
-
-        return response()->json([
-            'message' => 'Paciente adicionado à fila de espera com sucesso!',
-            'data' => $entradaFila
-        ], 201);
+        return redirect()
+            ->route('filaAtendimento.index')
+            ->with('success', 'Paciente adicionado à fila com sucesso!');
     }
 
     /**

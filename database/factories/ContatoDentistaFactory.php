@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\ContatoDentista;
+use App\Models\Dentista;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,20 +12,24 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ContatoDentistaFactory extends Factory
 {
+    protected $model = ContatoDentista::class;
+
     /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
+     * Define o estado padrão do modelo.
      */
     public function definition(): array
     {
         return [
-            //
-            'telefone' => fake()->phoneNumber(),
-            'email' => fake()->unique()->safeEmail(),
-            'whatsapp' => fake()->cellphoneNumber(),
-            'user_id' => 1, // Ajuste conforme seu sistema de autenticação
-            'dentista_id' => Dentista::inRandomOrder()->first()->id ?? 1,
+            'telefone'    => fake()->phoneNumber(),
+            'email'       => fake()->safeEmail(),
+            'whatsapp'    => fake()->phoneNumber(),
+            
+            // Relacionamentos
+            // Se 'user_id' pode ser nulo, usamos opcionalmente uma factory ou null
+            'user_id'     => fake()->boolean ? User::factory() : null,
+            
+            // Relacionamento obrigatório com Dentista
+            'dentista_id' => Dentista::factory(),
         ];
     }
 }

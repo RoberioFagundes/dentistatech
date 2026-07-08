@@ -60,6 +60,18 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [FilaAgendamentoEsperaController::class, 'deleteFilaEsperaAgendamento'])->name('filaAgendamentoEspera.destroy');
         Route::post('/salvar', [FilaAgendamentoEsperaController::class, 'storeFilaEsperaAgendamento'])->name('filaAgendamentoEspera.store');
     });
+
+     Route::delete(
+        '/fila/agendar-selecionados',
+        [FilaAgendamentoEsperaController::class, 'agendarSelecionados']
+    )->middleware('auth')
+        ->name('fila.agendarSelecionados');
+
+    Route::delete('/filaAgendamentoEspera/{id}', [FilaAgendamentoEsperaController::class, 'deleteFilaEsperaAgendamento'])->middleware('auth')->name('fila-delete-espera');
+    
+    Route::post('/fila-atendimento/adicionar',
+    [FilaAtendimentoController::class,'store'])->middleware('auth')
+    ->name('fila.adicionar');
 });
 
 

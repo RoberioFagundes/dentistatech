@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\ContatoPaciente;
+use App\Models\Paciente;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,20 +13,28 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class ContatoPacienteFactory extends Factory
 {
     /**
-     * Define the model's default state.
+     * O modelo associado a esta factory.
+     */
+    protected $model = ContatoPaciente::class;
+
+    /**
+     * Define o estado padrão do modelo.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            //
-            'telefone' => fake()->phoneNumber(),
-            'email' => fake()->unique()->safeEmail(),
-            'whatsapp' => fake()->cellphoneNumber(),
-            'user_id' => 1, // Ajuste conforme seu sistema de autenticação
-            'paciente_id' => Paciente::inRandomOrder()->first()->id ?? 1,
+            'telefone'    => fake()->phoneNumber(),
+            'whatsapp'    => fake()->cellphone(),
             
+            // Campos que aceitam NULL
+            'email'       => fake()->optional()->safeEmail(),
+            'site'        => fake()->optional()->url(),
+            
+            // Relacionamentos: gera um novo registro ou retorna null aleatoriamente
+            'user_id'     => fake()->boolean ? User::factory() : null,
+            'paciente_id' => fake()->boolean ? Paciente::factory() : null,
         ];
     }
 }

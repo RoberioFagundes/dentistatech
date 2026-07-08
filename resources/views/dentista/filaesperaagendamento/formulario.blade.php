@@ -8,11 +8,11 @@
 
     <div class="row g-3">
         <div class="col-md-6">
-            <label for="pessoa_id" class="form-label">Paciente</label>
-            <select name="pessoa_id" id="pessoa_id" class="form-select" required>
+            <label for="paciente_id" class="form-label">Paciente</label>
+            <select name="paciente_id" id="paciente_id" class="form-select" required>
                 <option value="">Selecione um paciente...</option>
                 @foreach($pacientes as $paciente)
-                    <option value="{{ $paciente->id }}" {{ (isset($fila) && $fila->pessoa_id == $paciente->id) ? 'selected' : '' }}>
+                    <option value="{{ $paciente->id }}" {{ (isset($fila) && $fila->paciente_id == $paciente->id) ? 'selected' : '' }}>
                         {{ $paciente->nome }}
                     </option>
                 @endforeach

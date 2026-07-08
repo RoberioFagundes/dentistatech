@@ -15,32 +15,30 @@ class AgendamentoController extends Controller
     /**
      * Exibe a listagem de agendamentos (Agenda do Dia/Mês).
      */
- public function index(Request $request)
-{
-    // Captura a data se o usuário quiser filtrar, mas não a torna obrigatória por padrão
-    $dataFiltro = $request->get('data');
+    public function index(Request $request)
+    {
+        $nomeFiltro = $request->get('nome');
+        $dataFiltro = $request->get('data');
 
-    // Inicia a query trazendo as relações corretas e filtrando pelo usuário logado
-    $query = Agendamento::with([
-        'paciente',
-        'dentista',
-        'atendimento' // <-- Corrigido para 'atendimento', que é o nome real do método na sua Model Agendamento
-    ])
-    ->where('user_id', auth()->id()); // Filtra apenas os agendamentos do usuário autenticado
+        $query = Agendamento::query();
 
-    // Se o usuário passar uma data no filtro da tela, aplica o filtro. 
-    // Se não passar nada, traz TODOS os agendamentos de todas as datas.
-    if ($dataFiltro) {
-        $query->whereDate('data', $dataFiltro);
+        // Filtro por Nome (Busca Parcial e Case-Insensitive)
+        if (!empty($nomeFiltro)) {
+            $query->whereHas('paciente', function ($q) use ($nomeFiltro) {
+                // O uso de 'LIKE' com '%' permite buscar partes do nome
+                $q->where('nome', 'LIKE', '%' . $nomeFiltro . '%');
+            });
+        }
+
+        // Filtro por Data
+        if (!empty($dataFiltro)) {
+            $query->whereDate('data', $dataFiltro);
+        }
+
+        $agendamentos = $query->get();
+
+        return view('dentista.agendamento.index', compact('agendamentos', 'nomeFiltro', 'dataFiltro'));
     }
-
-    // Ordena primeiro pela data mais recente e depois pelo horário de início
-    $agendamentos = $query->orderBy('data', 'desc')
-                          ->orderBy('hora_inicio', 'asc')
-                          ->get();
-
-    return view('dentista.agendamento.index', compact('agendamentos', 'dataFiltro'));
-}
 
     /**
      * Exibe o formulário de criação (Auxilia trazendo os seletores necessários).
@@ -128,9 +126,9 @@ class AgendamentoController extends Controller
     /**
      * Exibe o formulário de edição pré-carregando os dados.
      */
-  public function edit(Agendamento $agendamento)
+    public function edit(Agendamento $agendamento)
     {
-        
+
         if ($agendamento->user_id != auth()->id()) {
             abort(404);
         }
@@ -157,7 +155,7 @@ class AgendamentoController extends Controller
     /**
      * Atualiza os dados ou o Status do agendamento (Ex: Mudar de 'Agendado' para 'Confirmado').
      */
-   public function update(Request $request, Agendamento $agendamento)
+    public function update(Request $request, Agendamento $agendamento)
     {
         $dados = $request->validate([
             'data' => 'required|date',

@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\EnderecoPaciente;
+use App\Models\Paciente;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,22 +12,25 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class EnderecoPacienteFactory extends Factory
 {
+    protected $model = EnderecoPaciente::class;
+
     /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
+     * Define o estado padrão do modelo.
      */
     public function definition(): array
     {
         return [
-            //
-            'rua' => fake()->streetName(),
-            'numero' => fake()->buildingNumber(),
-            'bairro' => fake()->neighborhood(),
-            'cidade' => fake()->city(),
-            'estado' => fake()->state(),
-            'cep' => fake()->postcode(),
-            'paciente_id' => Paciente::inRandomOrder()->first()->id ?? 1,
+            'cep'         => fake()->postcode(),
+            'pais'        => 'Brasil',
+            'estado'      => fake()->stateAbbr(),
+            'cidade'      => fake()->city(),
+            'bairro'      => fake()->word(),
+            'rua'         => fake()->streetName(),
+            'numero'      => fake()->buildingNumber(),
+            
+            // Relacionamentos com suporte a valor nulo (conforme seu esquema)
+            'user_id'     => fake()->boolean ? User::factory() : null,
+            'paciente_id' => fake()->boolean ? Paciente::factory() : null,
         ];
     }
 }

@@ -52,8 +52,8 @@
                                                 <span class="text-muted text-xs">{{ $paciente->email }}</span>
                                             </td>
                                             <td>
-                                                <span>{{ $paciente->enderecoPaciente->cidade }} - {{ $paciente->estado }}</span>
-                                                <span class="text-muted d-block text-xs">Bairro: {{ $paciente->enderecoPaciente->bairro }}</span>
+                                                <span>{{ $paciente->enderecoPaciente->cidade ?? 'N/A' }} - {{ $paciente->estado ?? 'N/A' }}</span>
+                                                <span class="text-muted d-block text-xs">Bairro: {{ $paciente->enderecoPaciente->bairro ?? 'N/A' }}</span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">
