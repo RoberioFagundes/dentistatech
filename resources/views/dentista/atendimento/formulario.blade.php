@@ -14,7 +14,7 @@
     <form action="{{ isset($atendimento) ? route('atendimento.update', $atendimento->id) : route('atendimento.store') }}" method="POST">
         @csrf
         @if(isset($atendimento)) @method('PUT') @endif
-        
+
         <input type="hidden" name="user_id" value="{{ isset($atendimento) ? $atendimento->user_id : auth()->id() }}">
 
         <div class="row g-4">
@@ -26,29 +26,36 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Paciente <span class="text-danger">*</span></label>
-                                <select class="form-select" name="paciente_id" required>
-                                    <option value="" selected disabled>Selecione...</option>
-                                    @foreach($pacientes as $p)
-                                        <option value="{{ $p->id }}" {{ old('paciente_id', $atendimento->paciente_id ?? '') == $p->id ? 'selected' : '' }}>{{ $p->nome }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                        
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Dentista <span class="text-danger">*</span></label>
                                 <select class="form-select" name="dentista_id" required>
                                     @foreach($dentistas as $d)
-                                        <option value="{{ $d->id }}" {{ old('dentista_id', $atendimento->dentista_id ?? '') == $d->id ? 'selected' : '' }}>{{ $d->nome }}</option>
+                                    <option value="{{ $d->id }}" {{ old('dentista_id', $atendimento->dentista_id ?? '') == $d->id ? 'selected' : '' }}>{{ $d->nome }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Agendamento</label>
+                                {{-- No select de Paciente --}}
+                                <select class="form-select" name="paciente_id" required>
+                                    <option value="" selected disabled>Selecione...</option>
+                                    @foreach($pacientes as $p)
+                                    <option value="{{ $p->id }}"
+                                        {{ (isset($pacienteId) && $pacienteId == $p->id) || old('paciente_id') == $p->id ? 'selected' : '' }}>
+                                        {{ $p->nome }}
+                                    </option>
+                                    @endforeach
+                                </select>
+
+                                {{-- No select de Agendamento --}}
                                 <select class="form-select" name="agendamento_id">
                                     <option value="">Nenhum</option>
                                     @foreach($agendamentos as $a)
-                                        <option value="{{ $a->id }}">{{ $a->data->format('d/m H:i') }}</option>
+                                    <option value="{{ $a->id }}"
+                                        {{ (isset($agendamentoId) && $agendamentoId == $a->id) ? 'selected' : '' }}>
+                                        {{ $a->data->format('d/m H:i') }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -60,12 +67,12 @@
                 <div class="card shadow-sm border-0 rounded-3 mb-4">
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Queixa Principal</label>
+                            <label class="form-label fw-semibold">Queixa Principal</label>
                             <input type="text" class="form-control" name="queixa_principal" required>
                         </div>
                         <div class="row">
-                            <div class="col-md-6"><label>Diagnóstico</label><textarea class="form-control" name="diagnostico" rows="3"></textarea></div>
-                            <div class="col-md-6"><label>Tratamento</label><textarea class="form-control" name="tratamento_executado" rows="3"></textarea></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">Diagnóstico</label><textarea class="form-control" name="diagnostico" rows="3"></textarea></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">Tratamento</label><textarea class="form-control" name="tratamento_executado" rows="3"></textarea></div>
                         </div>
                     </div>
                 </div>
@@ -76,13 +83,13 @@
                         <h6>Quadrantes Superiores</h6>
                         <div class="d-flex justify-content-center gap-1 mb-3 flex-wrap">
                             @foreach([18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28] as $dente)
-                                <button type="button" class="btn btn-outline-secondary tooth-btn p-2" data-tooth="{{ $dente }}"><small>{{ $dente }}</small><br>🦷</button>
+                            <button type="button" class="btn btn-outline-secondary tooth-btn p-2" data-tooth="{{ $dente }}"><small>{{ $dente }}</small><br>🦷</button>
                             @endforeach
                         </div>
                         <h6>Quadrantes Inferiores</h6>
                         <div class="d-flex justify-content-center gap-1 flex-wrap">
                             @foreach([48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38] as $dente)
-                                <button type="button" class="btn btn-outline-secondary tooth-btn p-2" data-tooth="{{ $dente }}">🦷<br><small>{{ $dente }}</small></button>
+                            <button type="button" class="btn btn-outline-secondary tooth-btn p-2" data-tooth="{{ $dente }}">🦷<br><small>{{ $dente }}</small></button>
                             @endforeach
                         </div>
                     </div>
@@ -100,7 +107,7 @@
             <div class="col-lg-4">
                 <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
                     <div class="card-body">
-                        <label class="form-label">Observações Clínicas</label>
+                        <label class="form-label fw-semibold">Observações Clínicas</label>
                         <textarea class="form-control mb-3" name="observacoes_clinicas" rows="5"></textarea>
                         <button type="submit" class="btn btn-primary w-100 fw-bold">Salvar Atendimento</button>
                     </div>
@@ -115,13 +122,15 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form id="form-procedimento-dente">
-                <div class="modal-header"><h5 class="modal-title">Dente <span id="modal-tooth-number"></span></h5></div>
+                <div class="modal-header">
+                    <h5 class="modal-title">Dente <span id="modal-tooth-number"></span></h5>
+                </div>
                 <div class="modal-body">
                     <input type="hidden" id="input-dente-id" name="numero_dente">
                     <select class="form-select mb-3" name="procedimento_dentes_id" required>
                         <option value="" selected disabled>Escolha o procedimento...</option>
                         @foreach($procedimentoDentes as $p)
-                            <option value="{{ $p->id }}">{{ $p->nome }}</option>
+                        <option value="{{ $p->id }}">{{ $p->nome }}</option>
                         @endforeach
                     </select>
                     <textarea class="form-control" name="observacao" placeholder="Observações..." rows="2"></textarea>
@@ -136,12 +145,18 @@
 </div>
 
 <style>
-    .tooth-btn { min-width: 45px; }
-    .tooth-active { background-color: #d1e7dd !important; border-color: #0f5132 !important; }
+    .tooth-btn {
+        min-width: 45px;
+    }
+
+    .tooth-active {
+        background-color: #d1e7dd !important;
+        border-color: #0f5132 !important;
+    }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const modalElement = document.getElementById('odontogramaModal');
         const odontogramaModal = new bootstrap.Modal(modalElement);
         const formDente = document.getElementById('form-procedimento-dente');
@@ -149,14 +164,14 @@
         let procedimentosSelecionados = [];
 
         document.querySelectorAll('.tooth-btn').forEach(button => {
-            button.addEventListener('click', function () {
+            button.addEventListener('click', function() {
                 document.getElementById('modal-tooth-number').textContent = this.getAttribute('data-tooth');
                 document.getElementById('input-dente-id').value = this.getAttribute('data-tooth');
                 odontogramaModal.show();
             });
         });
 
-        formDente.addEventListener('submit', function (e) {
+        formDente.addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(formDente);
             procedimentosSelecionados.push({
@@ -166,7 +181,7 @@
                 observacao: formData.get('observacao'),
                 nome_procedimento: formDente.querySelector('select[name="procedimento_dentes_id"] option:checked').text
             });
-            
+
             document.querySelector(`.tooth-btn[data-tooth="${formData.get('numero_dente')}"]`).classList.add('tooth-active');
             renderizarLista();
             odontogramaModal.hide();
@@ -192,7 +207,7 @@
         window.removerItem = function(index) {
             const item = procedimentosSelecionados[index];
             procedimentosSelecionados.splice(index, 1);
-            if(!procedimentosSelecionados.some(p => p.dente == item.dente)) {
+            if (!procedimentosSelecionados.some(p => p.dente == item.dente)) {
                 document.querySelector(`.tooth-btn[data-tooth="${item.dente}"]`).classList.remove('tooth-active');
             }
             renderizarLista();

@@ -66,6 +66,7 @@ class AgendamentoController extends Controller
         $dadosValidados = $request->validate([
             'paciente_id' => 'required|exists:pacientes,id',
             'procedimento_id' => 'nullable|exists:procedimentos,id',
+            'dentista_id'      => 'required|exists:dentistas,id',
             'data' => 'required|date',
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fim' => 'required|date_format:H:i|after:hora_inicio',
@@ -74,7 +75,6 @@ class AgendamentoController extends Controller
         ]);
 
         // Injeta o ID do usuário autenticado como o dentista_id
-        $dadosValidados['dentista_id'] = auth()->id();
         $dadosValidados['user_id']     = auth()->id();
 
         // 2. Regra de Negócio: Impede marcação em feriados/recessos que bloqueiam a agenda

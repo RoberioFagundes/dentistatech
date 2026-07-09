@@ -8,10 +8,7 @@
             <h4 class="fw-bold text-dark mb-1">Histórico de Atendimentos</h4>
             <p class="text-muted mb-0">Listagem de prontuários e intervenções clínicas.</p>
         </div>
-        <a href="{{ route('atendimento.create') }}" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
-            <i class="bi bi-plus-circle fs-5"></i>
-            <span>Novo Atendimento</span>
-        </a>
+        
     </div>
 
     <div class="card shadow-sm border-0 rounded-3">

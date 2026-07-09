@@ -54,19 +54,19 @@ class AtendimentoController extends Controller implements HasMiddleware
     /**
      * Tela para abertura manual de atendimento.
      */
-    public function create()
+    public function create(Request $request)
     {
         $userId = auth()->id();
         $dentista = Dentista::where('user_id', $userId)->first();
 
         // Filtro mais leve
         $agendamentos = $dentista
-            ? Agendamento::where('status', 'AGENDADO')
-            ->where('dentista_id', $dentista->id)
-            ->limit(50) // Limite registros para não explodir a memória
-            ->get(['id', 'data', 'hora_inicio', 'paciente_id']) // Selecione apenas colunas necessárias
+            ? Agendamento::where('dentista_id', $dentista->id)
+            ->whereIn('status', ['AGENDADO', 'ACENDADO'])
+            ->get(['id', 'data', 'hora_inicio', 'paciente_id'])
             : collect();
 
+        //    dd($agendamentos);
         // BUSCA OTIMIZADA: Use ->select() para não trazer colunas 'text' pesadas (como histórico, descrições, etc)
         $pacientes = Paciente::select('id', 'nome', 'sobrenome')->orderBy('nome')->get();
 
@@ -75,7 +75,10 @@ class AtendimentoController extends Controller implements HasMiddleware
 
         $dentistas = Dentista::select('id', 'nome', 'sobrenome')->orderBy('nome')->get();
 
-        return view('dentista.atendimento.formulario', compact('pacientes', 'agendamentos', 'procedimentoDentes', 'dentistas'));
+        $pacienteId = $request->query('paciente_id');
+        $agendamentoId = $request->query('agendamento_id');
+
+        return view('dentista.atendimento.formulario', compact('pacientes', 'agendamentos', 'procedimentoDentes', 'dentistas', 'pacienteId', 'agendamentoId'));
     }
 
     /**
