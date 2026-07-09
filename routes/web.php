@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Página Inicial
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 // Dashboard Centralizado (Com redirecionamento por tipo de usuário)
