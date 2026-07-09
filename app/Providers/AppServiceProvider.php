@@ -25,7 +25,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('admin-only', function ($user) {
-            return $user->tipo === 'admin';
+            return $user->tipo === 'administrador';
+        });
+
+        Gate::define('dentista-only', function ($user) {
+            return $user->tipo === 'dentista';
+        });
+
+        Gate::define('recepcionista', function ($user) {
+            return $user->tipo === 'recepcionista' || $user->tipo === 'recepcionista';
+        });
+        Gate::define('acompanhante_dentista', function ($user) {
+            return $user->tipo === 'acompanhante_dentista' || $user->tipo === 'acompanhante_dentista';
         });
         // Bloqueia comandos destrutivos em produção
         Event::listen(function (CommandStarting $event) {
