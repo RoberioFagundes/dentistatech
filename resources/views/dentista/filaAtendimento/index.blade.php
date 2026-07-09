@@ -56,12 +56,14 @@
                                     
                                     <td>
                                         <div class="d-flex justify-content-center gap-2">
+                                            @can('admin-only')
                                             <form action="#" method="POST" class="ajax-form">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-success d-flex align-items-center btn-acao">
                                                     <i class="fa fa-check me-1"></i> Confirmar
                                                 </button>
                                             </form>
+                                            @endcan
                                             
                                             <form action="{{ route('filaAtendimento.destroy', $filas->id) }}" method="POST" class="ajax-form"
                                                   data-confirm="Tem certeza que deseja remover esta pessoa da fila?">

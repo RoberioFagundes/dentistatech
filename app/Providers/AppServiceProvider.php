@@ -7,6 +7,7 @@ use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Support\Facades\Event;
 // Adicione esta linha aqui:
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::define('admin-only', function ($user) {
+            return $user->tipo === 'admin';
+        });
         // Bloqueia comandos destrutivos em produção
         Event::listen(function (CommandStarting $event) {
             $comandosProibidos = [
@@ -37,10 +41,12 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-         // Force Laravel to use Bootstrap 5 styling globally
+        // Force Laravel to use Bootstrap 5 styling globally
         Paginator::useBootstrapFive();
 
         // Alternatively, use Bootstrap 4:
         // Paginator::useBootstrapFour();
+
+
     }
 }
