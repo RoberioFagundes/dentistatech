@@ -1,3 +1,8 @@
+@php
+    // Extraímos o objeto uma única vez para usar abaixo
+    $habito = $paciente->habitoSaudavel->first();
+@endphp
+
 @extends('dentista.layout.paginaDentista')
 
 @section('pagina')
@@ -7,7 +12,9 @@
                 --}}
                 <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white py-3">
-                        <h4 class="mb-0 fs-5"><i class="bi bi-person-plus me-2"></i>{{ isset($paciente) ? 'Editar Paciente' : 'Cadastrar Paciente' }}</h4>
+                        <h4 class="mb-0 fs-5"><i
+                                class="bi bi-person-plus me-2"></i>{{ isset($paciente) ? 'Editar Paciente' : 'Cadastrar Paciente' }}
+                        </h4>
                     </div>
                     <div class="card-body p-4">
 
@@ -22,11 +29,13 @@
                             </div>
                         @endif
 
-                       <form action="{{ isset($paciente->id) ? route('paciente.update', $paciente->id) : route('paciente.store') }}" method="POST">
-                        @csrf
-                        @if(isset($paciente->id))
-                            @method('PUT')
-                        @endif
+                        <form
+                            action="{{ isset($paciente->id) ? route('paciente.update', $paciente->id) : route('paciente.store') }}"
+                            method="POST">
+                            @csrf
+                            @if(isset($paciente->id))
+                                @method('PUT')
+                            @endif
 
                             {{-- 1. IDENTIFICAÇÃO BÁSICA --}}
                             <h5 class="card-title text-primary fw-bold mb-3 fs-6 text-uppercase"
@@ -47,7 +56,8 @@
                                     <label for="sobrenome" class="form-label fw-semibold text-secondary small">Sobrenome
                                         <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('sobrenome') is-invalid @enderror"
-                                        id="sobrenome" name="sobrenome" value="{{ old('sobrenome', optional($paciente)->sobrenome) }}" required>
+                                        id="sobrenome" name="sobrenome"
+                                        value="{{ old('sobrenome', optional($paciente)->sobrenome) }}" required>
                                     @error('sobrenome') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
@@ -55,8 +65,8 @@
                                     <label for="cpf" class="form-label fw-semibold text-secondary small">CPF <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control mask-cpf @error('cpf') is-invalid @enderror"
-                                        id="cpf" name="cpf" value="{{ old('cpf', optional($paciente)->cpf) }}" maxlength="14" required
-                                        placeholder="000.000.000-00">
+                                        id="cpf" name="cpf" value="{{ old('cpf', optional($paciente)->cpf) }}"
+                                        maxlength="14" required placeholder="000.000.000-00">
                                     @error('cpf') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
@@ -72,7 +82,8 @@
                                     <label for="data_nascimento" class="form-label fw-semibold text-secondary small">Data de
                                         Nascimento <span class="text-danger">*</span></label>
                                     <input type="date" class="form-control @error('data_nascimento') is-invalid @enderror"
-                                        id="data_nascimento" name="data_nascimento" value="{{ old('data_nascimento', optional($paciente)->data_nascimento) }}"
+                                        id="data_nascimento" name="data_nascimento"
+                                        value="{{ old('data_nascimento', $paciente->data_nascimento?->format('Y-m-d')) }}"
                                         required>
                                     @error('data_nascimento') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
@@ -105,8 +116,9 @@
                                         Residencial/Fixo <span class="text-danger">*</span></label>
                                     <input type="text"
                                         class="form-control mask-telefone @error('telefone') is-invalid @enderror"
-                                        id="telefone" name="telefone" value="{{ old('telefone', optional($paciente)->telefone) }}" required
-                                        placeholder="(00) 0000-0000">
+                                        id="telefone" name="telefone"
+                                        value="{{ old('telefone', optional($paciente->contatosPaciente->first())->telefone) }}"
+                                        required placeholder="(00) 0000-0000">
                                     @error('telefone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
@@ -114,9 +126,10 @@
                                     <label for="whatsapp" class="form-label fw-semibold text-secondary small">WhatsApp /
                                         Celular <span class="text-danger">*</span></label>
                                     <input type="text"
-                                        class="form-control mask-celular @error('whatsapp') is-invalid @enderror"
-                                        id="whatsapp" name="whatsapp" value="{{ old('whatsapp', optional($paciente)->whatsapp) }}" required
-                                        placeholder="(00) 00000-0000">
+                                        class="form-control mask-telefone @error('whatsapp') is-invalid @enderror"
+                                        id="whatsapp" name="whatsapp"
+                                        value="{{ old('whatsapp', optional($paciente->contatosPaciente->first())->whatsapp) }}"
+                                        placeholder="(00) 0000-0000">
                                     @error('whatsapp') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
@@ -124,7 +137,9 @@
                                     <label for="email" class="form-label fw-semibold text-secondary small">E-mail <span
                                             class="text-danger">*</span></label>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                                        name="email" value="{{ old('email', optional($paciente)->email) }}" required placeholder="paciente@exemplo.com">
+                                        name="email"
+                                        value="{{ old('email', optional($paciente->contatosPaciente->first())->email) }}"
+                                        required placeholder="paciente@exemplo.com">
                                     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
@@ -142,7 +157,9 @@
                                     <label for="cep" class="form-label fw-semibold text-secondary small">CEP <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control mask-cep @error('cep') is-invalid @enderror"
-                                        id="cep" name="cep" value="{{ old('cep', optional($paciente)->cep) }}" required placeholder="00000-000">
+                                        id="cep" name="cep"
+                                        value="{{ old('cep', optional($paciente->enderecoPaciente)->cep) }}" required
+                                        placeholder="00000-000">
                                     @error('cep') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     <div id="cep-error" class="text-danger small mt-1 d-none">CEP não encontrado.</div>
                                 </div>
@@ -151,7 +168,8 @@
                                     <label for="pais" class="form-label fw-semibold text-secondary small">País <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('pais') is-invalid @enderror" id="pais"
-                                        name="pais" value="{{ old('pais', optional($paciente)->pais ?? 'Brasil') }}" required placeholder="Ex: Brasil">
+                                        name="pais" value="{{ old('pais', optional($paciente)->pais ?? 'Brasil') }}"
+                                        required placeholder="Ex: Brasil">
                                     @error('pais') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
@@ -159,7 +177,9 @@
                                     <label for="estado" class="form-label fw-semibold text-secondary small">Estado <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('estado') is-invalid @enderror"
-                                        id="estado" name="estado" value="{{ old('estado', optional($paciente)->estado) }}" required placeholder="Ex: SP">
+                                        id="estado" name="estado"
+                                        value="{{ old('estado', optional($paciente->enderecoPaciente)->estado) }}" required
+                                        placeholder="Ex: SP">
                                     @error('estado') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
@@ -167,7 +187,8 @@
                                     <label for="cidade" class="form-label fw-semibold text-secondary small">Cidade <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('cidade') is-invalid @enderror"
-                                        id="cidade" name="cidade" value="{{ old('cidade', optional($paciente)->cidade) }}" required
+                                        id="cidade" name="cidade"
+                                        value="{{ old('cidade', optional($paciente->enderecoPaciente)->cidade) }}" required
                                         placeholder="Ex: São Paulo">
                                     @error('cidade') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
@@ -176,7 +197,8 @@
                                     <label for="bairro" class="form-label fw-semibold text-secondary small">Bairro <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('bairro') is-invalid @enderror"
-                                        id="bairro" name="bairro" value="{{ old('bairro', optional($paciente)->bairro) }}" required
+                                        id="bairro" name="bairro"
+                                        value="{{ old('bairro', optional($paciente->enderecoPaciente)->bairro) }}" required
                                         placeholder="Ex: Centro">
                                     @error('bairro') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
@@ -185,7 +207,8 @@
                                     <label for="rua" class="form-label fw-semibold text-secondary small">Rua <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('rua') is-invalid @enderror" id="rua"
-                                        name="rua" value="{{ old('rua', optional($paciente)->rua) }}" required placeholder="Ex: Rua Exemplo">
+                                        name="rua" value="{{ old('rua', optional($paciente->enderecoPaciente)->rua) }}"
+                                        required placeholder="Ex: Rua Exemplo">
                                     @error('rua') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
@@ -193,7 +216,8 @@
                                     <label for="numero" class="form-label fw-semibold text-secondary small">Número <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('numero') is-invalid @enderror"
-                                        id="numero" name="numero" value="{{ old('numero', optional($paciente)->numero) }}" required
+                                        id="numero" name="numero"
+                                        value="{{ old('numero', optional($paciente->enderecoPaciente)->numero) }}" required
                                         placeholder="Ex: 123">
                                     @error('numero') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
@@ -212,18 +236,21 @@
                                     <label for="alergias"
                                         class="form-label fw-semibold text-secondary small">Alergias</label>
                                     <input type="text" class="form-control @error('alergias') is-invalid @enderror"
-                                        id="alergias" name="alergias" value="{{ old('alergias', optional($paciente)->alergias) }}"
+                                        id="alergias" name="alergias"
+                                        value="{{ old('alergias', optional($paciente->historicoMedico)->alergias) }}"
                                         placeholder="Ex: Penicilina">
                                     @error('alergias') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label for="medicacoes" class="form-label fw-semibold text-secondary small">Medicações
+                                    <label for="medicacaoEmUso"
+                                        class="form-label fw-semibold text-secondary small">Medicações
                                         em Uso</label>
-                                    <input type="text" class="form-control @error('medicacoes') is-invalid @enderror"
-                                        id="medicacoes" name="medicacoes" value="{{ old('medicacoes', optional($paciente)->medicacoes) }}"
+                                    <input type="text" class="form-control @error('medicacaoEmUso') is-invalid @enderror"
+                                        id="medicacaoEmUso" name="medicacaoEmUso"
+                                        value="{{ old('medicacaoEmUso', optional($paciente->historicoMedico)->medicacaoEmUso) }}"
                                         placeholder="Ex: Anti-hipertensivos">
-                                    @error('medicacoes') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    @error('medicacaoEmUso') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-4">
@@ -231,8 +258,9 @@
                                         class="form-label fw-semibold text-secondary small">Condições Crônicas</label>
                                     <input type="text"
                                         class="form-control @error('condicoes_cronicas') is-invalid @enderror"
-                                        id="condicoes_cronicas" name="condicoes_cronicas"
-                                        value="{{ old('condicoes_cronicas', optional($paciente)->condicoes_cronicas) }}" placeholder="Ex: Diabetes, Hipertensão">
+                                        id="condicoes_cronicas" name="condicaoCronica"
+                                        value="{{ old('condicoes_cronicas', optional($paciente->historicoMedico)->condicaoCronica) }}"
+                                        placeholder="Ex: Diabetes, Hipertensão">
                                     @error('condicoes_cronicas') <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -241,8 +269,8 @@
                                     <label for="historico_cirurgico"
                                         class="form-label fw-semibold text-secondary small">Histórico Cirúrgico</label>
                                     <textarea class="form-control @error('historico_cirurgico') is-invalid @enderror"
-                                        id="historico_cirurgico" name="historico_cirurgico" rows="2"
-                                        placeholder="Descreva procedimentos cirúrgicos anteriores relevantes">{{ old('historico_cirurgico', optional($paciente)->historico_cirurgico) }}</textarea>
+                                        id="historico_cirurgico" name="historicoCirurgico" rows="2"
+                                        placeholder="Descreva procedimentos cirúrgicos anteriores relevantes">{{ old('historico_cirurgico', optional($paciente->historicoMedico)->historicoCirurgico) }}</textarea>
                                     @error('historico_cirurgico') <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -251,10 +279,10 @@
                                     <label for="observacoes_medicas"
                                         class="form-label fw-semibold text-secondary small">Observações Médicas
                                         Gerais</label>
-                                    <textarea class="form-control @error('observacoes_medicas') is-invalid @enderror"
-                                        id="observacoes_medicas" name="observacoes_medicas" rows="2"
-                                        placeholder="Informações médicas adicionais importantes ou contraindicações">{{ old('observacoes_medicas', optional($paciente)->observacoes_medicas) }}</textarea>
-                                    @error('observacoes_medicas') <div class="invalid-feedback">{{ $message }}</div>
+                                    <textarea class="form-control @error('observacaoMedicaGeral') is-invalid @enderror"
+                                        id="observacaoMedicaGeral" name="observacaoMedicaGeral" rows="2"
+                                        placeholder="Informações médicas adicionais importantes ou contraindicações">{{ old('observacaoMedicaGeral', optional($paciente->historicoMedico)->observacaoMedicaGeral) }}</textarea>
+                                    @error('observacaoMedicaGeral') <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -274,8 +302,8 @@
                                         Dentista</label>
                                     <input type="date"
                                         class="form-control @error('data_ultima_visita') is-invalid @enderror"
-                                        id="data_ultima_visita" name="data_ultima_visita"
-                                        value="{{ old('data_ultima_visita', optional($paciente)->data_ultima_visita) }}">
+                                        id="data_ultima_visita" name="ultima_consulta"
+                                        value="{{ old('data_ultima_visita', optional($paciente->historicoBucal)->ultima_consulta) }}">
                                     @error('data_ultima_visita') <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -284,7 +312,8 @@
                                     <label for="motivo_visita" class="form-label fw-semibold text-secondary small">Motivo da
                                         Visita Atual</label>
                                     <input type="text" class="form-control @error('motivo_visita') is-invalid @enderror"
-                                        id="motivo_visita" name="motivo_visita" value="{{ old('motivo_visita', optional($paciente)->motivo_visita) }}"
+                                        id="motivo_visita" name="motivo_consulta_atual"
+                                        value="{{ old('motivo_visita', optional($paciente->historicoBucal)->motivo_consulta_atual) }}"
                                         placeholder="Ex: Dor, check-up, estética">
                                     @error('motivo_visita') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
@@ -295,9 +324,9 @@
                                     <select class="form-select @error('sangramento_gengival') is-invalid @enderror"
                                         id="sangramento_gengival" name="sangramento_gengival">
                                         <option value="">Selecione</option>
-                                        <option value="Sim" {{ old('sangramento_gengival', optional($paciente)->sangramento_gengival) == 'Sim' ? 'selected' : '' }}>Sim
+                                        <option value="Sim" {{ old('sangramento_gengival', optional($paciente->historicoBucal)->sangramento_gengival) == 'Sim' ? 'selected' : '' }}>Sim
                                         </option>
-                                        <option value="Não" {{ old('sangramento_gengival', optional($paciente)->sangramento_gengival) == 'Não' ? 'selected' : '' }}>Não
+                                        <option value="Não" {{ old('sangramento_gengival', optional($paciente->historicoBucal)->sangramento_gengival) == 'Não' ? 'selected' : '' }}>Não
                                         </option>
                                     </select>
                                     @error('sangramento_gengival') <div class="invalid-feedback">{{ $message }}</div>
@@ -310,9 +339,9 @@
                                     <select class="form-select @error('sensibilidade_dental') is-invalid @enderror"
                                         id="sensibilidade_dental" name="sensibilidade_dental">
                                         <option value="">Selecione</option>
-                                        <option value="Sim" {{ old('sensibilidade_dental', optional($paciente)->sensibilidade_dental) == 'Sim' ? 'selected' : '' }}>Sim
+                                        <option value="Sim" {{ old('sensibilidade_dental', optional($paciente->historicoBucal)->sensibilidade_dental) == 'Sim' ? 'selected' : '' }}>Sim
                                         </option>
-                                        <option value="Não" {{ old('sensibilidade_dental', optional($paciente)->sensibilidade_dental) == 'Não' ? 'selected' : '' }}>Não
+                                        <option value="Não" {{ old('sensibilidade_dental', optional($paciente->historicoBucal)->sensibilidade_dental) == 'Não' ? 'selected' : '' }}>Não
                                         </option>
                                     </select>
                                     @error('sensibilidade_dental') <div class="invalid-feedback">{{ $message }}</div>
@@ -322,32 +351,37 @@
                                 <div class="col-md-4">
                                     <label for="uso_protese" class="form-label fw-semibold text-secondary small">Uso de
                                         Próteses / Aparelhos?</label>
-                                    <select class="form-select @error('uso_protese') is-invalid @enderror" id="uso_protese"
-                                        name="uso_protese">
+                                    <select class="form-select @error('uso_proteses_aparelho') is-invalid @enderror"
+                                        id="uso_proteses_aparelho" name="uso_proteses_aparelho">
                                         <option value="">Selecione</option>
-                                        <option value="Sim" {{ old('uso_protese', optional($paciente)->uso_protese) == 'Sim' ? 'selected' : '' }}>Sim</option>
-                                        <option value="Não" {{ old('uso_protese', optional($paciente)->uso_protese) == 'Não' ? 'selected' : '' }}>Não</option>
+                                        <option value="Sim" {{ old('uso_proteses_aparelho', optional($paciente->historicoBucal)->uso_proteses_aparelho) == 'Sim' ? 'selected' : '' }}>Sim</option>
+                                        <option value="Não" {{ old('uso_proteses_aparelho', optional($paciente->historicoBucal)->uso_proteses_aparelho) == 'Não' ? 'selected' : '' }}>Não</option>
                                     </select>
-                                    @error('uso_protese') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    @error('uso_proteses_aparelho') <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label for="tipo_protese" class="form-label fw-semibold text-secondary small">Se sim,
+                                    <label for="tipo_aparelho_ou_protese"
+                                        class="form-label fw-semibold text-secondary small">Se sim,
                                         qual tipo?</label>
-                                    <input type="text" class="form-control @error('tipo_protese') is-invalid @enderror"
-                                        id="tipo_protese" name="tipo_protese" value="{{ old('tipo_protese', optional($paciente)->tipo_protese) }}"
+                                    <input type="text"
+                                        class="form-control @error('tipo_aparelho_ou_protese') is-invalid @enderror"
+                                        id="tipo_aparelho_ou_protese" name="tipo_aparelho_ou_protese"
+                                        value="{{ old('tipo_aparelho_ou_protese', optional($paciente->historicoBucal)->tipo_aparelho_ou_protese) }}"
                                         placeholder="Ex: Aparelho fixo, prótese parcial">
-                                    @error('tipo_protese') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    @error('tipo_aparelho_ou_protese') <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <div class="col-12">
                                     <label for="tratamentos_anteriores"
                                         class="form-label fw-semibold text-secondary small">Tratamentos Bucais
                                         Anteriores</label>
-                                    <textarea class="form-control @error('tratamentos_anteriores') is-invalid @enderror"
-                                        id="tratamentos_anteriores" name="tratamentos_anteriores" rows="2"
-                                        placeholder="Descreva restaurações, extrações, canais, etc.">{{ old('tratamentos_anteriores', optional($paciente)->tratamentos_anteriores) }}</textarea>
-                                    @error('tratamentos_anteriores') <div class="invalid-feedback">{{ $message }}</div>
+                                    <textarea class="form-control @error('tratamento_bucal_anterior') is-invalid @enderror"
+                                        id="tratamento_bucal_anterior" name="tratamento_bucal_anterior" rows="2"
+                                        placeholder="Descreva restaurações, extrações, canais, etc.">{{ old('tratamento_bucal_anterior', optional($paciente->historicoBucal)->tratamento_bucal_anterior) }}</textarea>
+                                    @error('tratamento_bucal_anterior') <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
@@ -355,10 +389,12 @@
                                     <label for="observacoes_bucais"
                                         class="form-label fw-semibold text-secondary small">Observações Bucais
                                         Adicionais</label>
-                                    <textarea class="form-control @error('observacoes_bucais') is-invalid @enderror"
-                                        id="observacoes_bucais" name="observacoes_bucais" rows="2"
-                                        placeholder="Queixas específicas ou percepções do paciente">{{ old('observacoes_bucais', optional($paciente)->observacoes_bucais) }}</textarea>
-                                    @error('observacoes_bucais') <div class="invalid-feedback">{{ $message }}</div>
+                                    <textarea
+                                        class="form-control @error('observacoes_bucal_adicionais') is-invalid @enderror"
+                                        id="observacoes_bucal_adicionais" name="observacoes_bucal_adicionais" rows="2"
+                                        placeholder="Queixas específicas ou percepções do paciente">{{ old('observacoes_bucal_adicionais', optional($paciente->historicoBucal)->observacoes_bucal_adicionais) }}</textarea>
+                                    @error('observacoes_bucal_adicionais') <div class="invalid-feedback">{{ $message }}
+                                        </div>
                                     @enderror
                                 </div>
                             </div>
@@ -375,31 +411,31 @@
                                 <div class="col-md-4">
                                     <label for="frequencia_escovacao"
                                         class="form-label fw-semibold text-secondary small">Frequência de Escovação</label>
+                                    {{-- 1. Frequência de Escovação --}}
                                     <select class="form-select @error('frequencia_escovacao') is-invalid @enderror"
                                         id="frequencia_escovacao" name="frequencia_escovacao">
                                         <option value="">Selecione</option>
-                                        <option value="1 vez ao dia" {{ old('frequencia_escovacao', optional($paciente)->frequencia_escovacao) == '1 vez ao dia' ? 'selected' : '' }}>uma_vez</option>
-                                        <option value="2 vezes ao dia" {{ old('frequencia_escovacao', optional($paciente)->frequencia_escovacao) == '2 vezes ao dia' ? 'selected' : '' }}>2 vezes ao dia</option>
-                                        <option value="3 ou mais vezes ao dia" {{ old('frequencia_escovacao', optional($paciente)->frequencia_escovacao) == '3 ou mais vezes ao dia' ? 'selected' : '' }}>3 ou mais vezes ao dia</option>
+                                        @php $valorAtual = old('frequencia_escovacao', $paciente->habitoSaudavel->first()?->frequencia_escovacao); @endphp
+
+                                        <option value="1 vez ao dia" {{ $valorAtual == '1 vez ao dia' ? 'selected' : '' }}>1
+                                            vez ao dia</option>
+                                        <option value="2 vezes ao dia" {{ $valorAtual == '2 vezes ao dia' ? 'selected' : '' }}>2 vezes ao dia</option>
+                                        <option value="3 ou mais vezes ao dia" {{ $valorAtual == '3 ou mais vezes ao dia' ? 'selected' : '' }}>3 ou mais vezes ao dia</option>
                                     </select>
                                     @error('frequencia_escovacao') <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label for="usa_fio_dental" class="form-label fw-semibold text-secondary small">Usa Fio
+                                    <label for="uso_fio_dental" class="form-label fw-semibold text-secondary small">Usa Fio
                                         Dental?</label>
-                                    <select class="form-select @error('usa_fio_dental') is-invalid @enderror"
-                                        id="usa_fio_dental" name="usa_fio_dental">
+                                    <select class="form-select @error('uso_fio_dental') is-invalid @enderror"
+                                        id="uso_fio_dental" name="uso_fio_dental">
                                         <option value="">Selecione</option>
-                                        <option value="Sim" {{ old('usa_fio_dental', optional($paciente)->usa_fio_dental) == 'Sim' ? 'selected' : '' }}>Sim
-                                        </option>
-                                        <option value="Não" {{ old('usa_fio_dental', optional($paciente)->usa_fio_dental) == 'Não' ? 'selected' : '' }}>Não
-                                        </option>
-                                        <option value="Às vezes" {{ old('usa_fio_dental', optional($paciente)->usa_fio_dental) == 'Às vezes' ? 'selected' : '' }}>
-                                            Às vezes</option>
+                                        <option value="Sim" {{ old('uso_fio_dental', $habito?->uso_fio_dental) == 'Sim' ? 'selected' : '' }}>Sim</option>
+                                        <option value="Não" {{ old('uso_fio_dental', $habito?->uso_fio_dental) == 'Não' ? 'selected' : '' }}>Não</option>
+                                        <option value="Às vezes" {{ old('uso_fio_dental', $habito?->uso_fio_dental) == 'Às vezes' ? 'selected' : '' }}>Às vezes</option>
                                     </select>
-                                    @error('usa_fio_dental') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-4">
@@ -408,12 +444,22 @@
                                     <select class="form-select @error('habito_fumo') is-invalid @enderror" id="habito_fumo"
                                         name="habito_fumo">
                                         <option value="">Selecione</option>
-                                        <option value="Não fuma" {{ old('habito_fumo', optional($paciente)->habito_fumo) == 'Não fuma' ? 'selected' : '' }}>Não
-                                            fuma</option>
-                                        <option value="Ex-fumante" {{ old('habito_fumo', optional($paciente)->habito_fumo) == 'Ex-fumante' ? 'selected' : '' }}>
-                                            Ex-fumante</option>
-                                        <option value="Fuma ocasionalmente" {{ old('habito_fumo', optional($paciente)->habito_fumo) == 'Fuma ocasionalmente' ? 'selected' : '' }}>Fuma ocasionalmente</option>
-                                        <option value="Fumante regular" {{ old('habito_fumo', optional($paciente)->habito_fumo) == 'Fumante regular' ? 'selected' : '' }}>Fumante regular</option>
+
+                                        <option value="Não fuma" {{ old('habito_fumo', optional($paciente->habitoSaudavel->first())->habito_fumo) == 'Não fuma' ? 'selected' : '' }}>
+                                            Não fuma
+                                        </option>
+
+                                        <option value="Ex-fumante" {{ old('habito_fumo', optional($paciente->habitoSaudavel->first())->habito_fumo) == 'Ex-fumante' ? 'selected' : '' }}>
+                                            Ex-fumante
+                                        </option>
+
+                                        <option value="Fuma ocasionalmente" {{ old('habito_fumo', optional($paciente->habitoSaudavel->first())->habito_fumo) == 'Fuma ocasionalmente' ? 'selected' : '' }}>
+                                            Fuma ocasionalmente
+                                        </option>
+
+                                        <option value="Fumante regular" {{ old('habito_fumo', optional($paciente->habitoSaudavel->first())->habito_fumo) == 'Fumante regular' ? 'selected' : '' }}>
+                                            Fumante regular
+                                        </option>
                                     </select>
                                     @error('habito_fumo') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
@@ -424,51 +470,58 @@
                                     <select class="form-select @error('consumo_alcool') is-invalid @enderror"
                                         id="consumo_alcool" name="consumo_alcool">
                                         <option value="">Selecione</option>
-                                        <option value="Não consome" {{ old('consumo_alcool', optional($paciente)->consumo_alcool) == 'Não consome' ? 'selected' : '' }}>Não consome</option>
-                                        <option value="Raramente" {{ old('consumo_alcool', optional($paciente)->consumo_alcool) == 'Raramente' ? 'selected' : '' }}>Raramente</option>
-                                        <option value="Moderadamente" {{ old('consumo_alcool', optional($paciente)->consumo_alcool) == 'Moderadamente' ? 'selected' : '' }}>Moderadamente</option>
-                                        <option value="Frequentemente" {{ old('consumo_alcool', optional($paciente)->consumo_alcool) == 'Frequentemente' ? 'selected' : '' }}>Frequentemente</option>
+                                        <option value="Não consome" {{ old('consumo_alcool', $habito?->consumo_alcool) == 'Não consome' ? 'selected' : '' }}>Não consome</option>
+                                        <option value="Raramente" {{ old('consumo_alcool', $habito?->consumo_alcool) == 'Raramente' ? 'selected' : '' }}>Raramente</option>
+                                        <option value="Moderadamente" {{ old('consumo_alcool', $habito?->consumo_alcool) == 'Moderadamente' ? 'selected' : '' }}>Moderadamente
+                                        </option>
+                                        <option value="Frequentemente" {{ old('consumo_alcool', $habito?->consumo_alcool) == 'Frequentemente' ? 'selected' : '' }}>Frequentemente
+                                        </option>
                                     </select>
-                                    @error('consumo_alcool') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-4">
                                     <label for="pratica_atividade_fisica"
                                         class="form-label fw-semibold text-secondary small">Atividade Física</label>
-                                    <select class="form-select @error('pratica_atividade_fisica') is-invalid @enderror"
-                                        id="pratica_atividade_fisica" name="pratica_atividade_fisica">
+                                    {{-- 2. Atividade Física --}}
+                                    <select class="form-select @error('atividade_fisica') is-invalid @enderror"
+                                        id="atividade_fisica" name="atividade_fisica">
                                         <option value="">Selecione</option>
-                                        <option value="Não pratica" {{ old('pratica_atividade_fisica', optional($paciente)->pratica_atividade_fisica) == 'Não pratica' ? 'selected' : '' }}>Não pratica</option>
-                                        <option value="1-2 vezes por semana" {{ old('pratica_atividade_fisica', optional($paciente)->pratica_atividade_fisica) == '1-2 vezes por semana' ? 'selected' : '' }}>1-2 vezes por semana</option>
-                                        <option value="3-4 vezes por semana" {{ old('pratica_atividade_fisica', optional($paciente)->pratica_atividade_fisica) == '3-4 vezes por semana' ? 'selected' : '' }}>3-4 vezes por semana</option>
-                                        <option value="Diariamente" {{ old('pratica_atividade_fisica', optional($paciente)->pratica_atividade_fisica) == 'Diariamente' ? 'selected' : '' }}>Diariamente</option>
+                                        @php $valorAtual = old('atividade_fisica', $paciente->habitoSaudavel->first()?->atividade_fisica); @endphp
+
+                                        <option value="Não pratica" {{ $valorAtual == 'Não pratica' ? 'selected' : '' }}>Não
+                                            pratica</option>
+                                        <option value="1-2 vezes por semana" {{ $valorAtual == '1-2 vezes por semana' ? 'selected' : '' }}>1-2 vezes por semana</option>
+                                        <option value="3-4 vezes por semana" {{ $valorAtual == '3-4 vezes por semana' ? 'selected' : '' }}>3-4 vezes por semana</option>
+                                        <option value="Diariamente" {{ $valorAtual == 'Diariamente' ? 'selected' : '' }}>
+                                            Diariamente</option>
                                     </select>
-                                    @error('pratica_atividade_fisica') <div class="invalid-feedback">{{ $message }}</div>
+                                    @error('atividade_fisica') <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <label for="qualidade_sono"
+                                <div class="col-md-4">
+                                    <label for="qualidade_sono"
                                         class="form-label fw-semibold text-secondary small">Qualidade do Sono</label>
-                                <select class="form-select @error('qualidade_sono') is-invalid @enderror"
-                                    id="qualidade_sono" name="qualidade_sono">
-                                    <option value="">Selecione</option>
-                                    <option value="Ruim" {{ old('qualidade_sono', optional($paciente)->qualidade_sono) == 'Ruim' ? 'selected' : '' }}>Ruim</option>
-                                    <option value="Regular" {{ old('qualidade_sono', optional($paciente)->qualidade_sono) == 'Regular' ? 'selected' : '' }}>Regular
-                                    </option>
-                                    <option value="Bom" {{ old('qualidade_sono', optional($paciente)->qualidade_sono) == 'Bom' ? 'selected' : '' }}>Bom</option>
-                                    <option value="Ótimo" {{ old('qualidade_sono', optional($paciente)->qualidade_sono) == 'Ótimo' ? 'selected' : '' }}>Ótimo
-                                    </option>
-                                </select>
-                                @error('qualidade_sono') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <select class="form-select @error('qualidade_sono') is-invalid @enderror"
+                                        id="qualidade_sono" name="qualidade_sono">
+                                        <option value="">Selecione</option>
+                                        <option value="Ruim" {{ old('qualidade_sono', $habito?->qualidade_sono) == 'Ruim' ? 'selected' : '' }}>Ruim</option>
+                                        <option value="Regular" {{ old('qualidade_sono', $habito?->qualidade_sono) == 'Regular' ? 'selected' : '' }}>Regular</option>
+                                        <option value="Bom" {{ old('qualidade_sono', $habito?->qualidade_sono) == 'Bom' ? 'selected' : '' }}>Bom</option>
+                                        <option value="Ótimo" {{ old('qualidade_sono', $habito?->qualidade_sono) == 'Ótimo' ? 'selected' : '' }}>Ótimo</option>
+                                    </select>
+                                </div>
 
-                                <div class="col-12">
-                                    <label for="observacoes_habitos"
-                                        class="form-label fw-semibold text-secondary small">Observações sobre Estilo de
-                                        Vida</label>
-                                    <textarea class="form-control @error('observacoes_habitos') is-invalid @enderror"
-                                        id="observacoes_habitos" name="observacoes_habitos" rows="2"
-                                        placeholder="Outros hábitos relevantes (ex: bruxismo, roer unhas, dieta rica em açúcar)">{{ old('observacoes_habitos', optional($paciente)->observacoes_habitos) }}</textarea>
-                                    @error('observacoes_habitos') <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <div class="row mt-3">
+                                    {{-- Observações --}}
+                                    <div class="col-12">
+                                        <label for="observacoes_estilo_vida"
+                                            class="form-label fw-semibold text-secondary small">Observações sobre Estilo de
+                                            Vida</label>
+                                        <textarea
+                                            class="form-control @error('observacoes_estilo_vida') is-invalid @enderror"
+                                            id="observacoes_estilo_vida" name="observacoes_estilo_vida"
+                                            rows="2">{{ old('observacoes_estilo_vida', $habito?->observacoes_estilo_vida) }}</textarea>
+                                    </div>
                                 </div>
                             </div>
 

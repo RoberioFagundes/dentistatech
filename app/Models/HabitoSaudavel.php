@@ -20,6 +20,7 @@ class HabitoSaudavel extends Model
         'qualidade_sono',
         'observacoes_estilo_vida',
         'user_id',
+        'consumo_alcool',
         'paciente_id'
     ];
 

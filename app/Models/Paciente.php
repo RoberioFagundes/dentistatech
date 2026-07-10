@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory; // <--- ADICIONE ESTA IMPORTAÇÃO
+use App\Models\EnderecoPaciente;
+use App\Models\ContatoPaciente;
+use App\Models\HistoricoBucal;
+use App\Models\HistoricoMedico;
+use App\Models\HistoricoSaudavel;
 
 
 class Paciente extends Model
@@ -47,6 +52,12 @@ class Paciente extends Model
         return $this->hasOne(EnderecoPaciente::class, 'paciente_id');
     }
 
+    public function endereco()
+    {
+        // Isso redireciona a chamada para o relacionamento correto
+        return $this->enderecoPaciente();
+    }
+
     /**
      * Retorna os registros de contato do paciente (Telefone, celular, e-mail).
      */
@@ -80,10 +91,7 @@ class Paciente extends Model
     /**
      * Retorna o histórico de internações/hospitalizações do paciente.
      */
-    public function historicoSaudavel(): HasMany
-    {
-        return $this->hasMany(HistoricoSaudavel::class, 'paciente_id');
-    }
+
 
     public function habitoSaudavel(): HasMany
     {

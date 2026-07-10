@@ -21,6 +21,8 @@
                             </div>
                         @endif
 
+                        
+
                         {{-- Tabela de Pacientes --}}
                         <div class="table-responsive">
                             <table class="table table-hover align-middle border">
@@ -48,8 +50,8 @@
                                                 <span class="text-muted text-xs">RG: {{ $paciente->rg }}</span>
                                             </td>
                                             <td>
-                                                <span class="d-block"><i class="bi bi-whatsapp text-success me-1"></i>{{ $paciente->whatsapp }}</span>
-                                                <span class="text-muted text-xs">{{ $paciente->email }}</span>
+                                                <span class="d-block"><i class="bi bi-whatsapp text-success me-1"></i>{{ $paciente->contatosPaciente->first()->telefone ?? 'Não informado' }}</span>
+                                                <span class="text-muted text-xs">{{ $paciente->contatosPaciente->first()->email ?? 'Não informado' }}</span>
                                             </td>
                                             <td>
                                                 <span>{{ $paciente->enderecoPaciente->cidade ?? 'N/A' }} - {{ $paciente->estado ?? 'N/A' }}</span>
@@ -96,54 +98,57 @@
                                                         <div class="row g-3 mb-3">
                                                             <div class="col-md-4"><strong>Data de Nascimento:</strong> {{ \Carbon\Carbon::parse($paciente->data_nascimento)->format('d/m/Y') }}</div>
                                                             <div class="col-md-4"><strong>Sexo:</strong> {{ $paciente->sexo ?? 'Não informado' }}</div>
-                                                            <div class="col-md-4"><strong>Telefone Fixo:</strong> {{ $paciente->telefone }}</div>
-                                                            <div class="col-md-4"><strong>Celular/WhatsApp:</strong> {{ $paciente->whatsapp }}</div>
-                                                            <div class="col-md-8"><strong>E-mail:</strong> {{ $paciente->email }}</div>
+                                                            <div class="col-md-4">
+                                                                <strong>Telefone Fixo:</strong> 
+                                                                {{ $paciente->contatosPaciente->first()->telefone ?? 'Não informado' }}
+                                                            </div>
+                                                            <div class="col-md-4"><strong>Celular/WhatsApp:</strong> {{ $paciente->contatosPaciente->first()->whatsapp ?? 'Não informado' }}</div>
+                                                            <div class="col-md-8"><strong>E-mail:</strong> {{ $paciente->contatosPaciente->first()->email ?? 'Não informado' }}</div>
                                                         </div>
 
                                                         {{-- 3. Localização --}}
                                                         <h6 class="text-primary fw-bold mb-2 border-bottom pb-1 text-uppercase text-xs" style="font-size: 0.8rem;">3. Endereço</h6>
                                                         <div class="row g-3 mb-3">
-                                                            <div class="col-md-3"><strong>CEP:</strong> {{ $paciente->cep }}</div>
-                                                            <div class="col-md-6"><strong>Rua:</strong> {{ $paciente->rua }}, Nº {{ $paciente->numero }}</div>
-                                                            <div class="col-md-3"><strong>Bairro:</strong> {{ $paciente->bairro }}</div>
-                                                            <div class="col-md-4"><strong>Cidade/UF:</strong> {{ $paciente->cidade }} - {{ $paciente->estado }}</div>
-                                                            <div class="col-md-4"><strong>País:</strong> {{ $paciente->pais }}</div>
+                                                            <div class="col-md-3"><strong>CEP:</strong> {{ $paciente->enderecoPaciente->first()->cep ?? 'Não informado' }}</div>
+                                                            <div class="col-md-6"><strong>Rua:</strong> {{ $paciente->enderecoPaciente->first()->rua ?? 'Não informado' }}, Nº {{ $paciente->enderecoPaciente->first()->numero ?? 'Não informado' }}</div>
+                                                            <div class="col-md-3"><strong>Bairro:</strong> {{ $paciente->enderecoPaciente->first()->bairro ?? 'Não informado' }}</div>
+                                                            <div class="col-md-4"><strong>Cidade/UF:</strong> {{ $paciente->enderecoPaciente->first()->cidade ?? 'Não informado' }} - {{ $paciente->enderecoPaciente->first()->estado ?? 'Não informado' }}</div>
+                                                            <div class="col-md-4"><strong>País:</strong> {{ $paciente->enderecoPaciente->first()->pais ?? 'Não informado' }}</div>
                                                         </div>
 
                                                         {{-- 4. Histórico Médico --}}
                                                         <h6 class="text-primary fw-bold mb-2 border-bottom pb-1 text-uppercase text-xs" style="font-size: 0.8rem;">4. Histórico Médico</h6>
                                                         <div class="row g-3 mb-3">
-                                                            <div class="col-md-4"><strong>Alergias:</strong> <span class="{{ $paciente->alergias ? 'text-danger fw-bold' : 'text-muted' }}">{{ $paciente->alergias ?? 'Nenhuma' }}</span></div>
-                                                            <div class="col-md-4"><strong>Medicações em Uso:</strong> <span class="{{ $paciente->medicacoes ? 'text-warning fw-bold' : 'text-muted' }}">{{ $paciente->medicacoes ?? 'Nenhuma' }}</span></div>
-                                                            <div class="col-md-4"><strong>Condições Crônicas:</strong> <span class="{{ $paciente->condicoes_cronicas ? 'text-primary fw-bold' : 'text-muted' }}">{{ $paciente->condicoes_cronicas ?? 'Nenhuma' }}</span></div>
-                                                            <div class="col-12"><strong>Histórico Cirúrgico:</strong> <p class="text-muted mb-0">{{ $paciente->historico_cirurgico ?? 'Nenhum histórico informado.' }}</p></div>
-                                                            <div class="col-12"><strong>Observações Médicas Gerais:</strong> <p class="text-muted mb-0">{{ $paciente->observacoes_medicas ?? 'Sem observações.' }}</p></div>
+                                                            <div class="col-md-4"><strong>Alergias:</strong> <span class="{{ $paciente->historicoMedico->alergias ? 'text-danger fw-bold' : 'text-muted' }}">{{ $paciente->historicoMedico->alergias ?? 'Nenhuma' }}</span></div>
+                                                            <div class="col-md-4"><strong>Medicações em Uso:</strong> <span class="{{ $paciente->historicoMedico->medicacoes ? 'text-warning fw-bold' : 'text-muted' }}">{{ $paciente->historicoMedico->medicacoes ?? 'Nenhuma' }}</span></div>
+                                                            <div class="col-md-4"><strong>Condições Crônicas:</strong> <span class="{{ $paciente->historicoMedico->condicoes_cronicas ? 'text-primary fw-bold' : 'text-muted' }}">{{ $paciente->historicoMedico->condicoes_cronicas ?? 'Nenhuma' }}</span></div>
+                                                            <div class="col-12"><strong>Histórico Cirúrgico:</strong> <p class="text-muted mb-0">{{ $paciente->historicoMedico->historico_cirurgico ?? 'Nenhum histórico informado.' }}</p></div>
+                                                            <div class="col-12"><strong>Observações Médicas Gerais:</strong> <p class="text-muted mb-0">{{ $paciente->historicoMedico->observacoes_medicas ?? 'Sem observações.' }}</p></div>
                                                         </div>
 
                                                         {{-- 5. Histórico Bucal --}}
                                                         <h6 class="text-primary fw-bold mb-2 border-bottom pb-1 text-uppercase text-xs" style="font-size: 0.8rem;">5. Histórico Bucal</h6>
                                                         <div class="row g-3 mb-3">
                                                             <div class="col-md-4"><strong>Última Visita:</strong> {{ $paciente->data_ultima_visita ? \Carbon\Carbon::parse($paciente->data_ultima_visita)->format('d/m/Y') : 'Não informada' }}</div>
-                                                            <div class="col-md-4"><strong>Motivo da Visita:</strong> {{ $paciente->motivo_visita ?? 'Não informado' }}</div>
-                                                            <div class="col-md-4"><strong>Sangramento Gengival?</strong> {{ $paciente->sangramento_gengival ?? 'Não' }}</div>
-                                                            <div class="col-md-4"><strong>Sensibilidade Dental?</strong> {{ $paciente->sensibilidade_dental ?? 'Não' }}</div>
-                                                            <div class="col-md-4"><strong>Uso de Prótese/Aparelho?</strong> {{ $paciente->uso_protese ?? 'Não' }}</div>
-                                                            <div class="col-md-4"><strong>Tipo de Prótese:</strong> {{ $paciente->tipo_protese ?? 'Nenhum' }}</div>
-                                                            <div class="col-12"><strong>Tratamentos Anteriores:</strong> <p class="text-muted mb-0">{{ $paciente->tratamentos_anteriores ?? 'Nenhum informado.' }}</p></div>
-                                                            <div class="col-12"><strong>Observações Bucais Adicionais:</strong> <p class="text-muted mb-0">{{ $paciente->observacoes_bucais ?? 'Sem observações.' }}</p></div>
+                                                            <div class="col-md-4"><strong>Motivo da Visita:</strong> {{ $paciente->historicoBucal->motivo_visita ?? 'Não informado' }}</div>
+                                                            <div class="col-md-4"><strong>Sangramento Gengival?</strong> {{ $paciente->historicoBucal->sangramento_gengival ?? 'Não' }}</div>
+                                                            <div class="col-md-4"><strong>Sensibilidade Dental?</strong> {{ $paciente->historicoBucal->sensibilidade_dental ?? 'Não' }}</div>
+                                                            <div class="col-md-4"><strong>Uso de Prótese/Aparelho?</strong> {{ $paciente->historicoBucal->uso_protese ?? 'Não' }}</div>
+                                                            <div class="col-md-4"><strong>Tipo de Prótese:</strong> {{ $paciente->historicoBucal->tipo_protese ?? 'Nenhum' }}</div>
+                                                            <div class="col-12"><strong>Tratamentos Anteriores:</strong> <p class="text-muted mb-0">{{ $paciente->historicoBucal->tratamentos_anteriores ?? 'Nenhum informado.' }}</p></div>
+                                                            <div class="col-12"><strong>Observações Bucais Adicionais:</strong> <p class="text-muted mb-0">{{ $paciente->historicoBucal->observacoes_bucais ?? 'Sem observações.' }}</p></div>
                                                         </div>
 
                                                         {{-- 6. Hábitos Saudáveis --}}
                                                         <h6 class="text-primary fw-bold mb-2 border-bottom pb-1 text-uppercase text-xs" style="font-size: 0.8rem;">6. Hábitos & Estilo de Vida</h6>
                                                         <div class="row g-3">
-                                                            <div class="col-md-4"><strong>Frequência Escovação:</strong> {{ $paciente->frequencia_escovacao ?? 'Não informado' }}</div>
-                                                            <div class="col-md-4"><strong>Usa Fio Dental?</strong> {{ $paciente->usa_fio_dental ?? 'Não informado' }}</div>
-                                                            <div class="col-md-4"><strong>Hábito de Fumo:</strong> {{ $paciente->habito_fumo ?? 'Não informado' }}</div>
-                                                            <div class="col-md-4"><strong>Consumo de Álcool:</strong> {{ $paciente->consumo_alcool ?? 'Não informado' }}</div>
-                                                            <div class="col-md-4"><strong>Atividade Física:</strong> {{ $paciente->pratica_atividade_fisica ?? 'Não informado' }}</div>
-                                                            <div class="col-md-4"><strong>Qualidade do Sono:</strong> {{ $paciente->qualidade_sono ?? 'Não informado' }}</div>
-                                                            <div class="col-12"><strong>Observações sobre Estilo de Vida:</strong> <p class="text-muted mb-0">{{ $paciente->observacoes_habitos ?? 'Sem observações adicionais.' }}</p></div>
+                                                            <div class="col-md-4"><strong>Frequência Escovação:</strong> {{ $paciente->historicoBucal->frequencia_escovacao ?? 'Não informado' }}</div>
+                                                            <div class="col-md-4"><strong>Usa Fio Dental?</strong> {{ $paciente->historicoBucal->usa_fio_dental ?? 'Não informado' }}</div>
+                                                            <div class="col-md-4"><strong>Hábito de Fumo:</strong> {{ $paciente->historicoBucal->habito_fumo ?? 'Não informado' }}</div>
+                                                            <div class="col-md-4"><strong>Consumo de Álcool:</strong> {{ $paciente->historicoBucal->consumo_alcool ?? 'Não informado' }}</div>
+                                                            <div class="col-md-4"><strong>Atividade Física:</strong> {{ $paciente->historicoBucal->pratica_atividade_fisica ?? 'Não informado' }}</div>
+                                                            <div class="col-md-4"><strong>Qualidade do Sono:</strong> {{ $paciente->historicoBucal->qualidade_sono ?? 'Não informado' }}</div>
+                                                            <div class="col-12"><strong>Observações sobre Estilo de Vida:</strong> <p class="text-muted mb-0">{{ $paciente->historicoBucal->observacoes_habitos ?? 'Sem observações adicionais.' }}</p></div>
                                                         </div>
 
                                                     </div>

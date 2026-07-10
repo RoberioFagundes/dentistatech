@@ -80,3 +80,12 @@ Dica de Arquitetura:
 Se o recepcionista for um tipo de usuário dentro da tabela users, uma forma elegante de gerenciar isso é através de uma tabela pivô ou um campo de chave estrangeira chamado criado_por_id. Isso facilita muito consultas futuras, como "listar todos os recepcionistas deste dentista" ($dentista->recepcionistas).
 
 Você já possui a estrutura de tabelas criada para esse relacionamento (como uma tabela vinculos ou apenas uma coluna dentista_id na tabela de usuários)?
+
+
+
+## lista de funcionalidade ok 
+
+* cadastrar paciente 
+* editar paciente 
+* atualizar paciente 
+

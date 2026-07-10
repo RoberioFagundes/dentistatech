@@ -29,6 +29,6 @@ class ContatoPaciente extends Model
      */
     public function paciente(): BelongsTo
     {
-        return $this->belongsTo(Paciente::class, 'paciente_id');
+        return $this->belongsTo(Paciente::class, 'paciente_id', 'id');
     }
 }
