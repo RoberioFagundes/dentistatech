@@ -83,9 +83,13 @@ Você já possui a estrutura de tabelas criada para esse relacionamento (como um
 
 
 
-## lista de funcionalidade ok 
+## lista de funcionalidade de paciente ok 
 
 * cadastrar paciente 
 * editar paciente 
 * atualizar paciente 
+* deletar paciente 
+* pesquisar por nome 
+* função de limpar formulario 
+* falta arrumar o modal que mostrar dados do paciente 
 

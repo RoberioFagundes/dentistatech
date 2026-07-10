@@ -133,6 +133,7 @@
                 </div>
                 <nav class="sidebar-nav scroll-sidebar flex-grow-1 px-3">
                     @include('dentista.layout.menuDentista.menuDentista')
+                 
                 </nav>
             </div>
         </aside>
@@ -172,7 +173,7 @@
             <div class="body-wrapper-inner">
                 <div class="container-fluid" style="margin-top: -150px;">
                     @yield('pagina')
-                  
+
                 </div>
             </div>
         </div>

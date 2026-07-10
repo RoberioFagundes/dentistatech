@@ -1,6 +1,29 @@
 @extends('dentista.layout.paginaDentista')
 
 @section('pagina')
+   @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+@if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ session('warning') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-x-circle-fill me-2"></i>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-12">
@@ -11,6 +34,28 @@
                             <i class="bi bi-person-plus me-1"></i> Novo Paciente
                         </a>
                     </div>
+                    <div class="col-resposive">
+                                        <form method="GET" action="{{ route('paciente.index') }}">
+                            <div class="input-group">
+                                <input
+                                    type="text"
+                                    name="busca"
+                                    class="form-control"
+                                    placeholder="Buscar por nome..."
+                                    value="{{ request('busca') }}">
+
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+
+                                <a href="{{ route('paciente.index') }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Limpar
+                                </a>
+                            </div>
+                        </form>
+
+                    </div>
+    
                     <div class="card-body p-4">
 
                         {{-- Mensagens de Sucesso --}}

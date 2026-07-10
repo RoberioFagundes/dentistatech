@@ -25,11 +25,13 @@ class PacienteController extends Controller
         // ... restante do seu código (filtros de status e busca)
 
         // A busca também deve considerar o relacionamento se necessário
-        if ($request->has('busca')) {
-            $busca = $request->busca;
+        if ($request->filled('busca')) {
+            $busca = trim($request->busca);
+
             $query->where(function ($q) use ($busca) {
                 $q->where('nome', 'like', "%{$busca}%")
-                    ->orWhere('cpf', 'like', "%{$busca}%");
+                    ->orWhere('sobrenome', 'like', "%{$busca}%")
+                    ->orWhereRaw("CONCAT(nome, ' ', sobrenome) LIKE ?", ["%{$busca}%"]);
             });
         }
 
@@ -349,19 +351,21 @@ class PacienteController extends Controller
      */
     public function destroy(Paciente $paciente)
     {
-        // Regra de Negócio Crítica: Clínicas de saúde não podem excluir fisicamente pacientes que já possuem 
-        // históricos de consultas (agendamentos), evoluções de prontuário ou orçamentos aprovados devido a regras do CRO e auditorias legais.
+        // Verifica se o paciente possui histórico clínico
         $possuiHistoricoClinico = $paciente->agendamentos()->exists() ||
             $paciente->orcamentos()->exists();
 
         if ($possuiHistoricoClinico) {
-            // Atualiza o status
-            $paciente->update(['status' => 'Inativo']);
 
-            // Redireciona de volta com uma mensagem de aviso
-            return redirect()->back()->with('warning', 'O paciente possui históricos clínicos registados e não pode ser excluído permanentemente. O seu status foi alterado para Inativo.');
+            $paciente->update([
+                'status' => 'Inativo'
+            ]);
+
+            return redirect()
+                ->route('paciente.index')
+                ->with('warning', 'O paciente não pode ser excluído porque possui histórico clínico. Seu cadastro foi apenas inativado.');
         }
-        // Se for um cadastro novo sem nenhum vínculo ativo, realiza a deleção completa das tabelas filhas e do pai
+
         DB::transaction(function () use ($paciente) {
             $paciente->endereco()->delete();
             $paciente->contatosPaciente()->delete();
@@ -370,6 +374,8 @@ class PacienteController extends Controller
             $paciente->delete();
         });
 
-        return view('dentista.paciente.index', ['pacientes' => Paciente::all()])->with('success', 'Paciente removido com sucesso do sistema!');
+        return redirect()
+            ->route('paciente.index')
+            ->with('success', 'Paciente excluído com sucesso!');
     }
 }
