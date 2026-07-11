@@ -93,9 +93,9 @@ class Paciente extends Model
      */
 
 
-    public function habitoSaudavel(): HasMany
+    public function habitoSaudavel(): HasOne
     {
-        return $this->hasMany(HabitoSaudavel::class, 'paciente_id');
+        return $this->hasOne(HabitoSaudavel::class, 'paciente_id');
     }
 
     /**

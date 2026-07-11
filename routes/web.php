@@ -9,6 +9,7 @@ use App\Http\Controllers\AtendimentoController;
 use App\Http\Controllers\FinanceiroController;
 use App\Http\Controllers\FilaAgendamentoEsperaController;
 // use App\Http\Controllers\FilaEsperaAgendamentoController;
+use App\Http\Controllers\OrcamentoController;
 use App\Http\Controllers\RemacacaoController;
 use App\Http\Controllers\FilaAtendimentoController;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('atendimento', AtendimentoController::class);
     Route::resource('remarcacao', RemacacaoController::class);
     Route::resource('filaAtendimento', FilaAtendimentoController::class);
+    Route::resource('orcamento', OrcamentoController::class);
+  
 
     // Rotas específicas da Fila de Espera (Mantendo apenas um grupo limpo)
     Route::prefix('filaAgendamentoEspera')->group(function () {

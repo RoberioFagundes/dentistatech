@@ -66,6 +66,7 @@
         .body-wrapper {
             margin-left: 250px;
             padding-top: 110px;
+            /* Reduza este valor */
             min-height: 100vh;
             transition: all 0.3s ease;
         }
@@ -84,6 +85,11 @@
         .table td {
             vertical-align: middle;
             white-space: normal !important;
+        }
+        .container-fluid {
+            padding-left: 1rem;
+            padding-right: 1rem;
+           
         }
 
         @media (max-width: 991px) {
@@ -114,7 +120,7 @@
 </head>
 
 <body>
-    <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+    <div class="page-wrapper mt-0" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
         data-sidebar-position="fixed" data-header-position="fixed">
 
         <div class="app-topstrip">
@@ -123,119 +129,28 @@
 
         <aside class="left-sidebar" id="sidebar">
             <div class="d-flex flex-column h-100">
-                <div class="brand-logo d-flex align-items-center justify-content-between p-3">
-                    <a href="{{ route('dashboard') }}" class="text-nowrap logo-img">
-                        <img src="{{ asset('favicon.ico') }}" height="250" alt="Logo" class="img-fluid">
-                    </a>
-                    <div class="close-btn d-lg-none cursor-pointer" id="sidebarCloseBtn">
-                        <i class="fa fa-times fs-5"></i>
-                    </div>
+                <div class="brand-logo p-3">
+                    <a href="{{ route('dashboard') }}"><img src="{{ asset('favicon.ico') }}" height="150"
+                            alt="Logo"></a>
                 </div>
+
                 <nav class="sidebar-nav scroll-sidebar flex-grow-1 px-3">
                     @include('dentista.layout.menuDentista.menuDentista')
-                 
                 </nav>
             </div>
         </aside>
 
         <div class="body-wrapper">
-            <header class="app-header">
-                <nav class="navbar navbar-expand navbar-light w-100 d-flex justify-content-between align-items-center">
-                    <ul class="navbar-nav">
-                        <li class="nav-item d-block d-lg-none">
-                            <a class="nav-link sidebartoggler" id="sidebarToggleBtn" href="javascript:void(0)">
-                                <i class="fa fa-bars fs-5"></i>
-                            </a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#"
-                                id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-user-circle fs-5"></i>
-                                <span class="d-none d-md-inline">{{ auth()->user()->name }}</span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                                <div class="p-2">
-                                    <form action="{{ route('logout') }}" method="POST" class="m-0">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item rounded text-danger">
-                                            <i class="fa fa-sign-out me-2"></i> Sair
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </nav>
-            </header>
+            <header class="app-header">...</header>
 
             <div class="body-wrapper-inner">
-                <div class="container-fluid" style="margin-top: -150px;">
+                <div class="container-fluid">
                     @yield('pagina')
-
                 </div>
             </div>
+
+            @include('dentista.layout.footerDentista.footerDentista')
         </div>
-    </div>
-
-    <script src="{{ asset('template/assets/libs/jquery/dist/jquery.min.js') }}"></script>
-    <script src="{{ asset('template/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ asset('template/assets/js/sidebarmenu.js') }}"></script>
-    <script src="{{ asset('template/assets/js/app.min.js') }}"></script>
-    <script src="{{ asset('template/assets/libs/simplebar/dist/simplebar.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.getElementById('sidebarToggleBtn');
-            const closeBtn = document.getElementById('sidebarCloseBtn');
-
-            if (toggleBtn && sidebar) {
-                toggleBtn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    sidebar.classList.toggle('active');
-                });
-            }
-            if (closeBtn && sidebar) {
-                closeBtn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    sidebar.classList.remove('active');
-                });
-            }
-            document.addEventListener('click', function (event) {
-                if (sidebar && sidebar.classList.contains('active')) {
-                    if (!sidebar.contains(event.target) && !event.target.closest('#sidebarToggleBtn')) {
-                        sidebar.classList.remove('active');
-                    }
-                }
-            });
-
-            // AJAX dinâmico para os inputs com a classe .atualizar-campo
-            $(document).on('change', '.atualizar-campo', function () {
-                let id = $(this).data('id');
-                let campo = $(this).data('campo');
-                let valor = $(this).val();
-
-                $.ajax({
-                    url: '/agendamentos/' + id + '/atualizar-campo',
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        campo: campo,
-                        valor: valor
-                    },
-                    success: function (response) { console.log('Salvo com sucesso!'); },
-                    error: function () { alert('Erro ao salvar as alterações do agendamento.'); }
-                });
-            });
-        });
-    </script>
-    <div class="mt-4">
-        @include('dentista.layout.footerDentista.footerDentista')
-    </div>
 </body>
 
 </html>

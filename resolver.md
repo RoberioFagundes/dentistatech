@@ -91,5 +91,9 @@ Você já possui a estrutura de tabelas criada para esse relacionamento (como um
 * deletar paciente 
 * pesquisar por nome 
 * função de limpar formulario 
-* falta arrumar o modal que mostrar dados do paciente 
+* falta arrumar o modal que mostrar dados do paciente 7
+
+## colocar 
+* No create orçamento colocar os procedimentos há ser feitos no dentes e os valores 
+ 
 

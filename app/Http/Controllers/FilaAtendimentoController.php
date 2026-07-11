@@ -49,24 +49,28 @@ class FilaAtendimentoController extends Controller
             'agendamento_id' => 'required|exists:agendamentos,id',
         ]);
 
-        // Verifica se o agendamento já está na fila
+        // 1. Busca o agendamento para garantir que ele existe e obter o ID do paciente vinculado
+        $agendamento = Agendamento::findOrFail($request->agendamento_id);
+
+        // 2. Verifica se o agendamento já está na fila
         $filaExistente = FilaAtendimento::where('agendamento_id', $request->agendamento_id)
             ->whereIn('status_fila', ['AGUARDANDO', 'EM_ATENDIMENTO'])
             ->first();
 
         if ($filaExistente) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Este paciente já está na fila.'
-            ], 422);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Este paciente já está na fila.');
         }
 
+        // 3. Cria o registro na fila salvando tanto o agendamento_id quanto o paciente_id
         $fila = FilaAtendimento::create([
             'agendamento_id' => $request->agendamento_id,
-            'status_fila'    => 'AGUARDANDO',
-            'prioridade'     => 0,
-            'chegada_em'     => now(),
-            'user_id'        => auth()->id(),
+            'paciente_id' => $agendamento->paciente_id, // <--- ADICIONADO AQUI
+            'status_fila' => 'AGUARDANDO',
+            'prioridade' => 0,
+            'chegada_em' => now(),
+            'user_id' => auth()->id(),
         ]);
 
         return redirect()
@@ -100,7 +104,7 @@ class FilaAtendimentoController extends Controller
         // Ex: De 'Aguardando' para 'Chamado' (Piscar no painel da TV da recepção)
         $dadosValidados = $request->validate([
             'status_fila' => 'required|string|in:Aguardando,Chamado,Em Atendimento,Atendido,Desistiu',
-            'prioridade'  => 'nullable|integer|in:0,1',
+            'prioridade' => 'nullable|integer|in:0,1',
             'observacoes' => 'nullable|string|max:255'
         ]);
 

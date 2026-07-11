@@ -1,6 +1,6 @@
 @php
-    // Extraímos o objeto uma única vez para usar abaixo
-    $habito = $paciente->habitoSaudavel->first();
+    // Verifica se $paciente existe e se possui a relação carregada
+    $habito = ($paciente && $paciente->habitoSaudavel) ? $paciente->habitoSaudavel->first() : null;
 @endphp
 
 @extends('dentista.layout.paginaDentista')
@@ -415,7 +415,10 @@
                                     <select class="form-select @error('frequencia_escovacao') is-invalid @enderror"
                                         id="frequencia_escovacao" name="frequencia_escovacao">
                                         <option value="">Selecione</option>
-                                        @php $valorAtual = old('frequencia_escovacao', $paciente->habitoSaudavel->first()?->frequencia_escovacao); @endphp
+                                                    @php 
+                                                        // Tenta acessar o primeiro item da relação com segurança
+                                                        $valorAtual = old('frequencia_escovacao', $paciente->habitoSaudavel?->first()?->frequencia_escovacao); 
+                                                    @endphp
 
                                         <option value="1 vez ao dia" {{ $valorAtual == '1 vez ao dia' ? 'selected' : '' }}>1
                                             vez ao dia</option>
@@ -445,19 +448,23 @@
                                         name="habito_fumo">
                                         <option value="">Selecione</option>
 
-                                        <option value="Não fuma" {{ old('habito_fumo', optional($paciente->habitoSaudavel->first())->habito_fumo) == 'Não fuma' ? 'selected' : '' }}>
+                                        <option value="Não fuma"
+                                            {{ old('habito_fumo', $habito?->habito_fumo) == 'Não fuma' ? 'selected' : '' }}>
                                             Não fuma
                                         </option>
 
-                                        <option value="Ex-fumante" {{ old('habito_fumo', optional($paciente->habitoSaudavel->first())->habito_fumo) == 'Ex-fumante' ? 'selected' : '' }}>
+                                        <option value="Ex-fumante"
+                                            {{ old('habito_fumo', $habito?->habito_fumo) == 'Ex-fumante' ? 'selected' : '' }}>
                                             Ex-fumante
                                         </option>
 
-                                        <option value="Fuma ocasionalmente" {{ old('habito_fumo', optional($paciente->habitoSaudavel->first())->habito_fumo) == 'Fuma ocasionalmente' ? 'selected' : '' }}>
+                                        <option value="Fuma ocasionalmente"
+                                            {{ old('habito_fumo', $habito?->habito_fumo) == 'Fuma ocasionalmente' ? 'selected' : '' }}>
                                             Fuma ocasionalmente
                                         </option>
 
-                                        <option value="Fumante regular" {{ old('habito_fumo', optional($paciente->habitoSaudavel->first())->habito_fumo) == 'Fumante regular' ? 'selected' : '' }}>
+                                        <option value="Fumante regular"
+                                            {{ old('habito_fumo', $habito?->habito_fumo) == 'Fumante regular' ? 'selected' : '' }}>
                                             Fumante regular
                                         </option>
                                     </select>
@@ -486,7 +493,7 @@
                                     <select class="form-select @error('atividade_fisica') is-invalid @enderror"
                                         id="atividade_fisica" name="atividade_fisica">
                                         <option value="">Selecione</option>
-                                        @php $valorAtual = old('atividade_fisica', $paciente->habitoSaudavel->first()?->atividade_fisica); @endphp
+                                       @php $valorAtual = old('atividade_fisica', $paciente->habitoSaudavel?->first()?->atividade_fisica); @endphp
 
                                         <option value="Não pratica" {{ $valorAtual == 'Não pratica' ? 'selected' : '' }}>Não
                                             pratica</option>

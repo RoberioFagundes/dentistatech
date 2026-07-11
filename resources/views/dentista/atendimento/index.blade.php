@@ -60,6 +60,12 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group" role="group">
+                                            <form action="{{ route('orcamento.create', $atendimento->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-primary" title="Gerar Orçamento">
+                                                    <i class="bi bi-receipt"></i>
+                                                </button>
+                                            </form>
                                             <a href="{{ route('atendimento.edit', $atendimento->id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>

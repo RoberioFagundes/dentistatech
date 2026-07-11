@@ -1,7 +1,15 @@
 @extends('dentista.layout.paginaDentista')
 
 @section('pagina')
-<div class="container-fluid my-4 px-4">
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+<div class="container-fluid mt-0 px-4">
     <form action="{{ route('agendamento.index') }}" method="GET" class="row">
         <div class="col-md-4">
             <input type="text" name="nome" class="form-control" placeholder="Buscar por nome..." value="{{ $nomeFiltro }}">
@@ -20,11 +28,11 @@
             <h2 class="h3 mb-1 text-dark font-weight-bold">Controle de Agendamentos</h2>
             <p class="text-muted small mb-0">Gerencie os horários, pacientes e status dos atendimentos no consultório.</p>
         </div>
-        <div>
+        <!-- <div>
             <a href="{{ route('agendamento.create') }}" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm px-3 py-2">
                 <span>➕</span> Novo Agendamento
             </a>
-        </div>
+        </div> -->
     </div>
 
     <div class="card shadow-sm border-0">
@@ -96,6 +104,14 @@
 
                         <td class="px-4 py-3 text-end">
                             <div class="d-flex justify-content-end gap-1">
+                                <form action="{{ route('remarcacao.create') }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <input type="hidden" name="agendamento_id" value="{{ $item->id }}">
+                                    <input type="hidden" name="paciente_id" value="{{ $item->paciente_id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary border-0 text-primary p-1.5" title="Remarcar">
+                                        🔁
+                                    </button>
+                                </form>
                                 <form action="{{ route('fila.adicionar') }}" method="POST" class="d-inline">
                                     @csrf
                                     <input type="hidden" name="agendamento_id" value="{{ $item->id }}">

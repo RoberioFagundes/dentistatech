@@ -20,7 +20,8 @@ class FilaAtendimento extends Model
         'prioridade',
         'chegada_em',
         'chamado_em',
-        'user_id'
+        'user_id',
+        'paciente_id'
     
     ];
 

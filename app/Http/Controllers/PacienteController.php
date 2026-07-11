@@ -20,7 +20,7 @@ class PacienteController extends Controller
     {
         /// Adicione o 'with' para carregar os contatos junto com os pacientes
         $query = Paciente::where('user_id', auth()->id())
-            ->with('contatosPaciente'); // <--- A MÁGICA ESTÁ AQUI
+            ->with('contatosPaciente', 'habitoSaudavel', 'historicoBucal', 'historicoMedico'); // <--- A MÁGICA ESTÁ AQUI
 
         // ... restante do seu código (filtros de status e busca)
 
@@ -94,7 +94,7 @@ class PacienteController extends Controller
 
             // HÁBITOS SAUDÁVEIS
             'frequencia_escovacao' => 'nullable|string|in:1 vez ao dia,2 vezes ao dia,3 ou mais vezes ao dia',
-            'usa_fio_dental' => 'nullable|string|in:Sim,Não,Às vezes',
+            'uso_fio_dental' => 'nullable|string|in:Sim,Não,Às vezes',
             'habito_fumo' => 'nullable|string|in:Não fuma,Ex-fumante,Fuma ocasionalmente,Fumante regular',
             'atividade_fisica' => 'nullable|string|in:Não pratica,1-2 vezes por semana,3-4 vezes por semana,Diariamente',
             'qualidade_sono' => 'nullable|string|in:Ruim,Regular,Bom,Ótimo',
@@ -170,7 +170,7 @@ class PacienteController extends Controller
             HabitoSaudavel::create([
                 'paciente_id' => $paciente->id,
                 'frequencia_escovacao' => $validated['frequencia_escovacao'] ?? null,
-                'uso_fio_dental' => $validated['usa_fio_dental'] ?? null,
+                'uso_fio_dental' => $validated['uso_fio_dental'] ?? null,
                 'habito_fumo' => $validated['habito_fumo'] ?? null,
                 'atividade_fisica' => $validated['atividade_fisica'] ?? null,
                 'qualidade_sono' => $validated['qualidade_sono'] ?? null,
@@ -259,7 +259,7 @@ class PacienteController extends Controller
 
             // HÁBITOS SAUDÁVEIS
             'frequencia_escovacao' => 'nullable|string|in:1 vez ao dia,2 vezes ao dia,3 ou mais vezes ao dia',
-            'usa_fio_dental' => 'nullable|string|in:Sim,Não,Às vezes',
+            'uso_fio_dental' => 'nullable|string|in:Sim,Não,Às vezes',
             'habito_fumo' => 'nullable|string|in:Não fuma,Ex-fumante,Fuma ocasionalmente,Fumante regular',
             'atividade_fisica' => 'nullable|string|in:Não pratica,1-2 vezes por semana,3-4 vezes por semana,Diariamente',
             'qualidade_sono' => 'nullable|string|in:Ruim,Regular,Bom,Ótimo',
@@ -333,7 +333,7 @@ class PacienteController extends Controller
                 ['paciente_id' => $paciente->id],
                 [
                     'frequencia_escovacao' => $request->frequencia_escovacao,
-                    'uso_fio_dental' => $request->usa_fio_dental,
+                    'uso_fio_dental' => $request->uso_fio_dental,
                     'habito_fumo' => $request->habito_fumo,
                     'atividade_fisica' => $request->atividade_fisica,
                     'qualidade_sono' => $request->qualidade_sono,
