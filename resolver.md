@@ -95,5 +95,72 @@ Você já possui a estrutura de tabelas criada para esse relacionamento (como um
 
 ## colocar 
 * No create orçamento colocar os procedimentos há ser feitos no dentes e os valores 
- 
+
+como criar um login para funcionario estando logado no laravel
+
+Para criar um sistema onde um usuário já logado (geralmente um administrador ou gestor) possa criar um login para um funcionário, você deve seguir o fluxo de criação de registros padrão do Laravel, mas com uma atenção especial à segurança e ao envio de senha.
+
+Aqui está o roteiro para implementar isso:
+
+1. O Controller
+Você não deve usar o RegisterController padrão (que é para auto-cadastro), mas sim um FuncionarioController próprio, acessível apenas por usuários autenticados.
+
+PHP
+public function store(Request $request)
+{
+    // 1. Validação
+    $validated = $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|email|unique:users,email',
+        'password' => 'required|min:8|confirmed',
+        'role'     => 'required|in:dentista,recepcao', // Exemplo de permissão
+    ]);
+
+    // 2. Criação do Usuário
+    $funcionario = User::create([
+        'name'     => $validated['name'],
+        'email'    => $validated['email'],
+        'password' => Hash::make($validated['password']),
+        'role'     => $validated['role'],
+    ]);
+
+    return redirect()->route('funcionarios.index')
+        ->with('success', 'Funcionário cadastrado com sucesso!');
+}
+2. A Rota
+Proteja a rota dentro do grupo auth. No seu routes/web.php:
+
+PHP
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/funcionarios/create', [FuncionarioController::class, 'create'])->name('funcionarios.create');
+    Route::post('/funcionarios', [FuncionarioController::class, 'store'])->name('funcionarios.store');
+});
+3. A View (Formulário)
+O formulário será exibido para quem já está logado. Utilize o @csrf para segurança.
+
+HTML
+<form action="{{ route('funcionarios.store') }}" method="POST">
+    @csrf
+    <input type="text" name="name" placeholder="Nome" required>
+    <input type="email" name="email" required>
+    <input type="password" name="password" required>
+    <input type="password" name="password_confirmation" required>
+    
+    <select name="role">
+        <option value="dentista">Dentista</option>
+        <option value="recepcao">Recepção</option>
+    </select>
+    
+    <button type="submit">Cadastrar Funcionário</button>
+</form>
+Pontos de Atenção (Estratégia)
+Middleware de Autorização: Como você está logado, é essencial garantir que apenas administradores consigam acessar essa página. No Laravel, crie um Gate ou um Middleware chamado Admin.
+
+Envio de Senha: É uma prática ruim o administrador criar a senha para o funcionário e depois ter que passar por WhatsApp/email (inseguro). A melhor prática é criar o usuário com uma senha temporária e forçar uma troca no primeiro login, ou usar o recurso de "Reset de senha" (enviar um e-mail de definição de senha para o novo funcionário).
+
+Tabela de Usuários: Se a sua tabela users for usada para todos, garanta que você tenha uma coluna role ou type para diferenciar o Dentista do Administrador.
+
+Fluxo de criação de usuário autenticado
+Se você estiver usando Laravel Jetstream ou Breeze, você pode aproveitar o UserFactory para facilitar os testes deste cadastro, ou estender a lógica de CreateNewUser para o seu contexto de funcionários.
+
 
