@@ -12,17 +12,18 @@ class OrcamentoPaciente extends Model
 {
     use HasFactory;
     // Define explicitamente o nome da tabela no plural
-    protected $table = "orcamento_pacientes";
+    protected $table = "orcamento_pacientes";	
 
     protected $fillable = [
-        'paciente_id',
-        'dentista_id',
-        'valor_bruto',       // Soma do valor original de todos os itens
-        'desconto_global',   // Desconto aplicado sobre o total do orçamento
-        'valor_liquido',     // Valor final a ser pago (Bruto - Desconto)
-        'user_id',
-        'status',            // Ex: 'Pendente', 'Aprovado', 'Recusado', 'Finalizado'
-        'observacoes'
+        'validade',
+        'valor',
+        'total_orcamento',
+        'desconto',       // Soma do valor original de todos os itens
+        'valor_liquido',   // Desconto aplicado sobre o total do orçamento
+        'paciente_id',     // Valor final a ser pago (Bruto - Desconto)
+        'atendimento_id',
+        'user_id',            // Ex: 'Pendente', 'Aprovado', 'Recusado', 'Finalizado'
+        'procedimento_dentes_id'
     ];
 
     /**

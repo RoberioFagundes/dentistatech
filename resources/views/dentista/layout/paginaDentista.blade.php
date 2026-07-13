@@ -151,6 +151,14 @@
 
             @include('dentista.layout.footerDentista.footerDentista')
         </div>
+        <!-- é isso que faz o modal funcionar -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script src="{{ asset('template/assets/libs/jquery/dist/jquery.min.js') }}"></script>
+<script src="{{ asset('template/assets/js/sidebarmenu.js') }}"></script>
+<script src="{{ asset('template/assets/js/app.min.js') }}"></script>
 </body>
 
 </html>

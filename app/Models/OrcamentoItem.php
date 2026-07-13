@@ -15,14 +15,15 @@ class OrcamentoItem extends Model
     protected $table = "orcamento_itens";
 
     protected $fillable = [
-        'orcamento_id',       // ID do orçamento pai (OrcamentoPaciente)
-        'procedimento_id',    // ID do procedimento/serviço realizado
+        'dente',       // ID do orçamento pai (OrcamentoPaciente)
+        'face',    // ID do procedimento/serviço realizado
         'quantidade',         // Quantidade do procedimento (Ex: 2 extrações)
-        'user_id',
-        'valor_unitario',     // Preço do procedimento no momento do orçamento
-        'desconto',           // Valor ou porcentagem de desconto aplicado ao item
-        'valor_total',        // Valor líquido (Quantidade * Valor Unitário - Desconto)
-        'dente_regiao'        // Opcional: Indica se o procedimento é para um dente específico (Ex: 16)
+        'status',
+        'orcamento_paciente_id',     // Preço do procedimento no momento do orçamento
+        'user_id',           // Valor ou porcentagem de desconto aplicado ao item
+        'procedimento_dente_id',        // Valor líquido (Quantidade * Valor Unitário - Desconto)
+        'orcamento_paciente_id',
+        'valor'
     ];
 
     /**
@@ -30,9 +31,7 @@ class OrcamentoItem extends Model
      */
     protected $casts = [
         'quantidade' => 'integer',
-        'valor_unitario' => 'float',
-        'desconto' => 'float',
-        'valor_total' => 'float',
+        'valor' => 'float',
     ];
 
     /**
