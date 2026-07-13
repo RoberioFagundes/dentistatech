@@ -3,7 +3,8 @@
     <div class="container-fluid" style="max-width: 1400px; margin-top: -190px;">
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
-                <a href="{{ route('atendimento.index') }}" class="btn btn-sm btn-link text-decoration-none p-0 text-muted mb-2">
+                <a href="{{ route('atendimento.index') }}"
+                    class="btn btn-sm btn-link text-decoration-none p-0 text-muted mb-2">
                     <i class="bi bi-arrow-left me-1"></i> Voltar para o histórico
                 </a>
                 <h4 class="fw-bold text-dark mb-1">
@@ -25,12 +26,14 @@
                 <div class="col-lg-8">
                     <div class="card shadow-sm border-0 rounded-4 mb-4">
                         <div class="card-header bg-white border-bottom py-3">
-                            <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-people text-primary me-2"></i>Vínculos</h5>
+                            <h5 class="card-title mb-0 fw-bold text-dark"><i
+                                    class="bi bi-people text-primary me-2"></i>Vínculos</h5>
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-3 align-items-end">
                                 <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Dentista <span class="text-danger">*</span></label>
+                                    <label class="form-label fw-semibold">Dentista <span
+                                            class="text-danger">*</span></label>
                                     <select class="form-select shadow-sm" name="dentista_id" required>
                                         @foreach($dentistas as $d)
                                             <option value="{{ $d->id }}" {{ old('dentista_id', $atendimento->dentista_id ?? '') == $d->id ? 'selected' : '' }}>{{ $d->nome }}</option>
@@ -58,7 +61,8 @@
                                                 <option value="">Nenhum</option>
                                                 @foreach($agendamentos as $a)
                                                     <option value="{{ $a->id }}" {{ (isset($agendamentoId) && $agendamentoId == $a->id) ? 'selected' : '' }}>
-                                                        {{ $a->data->format('d/m H:i') }} - {{ $a->paciente->nome ?? 'Paciente sem nome' }}
+                                                        {{ $a->data->format('d/m H:i') }} -
+                                                        {{ $a->paciente->nome ?? 'Paciente sem nome' }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -76,16 +80,19 @@
                         <div class="card-body p-4">
                             <div class="mb-4">
                                 <label class="form-label fw-semibold">Queixa Principal</label>
-                                <input type="text" class="form-control shadow-sm" name="queixa_principal" placeholder="Digite a queixa principal" required>
+                                <input type="text" class="form-control shadow-sm" name="queixa_principal"
+                                    placeholder="Digite a queixa principal" required>
                             </div>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Diagnóstico</label>
-                                    <textarea class="form-control shadow-sm" name="diagnostico" rows="3" placeholder="Descrição do diagnóstico"></textarea>
+                                    <textarea class="form-control shadow-sm" name="diagnostico" rows="3"
+                                        placeholder="Descrição do diagnóstico"></textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Tratamento</label>
-                                    <textarea class="form-control shadow-sm" name="tratamento_executado" rows="3" placeholder="Procedimentos realizados"></textarea>
+                                    <textarea class="form-control shadow-sm" name="tratamento_executado" rows="3"
+                                        placeholder="Procedimentos realizados"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -96,12 +103,14 @@
                             <h6 class="mb-3 fw-semibold">Odontograma</h6>
                             <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
                                 @foreach([18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28] as $dente)
-                                    <button type="button" class="btn btn-outline-secondary tooth-btn p-2" data-tooth="{{ $dente }}"><small>{{ $dente }}</small><br>🦷</button>
+                                    <button type="button" class="btn btn-outline-secondary tooth-btn p-2"
+                                        data-tooth="{{ $dente }}"><small>{{ $dente }}</small><br>🦷</button>
                                 @endforeach
                             </div>
                             <div class="d-flex justify-content-center gap-2 flex-wrap">
                                 @foreach([48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38] as $dente)
-                                    <button type="button" class="btn btn-outline-secondary tooth-btn p-2" data-tooth="{{ $dente }}">🦷<br><small>{{ $dente }}</small></button>
+                                    <button type="button" class="btn btn-outline-secondary tooth-btn p-2"
+                                        data-tooth="{{ $dente }}">🦷<br><small>{{ $dente }}</small></button>
                                 @endforeach
                             </div>
                         </div>
@@ -120,7 +129,8 @@
                             <h6 class="fw-bold mb-3">Resumo do atendimento</h6>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Observações Clínicas</label>
-                                <textarea class="form-control shadow-sm" name="observacoes_clinicas" rows="5" placeholder="Notas adicionais"></textarea>
+                                <textarea class="form-control shadow-sm" name="observacoes_clinicas" rows="5"
+                                    placeholder="Notas adicionais"></textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Data de Validade do orçamento</label>
@@ -128,11 +138,14 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Valor do orçamento</label>
-                                <input type="number" class="form-control shadow-sm" name="total_orcamento" id="total_orcamento" placeholder="0,00">
+                                <input type="number" step="0.01" class="form-control shadow-sm" name="total_orcamento"
+                                    id="total_orcamento" placeholder="0,00" readonly>
+                                
                             </div>
                             <div class="mb-4">
                                 <label class="form-label fw-semibold">Desconto</label>
-                                <input type="number" class="form-control shadow-sm" name="desconto" id="desconto" placeholder="0,00">
+                                <input type="number" class="form-control shadow-sm" name="desconto" id="desconto"
+                                    placeholder="0,00">
                             </div>
                             <button type="submit" class="btn btn-primary w-100 fw-bold py-2">Salvar Atendimento</button>
                         </div>
@@ -151,13 +164,17 @@
                     </div>
                     <div class="modal-body">
                         <input type="hidden" id="input-dente-id" name="numero_dente">
-                        <select class="form-select mb-3 shadow-sm" name="procedimento_dentes_id" required>
+                        <select class="form-select mb-3 shadow-sm" name="procedimento_dentes_id" id="select-procedimento"
+                            required>
                             <option value="" selected disabled>Escolha o procedimento...</option>
                             @foreach($procedimentoDentes as $p)
-                                <option value="{{ $p->id }}">{{ $p->nome }}</option>
+                                <option value="{{ $p->id }}" data-valor="{{ $p->valor }}">{{ $p->nome }} - R$
+                                    {{ number_format($p->valor, 2, ',', '.') }}
+                                </option>
                             @endforeach
                         </select>
-                        <textarea class="form-control shadow-sm" name="observacao" placeholder="Observações..." rows="2"></textarea>
+                        <textarea class="form-control shadow-sm" name="observacao" placeholder="Observações..."
+                            rows="2"></textarea>
                     </div>
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -205,66 +222,95 @@
             const listaContainer = document.getElementById('lista-procedimentos-selecionados');
             let procedimentosSelecionados = [];
 
-            document.querySelectorAll('.tooth-btn').forEach(button => {
-                button.addEventListener('click', function () {
-                    document.getElementById('modal-tooth-number').textContent = this.getAttribute('data-tooth');
-                    document.getElementById('input-dente-id').value = this.getAttribute('data-tooth');
+            // Clique em cada dente
+            document.querySelectorAll('.tooth-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+
+                    const numeroDente = this.dataset.tooth;
+
+                    document.getElementById('modal-tooth-number').textContent = numeroDente;
+                    document.getElementById('input-dente-id').value = numeroDente;
+
                     odontogramaModal.show();
                 });
             });
 
-            formDente.addEventListener('submit', function (e) {
+            // Submissão do formulário do dente
+            formDente.addEventListener('submit', function (e) { // Corrigido: era (e))
                 e.preventDefault();
+
+                const select = document.getElementById('select-procedimento');
+                const valorProcedimento = parseFloat(select.options[select.selectedIndex].getAttribute('data-valor')) || 0;
+
                 const formData = new FormData(formDente);
                 procedimentosSelecionados.push({
                     id: Date.now(),
                     dente: formData.get('numero_dente'),
                     procedimento_dentes_id: formData.get('procedimento_dentes_id'),
+                    valor: valorProcedimento,
                     observacao: formData.get('observacao'),
-                    nome_procedimento: formDente.querySelector('select[name="procedimento_dentes_id"] option:checked').text
+                    nome_procedimento: select.options[select.selectedIndex].text
                 });
 
                 const button = document.querySelector(`.tooth-btn[data-tooth="${formData.get('numero_dente')}"]`);
                 if (button) button.classList.add('tooth-active');
+
                 renderizarLista();
                 odontogramaModal.hide();
                 formDente.reset();
             });
 
-            function renderizarLista() {
-                if (procedimentosSelecionados.length === 0) {
-                    listaContainer.innerHTML = '<h6 class="text-muted mb-0">Nenhum procedimento vinculado.</h6>';
-                    return;
-                }
+            // Função para calcular o total e atualizar o input
+            function calcularTotal() {
+                let total = procedimentosSelecionados.reduce((sum, item) => sum + parseFloat(item.valor), 0);
+                let desconto = parseFloat(document.getElementById('desconto').value) || 0;
+                let totalFinal = total - desconto;
 
-                listaContainer.innerHTML = '<h6 class="mb-3">Procedimentos vinculados</h6>';
-                procedimentosSelecionados.forEach((item, index) => {
-                    listaContainer.innerHTML += `
-                        <div class="list-group-item rounded-3 d-flex justify-content-between align-items-center gap-3">
-                            <div>
-                                <strong>Dente ${item.dente}</strong>
-                                <div class="text-muted">${item.nome_procedimento}</div>
-                            </div>
-                            <div class="text-end">
-                                <input type="hidden" name="procedimentos[${index}][dente]" value="${item.dente}">
-                                <input type="hidden" name="procedimentos[${index}][id_procedimento]" value="${item.procedimento_dentes_id}">
-                                <input type="hidden" name="procedimentos[${index}][observacao]" value="${item.observacao}">
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removerItem(${index})">Remover</button>
-                            </div>
-                        </div>
-                    `;
-                });
+                document.getElementById('total_orcamento').value = totalFinal.toFixed(2);
             }
 
+            // Evento para recalcular ao mudar o desconto
+            document.getElementById('desconto').addEventListener('input', calcularTotal);
+
+            // Função para remover item
             window.removerItem = function (index) {
                 const item = procedimentosSelecionados[index];
                 procedimentosSelecionados.splice(index, 1);
+
                 if (!procedimentosSelecionados.some(p => p.dente == item.dente)) {
                     const button = document.querySelector(`.tooth-btn[data-tooth="${item.dente}"]`);
                     if (button) button.classList.remove('tooth-active');
                 }
                 renderizarLista();
             };
+
+            // Função para renderizar a lista de procedimentos
+            function renderizarLista() {
+                if (procedimentosSelecionados.length === 0) {
+                    listaContainer.innerHTML = '<h6 class="text-muted mb-0">Nenhum procedimento vinculado.</h6>';
+                } else {
+                    listaContainer.innerHTML = '<h6 class="mb-3">Procedimentos vinculados</h6>';
+                    procedimentosSelecionados.forEach((item, index) => {
+                        listaContainer.innerHTML += `
+                            <div class="list-group-item rounded-3 d-flex justify-content-between align-items-center gap-3">
+                                <div>
+                                    <strong>Dente ${item.dente}</strong>
+                                    <div class="text-muted">${item.nome_procedimento} - R$ ${item.valor.toFixed(2)}</div>
+                                </div>
+                                <div class="text-end">
+                                    <input type="hidden" name="procedimentos[${index}][dente]" value="${item.dente}">
+                                    <input type="hidden" name="procedimentos[${index}][id_procedimento]" value="${item.procedimento_dentes_id}">
+                                    <input type="hidden" name="procedimentos[${index}][observacao]" value="${item.observacao}">
+                                    <input type="hidden" name="procedimentos[${index}][valor]" value="${item.valor}">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removerItem(${index})">Remover</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                // Sempre recalcula o total quando a lista é alterada
+                calcularTotal();
+            }
         });
     </script>
 @endsection

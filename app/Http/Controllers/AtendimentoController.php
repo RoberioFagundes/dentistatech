@@ -10,6 +10,7 @@ use App\Models\FilaAtendimento;
 use App\Models\Prontuario;
 use App\Models\ProcedimentoDente;
 use App\Models\Procedimento;
+use App\Models\OrcamentoPaciente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -73,6 +74,8 @@ class AtendimentoController extends Controller implements HasMiddleware
         // ATENÇÃO: Procedimento::all() traz a descrição inteira. Se a descrição for texto longo, isso mata a memória.
         $procedimentoDentes = Procedimento::select('id', 'nome', 'valor')->orderBy('nome')->get();
 
+        // dd($procedimentoDentes);
+
         $dentistas = Dentista::select('id', 'nome', 'sobrenome')->orderBy('nome')->get();
 
         $pacienteId = $request->query('paciente_id');
@@ -86,61 +89,75 @@ class AtendimentoController extends Controller implements HasMiddleware
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'procedimentos' => 'required|array',
-            'procedimentos.*.id_procedimento' => 'required|exists:procedimentos,id',
-        ]);
+        try {
 
-        // Usa transação para garantir que tudo seja salvo ou nada seja salvo
-        return \DB::transaction(function () use ($request) {
-
-            $atendimento = Atendimento::create($request->except(['procedimentos', '_token']));
-
-            foreach ($request->input('procedimentos') as $item) {
-
-                // Busca o procedimento (considere usar Model Eloquent em vez de DB::table)
-                $procedimento = \App\Models\Procedimento::findOrFail($item['id_procedimento']);
-                $valorUnitario = $procedimento->valor;
-
-                // 1. Inserção via Eloquent (mais limpo)
-                $procDente = \App\Models\ProcedimentoDente::create([
-                    'atendimento_id' => $atendimento->id,
-                    'numero_dente' => $item['dente'],
-                    'procedimento_id' => $item['id_procedimento'],
-                    'observacao' => $item['observacao'] ?? null,
-                    'user_id' => auth()->id(),
+            return DB::transaction(function () use ($request) {
+                $request->validate([
+                    'procedimentos' => 'required|array',
+                    'procedimentos.*.id_procedimento' => 'required|exists:procedimentos,id',
                 ]);
 
-                // 2. Criar Orçamento
-                $orcamento = OrcamentoPaciente::create([
-                    'paciente_id' => $request->paciente_id,
-                    'user_id' => auth()->id(),
-                    'validade' => $request->validade,
-                    'valor' => $valorUnitario,
-                    'total_orcamento' => $request->total_orcamento,
-                    'desconto' => $request->desconto,
-                    'valor_liquido' => $valorUnitario,
-                    'atendimento_id' => $atendimento->id,
-                    'procedimento_dentes_id' => $procDente->id
-                ]);
+                // Usa transação para garantir que tudo seja salvo ou nada seja salvo
+                return \DB::transaction(function () use ($request) {
 
-                // 3. Inserção na tabela de itens
-                \DB::table('orcamento_items')->insert([
-                    'orcamento_paciente_id' => $orcamento->id,
-                    'procedimento_dente_id' => $procDente->id,
-                    'dente' => $item['dente'],
-                    'face' => $item['face'] ?? null,
-                    'quantidade' => $item['quantidade'] ?? 1,
-                    'valor' => $valorUnitario,
-                    'status' => 'ativo',
-                    'user_id' => auth()->id(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+                    $atendimento = Atendimento::create($request->except(['procedimentos', '_token']));
 
-            return redirect()->route('atendimento.index')->with('success', 'Salvo com sucesso!');
-        });
+                    foreach ($request->input('procedimentos') as $item) {
+
+                        // Busca o procedimento (considere usar Model Eloquent em vez de DB::table)
+                        $procedimento = \App\Models\Procedimento::findOrFail($item['id_procedimento']);
+                        $valorUnitario = $procedimento->valor;
+
+                        // 1. Inserção via Eloquent (mais limpo)
+                        $procDente = \App\Models\ProcedimentoDente::create([
+                            'atendimento_id' => $atendimento->id,
+                            'numero_dente' => $item['dente'],
+                            'procedimento_id' => $item['id_procedimento'],
+                            'observacao' => $item['observacao'] ?? null,
+                            'user_id' => auth()->id(),
+                        ]);
+
+                        // 2. Criar Orçamento
+                        $orcamento = OrcamentoPaciente::create([
+                            'paciente_id' => $request->paciente_id,
+                            'user_id' => auth()->id(),
+                            'validade' => $request->validade,
+                            'valor' => $valorUnitario,
+                            'total_orcamento' => $request->total_orcamento,
+                            'desconto' => $request->desconto,
+                            'valor_liquido' => $valorUnitario,
+                            'atendimento_id' => $atendimento->id,
+                            'procedimento_dentes_id' => $procDente->id
+                        ]);
+
+                        // 3. Inserção na tabela de itens
+                        \DB::table('orcamento_items')->insert([
+                            'orcamento_paciente_id' => $orcamento->id,
+                            'procedimento_dente_id' => $procDente->id,
+                            'dente' => $item['dente'],
+                            'face' => $item['face'] ?? null,
+                            'quantidade' => $item['quantidade'] ?? 1,
+                            'valor' => $valorUnitario,
+                            'status' => 'ativo',
+                            'user_id' => auth()->id(),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+
+                    return redirect()->route('atendimento.index')->with('success', 'Salvo com sucesso!');
+                });
+            });
+
+        } catch (\Throwable $e) {
+
+            dd(
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            );
+
+        }
     }
 
     /**
