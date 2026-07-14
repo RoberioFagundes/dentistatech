@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Factories\HasFactory; // <--- ADICIONE ESTA IMPORTAÇÃO
+use Illuminate\Database\Eloquent\Relations\BelongsToMany; // Adicionado para tipar corretamente
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Atendimento extends Model
 {
     use HasFactory;
+
     protected $table = "atendimentos";
 
     protected $fillable = [
@@ -18,16 +19,15 @@ class Atendimento extends Model
         'diagnostico',
         'tratamento_executado',
         'observacoes_clinicas',
-         'paciente_id', 
-        'dentista_id', 
-        'agendamento_id', 
+        'paciente_id',
+        'dentista_id',
+        'agendamento_id',
         'procedimento_dente_id',
         'user_id'
     ];
 
     /**
-     * Retorna o Agendamento (reserva de horário) que deu origem a este atendimento.
-     * (Um atendimento PERTENCE A um agendamento)
+     * Relacionamento: Atendimento pertence a um Agendamento
      */
     public function agendamento(): BelongsTo
     {
@@ -35,17 +35,15 @@ class Atendimento extends Model
     }
 
     /**
-     * Retorna os Orçamentos gerados a partir deste atendimento clínico.
-     * (Um atendimento pode gerar UM ou MAIS orçamentos para o paciente)
+     * Relacionamento: Atendimento tem um Orçamento do Paciente
      */
-    public function orcamentos(): HasMany
+    public function orcamento(): HasOne
     {
-        return $this->hasMany(OrcamentoPaciente::class, 'atendimento_id');
+        return $this->hasOne(OrcamentoPaciente::class, 'atendimento_id');
     }
 
     /**
-     * Retorna o Prontuário clínico consolidado deste atendimento.
-     * (Um atendimento POSSUI UM registro de prontuário/evolução histórica)
+     * Relacionamento: Atendimento tem um Prontuário
      */
     public function prontuario(): HasOne
     {
@@ -53,31 +51,43 @@ class Atendimento extends Model
     }
 
     /**
-     * Retorna o Paciente associado a este atendimento.
-     * (Um atendimento PERTENCE A um paciente)
+     * Relacionamento: Atendimento pertence a um Paciente
      */
     public function paciente(): BelongsTo
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');
     }
 
+    /**
+     * Relacionamento: Atendimento pertence a um Dentista
+     */
     public function dentista(): BelongsTo
     {
         return $this->belongsTo(Dentista::class, 'dentista_id');
     }
 
+    /**
+     * Relacionamento: Atendimento pertence a um Usuário (se for o caso)
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Relacionamento: Atendimento pertence a um Procedimento de Dente
+     */
     public function procedimentoDente(): BelongsTo
     {
         return $this->belongsTo(ProcedimentoDente::class, 'procedimento_dente_id');
     }
 
-    public function procedimento_dentes()
+    /**
+     * Relacionamento: Atendimento tem vários Procedimentos (Tabela pivot: atendimento_procedimento)
+     * ✅ TIPAGEM ADICIONADA PARA MAIOR SEGURANÇA
+     */
+    public function procedimentos(): BelongsToMany
     {
-        return $this->hasMany(ProcedimentoDente::class, 'atendimento_id');
+        return $this->belongsToMany(Procedimento::class, 'atendimento_procedimento');
     }
 }

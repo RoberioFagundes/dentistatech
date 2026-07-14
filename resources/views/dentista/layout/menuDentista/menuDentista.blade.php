@@ -44,7 +44,7 @@
     }
 </style>
 
-<ul id="sidebarnav" class="nav flex-column patch-sidebar" style="margin-top:-160px">
+<ul id="sidebarnav" class="nav flex-column patch-sidebar">
     
     <li class="nav-small-cap mt-2 mb-1">
         <span class="hide-menu ms-1">Home</span>

@@ -60,28 +60,29 @@ class AtendimentoController extends Controller implements HasMiddleware
         $userId = auth()->id();
         $dentista = Dentista::where('user_id', $userId)->first();
 
-        // Filtro mais leve
         $agendamentos = $dentista
-            ? Agendamento::where('dentista_id', $dentista->id)
-                ->whereIn('status', ['AGENDADO', 'ACENDADO'])
-                ->get(['id', 'data', 'hora_inicio', 'paciente_id'])
+            ? Agendamento::where('status', 'AGENDADO')
+            ->where('dentista_id', $dentista->id)
+            ->with('paciente') // Carrega os dados do paciente de uma vez
+            ->get(['id', 'paciente_id', 'data']) // Apenas campos que existem na tabela
             : collect();
 
-        //    dd($agendamentos);
-        // BUSCA OTIMIZADA: Use ->select() para não trazer colunas 'text' pesadas (como histórico, descrições, etc)
-        $pacientes = Paciente::select('id', 'nome', 'sobrenome')->orderBy('nome')->get();
+        $pacientes = Paciente::orderBy('nome')->get(['id', 'nome']);
+        $procedimentoDentes = Procedimento::all();
+        $dentistas = Dentista::orderBy('nome')->get(['id', 'nome']);
 
-        // ATENÇÃO: Procedimento::all() traz a descrição inteira. Se a descrição for texto longo, isso mata a memória.
-        $procedimentoDentes = Procedimento::select('id', 'nome', 'valor')->orderBy('nome')->get();
+        // Pega os parâmetros da URL
+        $pacienteId = $request->paciente_id;
+        $agendamentoId = $request->agendamento_id;
 
-        // dd($procedimentoDentes);
-
-        $dentistas = Dentista::select('id', 'nome', 'sobrenome')->orderBy('nome')->get();
-
-        $pacienteId = $request->query('paciente_id');
-        $agendamentoId = $request->query('agendamento_id');
-
-        return view('dentista.atendimento.formulario', compact('pacientes', 'agendamentos', 'procedimentoDentes', 'dentistas', 'pacienteId', 'agendamentoId'));
+        return view('dentista.atendimento.formulario', compact(
+            'agendamentos',
+            'pacientes',
+            'procedimentoDentes',
+            'dentistas',
+            'pacienteId',
+            'agendamentoId'
+        ));
     }
 
     /**
@@ -90,34 +91,78 @@ class AtendimentoController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         try {
+            // 1. Captura os dados
+            $dados = $request->all();
+            $temProcedimentosValidos = false;
 
-            return DB::transaction(function () use ($request) {
-                $request->validate([
-                    'procedimentos' => 'required|array',
-                    'procedimentos.*.id_procedimento' => 'required|exists:procedimentos,id',
-                ]);
+            if (!empty($dados['procedimentos']) && is_array($dados['procedimentos'])) {
+                // ✅ FILTRA PELO NOME CORRETO: procedimento_id (não id_procedimento)
+                $dados['procedimentos'] = array_values(array_filter(
+                    $dados['procedimentos'],
+                    fn($item) => !empty($item['procedimento_id'])
+                ));
+                $temProcedimentosValidos = count($dados['procedimentos']) > 0;
+            }
 
-                // Usa transação para garantir que tudo seja salvo ou nada seja salvo
-                return \DB::transaction(function () use ($request) {
+            $request->merge($dados);
 
-                    $atendimento = Atendimento::create($request->except(['procedimentos', '_token']));
+            // 2. VALIDAÇÃO CORRIGIDA: usa procedimento_id
+            $request->validate([
+                'dentista_id' => 'required|exists:dentistas,id',
+                'paciente_id' => 'required|exists:pacientes,id',
+                'agendamento_id' => 'nullable|exists:agendamentos,id',
+                'queixa_principal' => 'required|string|max:255',
+                'diagnostico' => 'nullable|string',
+                'tratamento_executado' => 'nullable|string',
+                'observacoes_clinicas' => 'nullable|string',
+                'validade' => 'nullable|date',
+                'total_orcamento' => 'nullable|numeric',
+                'desconto' => 'nullable|numeric',
+                'procedimentos' => 'nullable|array',
+                // ✅ TROQUEI id_procedimento POR procedimento_id
+                'procedimentos.*.procedimento_id' => 'required|exists:procedimentos,id',
+                'procedimentos.*.dente' => 'required|string',
+                'procedimentos.*.valor' => 'required|numeric',
+                'procedimentos.*.observacao' => 'nullable|string',
+            ]);
 
-                    foreach ($request->input('procedimentos') as $item) {
+            // 3. Transação
+            return DB::transaction(function () use ($request, $dados, $temProcedimentosValidos) {
 
-                        // Busca o procedimento (considere usar Model Eloquent em vez de DB::table)
-                        $procedimento = \App\Models\Procedimento::findOrFail($item['id_procedimento']);
-                        $valorUnitario = $procedimento->valor;
+                $atendimento = Atendimento::create($request->except([
+                    'procedimentos',
+                    '_token',
+                    '_method',
+                    'validade',
+                    'total_orcamento',
+                    'desconto'
+                ]));
 
-                        // 1. Inserção via Eloquent (mais limpo)
-                        $procDente = \App\Models\ProcedimentoDente::create([
-                            'atendimento_id' => $atendimento->id,
-                            'numero_dente' => $item['dente'],
-                            'procedimento_id' => $item['id_procedimento'],
+                if ($temProcedimentosValidos) {
+                    foreach ($dados['procedimentos'] as $item) {
+                        // ✅ BUSCA PELO NOME CORRETO
+                        $procedimento = \App\Models\Procedimento::findOrFail($item['procedimento_id']);
+                        $valorUnitario = $item['valor'] ?? $procedimento->valor;
+
+                        // Tabela pivô
+                        $atendimento->procedimentos()->attach($item['procedimento_id'], [
+                            'dente' => $item['dente'],
+                            'valor' => $valorUnitario,
                             'observacao' => $item['observacao'] ?? null,
                             'user_id' => auth()->id(),
                         ]);
 
-                        // 2. Criar Orçamento
+                        // ProcedimentoDente
+                        $procDente = \App\Models\ProcedimentoDente::create([
+                            'atendimento_id' => $atendimento->id,
+                            'numero_dente' => $item['dente'],
+                            'procedimento_id' => $item['procedimento_id'],
+                            'observacao' => $item['observacao'] ?? null,
+                            'valor' => $valorUnitario,
+                            'user_id' => auth()->id(),
+                        ]);
+
+                        // Orçamento
                         $orcamento = OrcamentoPaciente::create([
                             'paciente_id' => $request->paciente_id,
                             'user_id' => auth()->id(),
@@ -125,12 +170,13 @@ class AtendimentoController extends Controller implements HasMiddleware
                             'valor' => $valorUnitario,
                             'total_orcamento' => $request->total_orcamento,
                             'desconto' => $request->desconto,
-                            'valor_liquido' => $valorUnitario,
+                            'valor_liquido' => $request->total_orcamento - ($request->desconto ?? 0),
                             'atendimento_id' => $atendimento->id,
-                            'procedimento_dentes_id' => $procDente->id
+                            'procedimento_dentes_id' => $procDente->id,
+                            'procedimento_id' => $item['procedimento_id'],
                         ]);
 
-                        // 3. Inserção na tabela de itens
+                        // Itens do orçamento
                         \DB::table('orcamento_items')->insert([
                             'orcamento_paciente_id' => $orcamento->id,
                             'procedimento_dente_id' => $procDente->id,
@@ -144,19 +190,13 @@ class AtendimentoController extends Controller implements HasMiddleware
                             'updated_at' => now(),
                         ]);
                     }
+                }
 
-                    return redirect()->route('atendimento.index')->with('success', 'Salvo com sucesso!');
-                });
+                return redirect()->route('atendimento.index')
+                    ->with('success', 'Salvo com sucesso! Procedimentos: ' . ($temProcedimentosValidos ? count($dados['procedimentos']) . ' registrados' : 'nenhum informado'));
             });
-
         } catch (\Throwable $e) {
-
-            dd(
-                $e->getMessage(),
-                $e->getFile(),
-                $e->getLine()
-            );
-
+            dd('Erro: ' . $e->getMessage(), 'Linha: ' . $e->getLine());
         }
     }
 
@@ -165,26 +205,39 @@ class AtendimentoController extends Controller implements HasMiddleware
      */
     public function edit($id)
     {
-        // 1. Busca segura: Se não encontrar, redireciona com mensagem, sem erro 500
-        $atendimento = Atendimento::find($id);
-        if (!$atendimento) {
-            return redirect()->route('atendimento.index')->with('error', 'Atendimento não encontrado.');
+        // 1. Usar findOrFail com tratamento personalizado (mais limpo)
+        // Ou mantenha a sua verificação — ambas são válidas
+        try {
+            $atendimento = Atendimento::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('atendimento.index')
+                ->with('error', 'Atendimento não encontrado.');
         }
 
         $userId = auth()->id();
         $dentista = Dentista::where('user_id', $userId)->first();
 
-        // 2. Otimização de consultas (Use 'select' para trazer só o que precisa)
+        // 2. Carregar relacionamentos com Eager Loading (evita consultas duplicadas)
+        // Se o atendimento tem relacionamentos como 'procedimentos', 'paciente' etc, carregue aqui
+        $atendimento->load(['procedimentos', 'paciente']); // Ajuste conforme seus relacionamentos
+
+        // 3. Consulta de agendamentos com otimização
         $agendamentos = $dentista
             ? Agendamento::where('status', 'AGENDADO')
-                ->where('dentista_id', $dentista->id)
-                ->get()
+            ->where('dentista_id', $dentista->id)
+            ->get(['id', 'paciente_id', 'data', 'hora_inicio', 'hora_fim'])
             : collect();
 
-        // 3. Garantia de dados: Se a lista estiver vazia, a view não quebra
+        // 4. Garantir consistência e campos necessários
         $pacientes = Paciente::orderBy('nome')->get(['id', 'nome']);
-        $procedimentoDentes = Procedimento::all();
+        $procedimentoDentes = Procedimento::orderBy('nome')->get(['id', 'nome', 'valor']); // Adicione ordenação e campos úteis
         $dentistas = Dentista::orderBy('nome')->get(['id', 'nome']);
+
+        // 5. Validação de permissão (opcional mas recomendado)
+        // Verifica se o dentista tem permissão para editar este atendimento
+        if ($dentista && $atendimento->dentista_id !== $dentista->id) {
+            abort(403, 'Você não tem permissão para editar este atendimento.');
+        }
 
         return view('dentista.atendimento.formulario', compact(
             'atendimento',
