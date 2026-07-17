@@ -14,7 +14,7 @@ use App\Models\OrcamentoPaciente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AtendimentoController extends Controller implements HasMiddleware
 {
@@ -26,6 +26,37 @@ class AtendimentoController extends Controller implements HasMiddleware
         return [
             'auth',
         ];
+    }
+
+    public function gerarPdf(Atendimento $atendimento)
+    {
+        // Carrega apenas os dados vinculados ao atendimento em questão
+        $atendimento->load([
+            'procedimentos' => function ($q) {
+                $q->withPivot('numero_dente', 'observacao');
+            },
+            'paciente',
+            'dentista',
+            'agendamento',
+            'orcamento'
+        ]);
+
+        // SE a sua view 'formulario-pdf' não usa as listas de pacientes, 
+        // dentistas e agendamentos, REMOVA estas linhas abaixo:
+        /*
+    $userId = auth()->id();
+    $dentista = Dentista::where('user_id', $userId)->first();
+    $agendamentos = ...
+    $pacientes = ...
+    $procedimentoDentes = ...
+    $dentistas = ...
+    */
+
+        // Gera o PDF enviando apenas o atendimento carregado
+        $pdf = Pdf::loadView('dentista.atendimento.formulario-pdf', compact('atendimento'))
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->download('atendimento-' . $atendimento->id . '.pdf');
     }
 
     public function index(Request $request)
@@ -205,8 +236,6 @@ class AtendimentoController extends Controller implements HasMiddleware
      */
     public function edit($id)
     {
-        // 1. Usar findOrFail com tratamento personalizado (mais limpo)
-        // Ou mantenha a sua verificação — ambas são válidas
         try {
             $atendimento = Atendimento::findOrFail($id);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -217,24 +246,27 @@ class AtendimentoController extends Controller implements HasMiddleware
         $userId = auth()->id();
         $dentista = Dentista::where('user_id', $userId)->first();
 
-        // 2. Carregar relacionamentos com Eager Loading (evita consultas duplicadas)
-        // Se o atendimento tem relacionamentos como 'procedimentos', 'paciente' etc, carregue aqui
-        $atendimento->load(['procedimentos', 'paciente']); // Ajuste conforme seus relacionamentos
+        // ✅ Carregamento ÚNICO e CORRETO com campos da Pivot
+        $atendimento->load([
+            'procedimentos' => function ($query) {
+                $query->withPivot('numero_dente', 'observacao'); // Apenas os campos válidos
+            },
+            'paciente'
+        ]);
 
-        // 3. Consulta de agendamentos com otimização
         $agendamentos = $dentista
             ? Agendamento::where('status', 'AGENDADO')
             ->where('dentista_id', $dentista->id)
             ->get(['id', 'paciente_id', 'data', 'hora_inicio', 'hora_fim'])
             : collect();
 
-        // 4. Garantir consistência e campos necessários
         $pacientes = Paciente::orderBy('nome')->get(['id', 'nome']);
-        $procedimentoDentes = Procedimento::orderBy('nome')->get(['id', 'nome', 'valor']); // Adicione ordenação e campos úteis
+
+        // ✅ Confirme o modelo correto: se é ProcedimentoDente ou Procedimento
+        $procedimentoDentes = \App\Models\Procedimento::orderBy('nome')->get(['id', 'nome', 'valor']);
+
         $dentistas = Dentista::orderBy('nome')->get(['id', 'nome']);
 
-        // 5. Validação de permissão (opcional mas recomendado)
-        // Verifica se o dentista tem permissão para editar este atendimento
         if ($dentista && $atendimento->dentista_id !== $dentista->id) {
             abort(403, 'Você não tem permissão para editar este atendimento.');
         }
@@ -257,18 +289,51 @@ class AtendimentoController extends Controller implements HasMiddleware
             'paciente_id' => 'required|exists:pacientes,id',
             'dentista_id' => 'required|exists:dentistas,id',
             'agendamento_id' => 'nullable|exists:agendamentos,id',
-            'procedimento_dente_id' => 'nullable|exists:procedimento_dentes,id',
             'queixa_principal' => 'required|string|max:255',
             'diagnostico' => 'nullable|string',
             'tratamento_executado' => 'nullable|string',
             'observacoes_clinicas' => 'nullable|string',
+            'validade' => 'nullable|date',
+            'total_orcamento' => 'nullable|numeric',
+            'desconto' => 'nullable|numeric',
+            'procedimentos' => 'nullable|array',
+            'procedimentos.*.dente' => 'required|string',
+            'procedimentos.*.procedimento_id' => 'required|exists:procedimentos,id',
+            'procedimentos.*.observacao' => 'nullable|string',
+            'procedimentos.*.valor' => 'nullable|numeric',
         ]);
 
         $dadosValidados['user_id'] = auth()->id();
-
         $atendimento->update($dadosValidados);
 
-        return redirect()->route('atendimento.index')->with('success', 'Alterações do atendimento salvas com sucesso!');
+        // Salva os procedimentos na tabela pivot
+        if ($request->has('procedimentos')) {
+            $dadosProcedimentos = [];
+
+            foreach ($request->procedimentos as $proc) {
+                $dadosProcedimentos[$proc['procedimento_id']] = [
+                    'numero_dente' => $proc['dente'],
+                    'observacao' => $proc['observacao'] ?? null,
+                    'user_id' => auth()->id(), // ✅ Campo obrigatório adicionado
+                ];
+            }
+
+            $atendimento->procedimentos()->sync($dadosProcedimentos);
+        } else {
+            $atendimento->procedimentos()->detach();
+        }
+
+        // Atualiza orçamento
+        $atendimento->orcamento()->updateOrCreate(
+            ['atendimento_id' => $atendimento->id],
+            [
+                'validade' => $dadosValidados['validade'] ?? null,
+                'total_orcamento' => $dadosValidados['total_orcamento'] ?? 0,
+                'desconto' => $dadosValidados['desconto'] ?? 0,
+            ]
+        );
+
+        return redirect()->route('atendimento.index')->with('success', 'Alterações salvas com sucesso!');
     }
 
     /**

@@ -88,6 +88,13 @@ class Atendimento extends Model
      */
     public function procedimentos(): BelongsToMany
     {
-        return $this->belongsToMany(Procedimento::class, 'atendimento_procedimento');
+        // Troque "Procedimento::class" pelo modelo correto da sua tabela de tipos
+        return $this->belongsToMany(
+            \App\Models\Procedimento::class, // ← Confirme o nome do modelo
+            'procedimento_dentes',            // ← Nome EXATO da tabela pivot
+            'atendimento_id',                 // ← Chave do Atendimento
+            'procedimento_id'                 // ← Chave do Procedimento
+        )
+            ->withPivot('numero_dente', 'observacao'); // ← Campos EXATOS da pivot
     }
 }

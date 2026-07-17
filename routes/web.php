@@ -14,6 +14,7 @@ use App\Http\Controllers\RemacacaoController;
 use App\Http\Controllers\FilaAtendimentoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 // Página Inicial
 Route::get('/', function () {
@@ -52,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('remarcacao', RemacacaoController::class);
     Route::resource('filaAtendimento', FilaAtendimentoController::class);
     Route::resource('orcamento', OrcamentoController::class);
+    Route::get('/atendimento/{atendimento}/pdf', [AtendimentoController::class, 'gerarPdf'])->name('atendimento.pdf');
   
 
     // Rotas específicas da Fila de Espera (Mantendo apenas um grupo limpo)

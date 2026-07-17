@@ -12,7 +12,7 @@ class OrcamentoPaciente extends Model
 {
     use HasFactory;
     // Define explicitamente o nome da tabela no plural
-    protected $table = "orcamento_pacientes";	
+    protected $table = "orcamento_pacientes";
 
     protected $fillable = [
         'validade',
@@ -26,10 +26,15 @@ class OrcamentoPaciente extends Model
         'procedimento_dentes_id'
     ];
 
+
+
     /**
      * Define a conversão de tipos para garantir a consistência dos valores financeiros.
      */
     protected $casts = [
+         'validade' => 'date:Y-m-d', // Converte automaticamente para objeto Carbon
+        'total_orcamento' => 'decimal:2',
+        'desconto' => 'decimal:2',
         'valor_bruto' => 'float',
         'desconto_global' => 'float',
         'valor_liquido' => 'float',

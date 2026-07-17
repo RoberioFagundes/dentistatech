@@ -143,7 +143,11 @@ $procedimentosOpcoes = $procedimentoDentes->keyBy('id');
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Data de Validade do orçamento</label>
                             <input type="date" class="form-control shadow-sm" name="validade" id="validade"
-                                value="{{ old('validade', $atendimento?->orcamento?->validade?->format('Y-m-d') ?? '') }}">
+                                value="{{ old('validade', 
+                                    $atendimento?->orcamento?->validade instanceof \Carbon\Carbon 
+                                        ? $atendimento->orcamento->validade->format('Y-m-d') 
+                                        : $atendimento?->orcamento?->validade ?? '' 
+                                ) }}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Valor do orçamento</label>
@@ -227,112 +231,124 @@ $procedimentosOpcoes = $procedimentoDentes->keyBy('id');
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Valida se o Bootstrap está carregado
-    if (typeof bootstrap === 'undefined') {
-        console.error('Bootstrap não encontrado! Verifique o layout.');
-        return;
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Valida se o Bootstrap está carregado
+        if (typeof bootstrap === 'undefined') {
+            console.error('Bootstrap não encontrado! Verifique o layout.');
+            return;
+        }
 
-    const modalElement = document.getElementById('odontogramaModal');
-    if (!modalElement) {
-        console.error('Modal não encontrado!');
-        return;
-    }
+        const modalElement = document.getElementById('odontogramaModal');
+        if (!modalElement) {
+            console.error('Modal não encontrado!');
+            return;
+        }
 
-    const odontogramaModal = new bootstrap.Modal(modalElement);
-    const formDente = document.getElementById('form-procedimento-dente');
-    const listaContainer = document.getElementById('lista-procedimentos-selecionados');
-    let procedimentosSelecionados = [];
+        const odontogramaModal = new bootstrap.Modal(modalElement);
+        const formDente = document.getElementById('form-procedimento-dente');
+        const listaContainer = document.getElementById('lista-procedimentos-selecionados');
+        let procedimentosSelecionados = [];
 
-    // Carrega procedimentos salvos
-    const procedimentosSalvos = @json($procedimentosSalvos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
-    const procedimentosOpcoes = @json($procedimentosOpcoes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        // Carrega procedimentos salvos
+        const procedimentosSalvos = @json($procedimentosSalvos, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        const procedimentosOpcoes = @json($procedimentosOpcoes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 
-    if (procedimentosSalvos.length > 0) {
-        procedimentosSalvos.forEach(item => {
-            procedimentosSelecionados.push({
-                id: Date.now() + Math.random(),
-                dente: item.pivot?.dente ?? item.dente ?? null,
-                procedimento_dentes_id: item.id ?? item.procedimento_id,
-                valor: parseFloat(item.pivot?.valor ?? item.valor ?? 0),
-                observacao: item.pivot?.observacao ?? item.observacao ?? '',
-                nome_procedimento: procedimentosOpcoes[item.id ?? item.procedimento_id]?.nome ?? 'Procedimento não encontrado'
+        if (procedimentosSalvos.length > 0) {
+            console.log('📋 Procedimentos carregados do servidor:', procedimentosSalvos);
+
+            procedimentosSalvos.forEach((item, indice) => {
+                // 👇 Tenta TODAS as formas de pegar o número do dente
+                const numeroDente = item.pivot?.dente ?? item.dente ?? null;
+
+                console.log(`🔹 Item ${indice}:`, {
+                    'item.dente': item.dente,
+                    'item.pivot?.dente': item.pivot?.dente,
+                    'numeroDente final': numeroDente
+                });
+
+                procedimentosSelecionados.push({
+                    id: Date.now() + Math.random(),
+                    dente: item.pivot?.numero_dente ?? null, // ← Nome correto da coluna
+                    procedimento_dentes_id: item.id ?? null,
+                    valor: parseFloat(item.valor ?? 0), // ← Valor vem do modelo Procedimento, não da pivot
+                    observacao: item.pivot?.observacao ?? '',
+                    nome_procedimento: procedimentosOpcoes[item.id]?.nome ?? 'Procedimento não encontrado'
+                });
+            });
+
+            marcarDentesCarregados();
+            renderizarLista();
+        }
+
+        function marcarDentesCarregados() {
+            procedimentosSelecionados.forEach(item => {
+                if (item.dente) {
+                    const botaoDente = document.querySelector(`.tooth-btn[data-tooth="${item.dente}"]`);
+                    if (botaoDente) botaoDente.classList.add('tooth-active');
+                }
+            });
+        }
+
+        // Abre o modal ao clicar no dente
+        document.querySelectorAll('.tooth-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const numeroDente = this.dataset.tooth;
+                document.getElementById('modal-tooth-number').textContent = numeroDente;
+                document.getElementById('input-dente-id').value = numeroDente;
+                odontogramaModal.show();
             });
         });
-        marcarDentesCarregados();
-        renderizarLista();
-    }
 
-    function marcarDentesCarregados() {
-        procedimentosSelecionados.forEach(item => {
-            if (item.dente) {
-                const botaoDente = document.querySelector(`.tooth-btn[data-tooth="${item.dente}"]`);
-                if (botaoDente) botaoDente.classList.add('tooth-active');
-            }
-        });
-    }
+        formDente.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const select = document.getElementById('select-procedimento');
+            const valorProcedimento = parseFloat(select.options[select.selectedIndex].getAttribute('data-valor')) || 0;
+            const formData = new FormData(formDente);
+            const numeroDente = formData.get('numero_dente');
 
-    // Abre o modal ao clicar no dente
-    document.querySelectorAll('.tooth-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const numeroDente = this.dataset.tooth;
-            document.getElementById('modal-tooth-number').textContent = numeroDente;
-            document.getElementById('input-dente-id').value = numeroDente;
-            odontogramaModal.show();
-        });
-    });
+            procedimentosSelecionados.push({
+                id: Date.now(),
+                dente: numeroDente,
+                procedimento_dentes_id: formData.get('procedimento_dentes_id'),
+                valor: valorProcedimento,
+                observacao: formData.get('observacao'),
+                nome_procedimento: select.options[select.selectedIndex].text
+            });
 
-    formDente.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const select = document.getElementById('select-procedimento');
-        const valorProcedimento = parseFloat(select.options[select.selectedIndex].getAttribute('data-valor')) || 0;
-        const formData = new FormData(formDente);
-        const numeroDente = formData.get('numero_dente');
+            const botaoDente = document.querySelector(`.tooth-btn[data-tooth="${numeroDente}"]`);
+            if (botaoDente) botaoDente.classList.add('tooth-active');
 
-        procedimentosSelecionados.push({
-            id: Date.now(),
-            dente: numeroDente,
-            procedimento_dentes_id: formData.get('procedimento_dentes_id'),
-            valor: valorProcedimento,
-            observacao: formData.get('observacao'),
-            nome_procedimento: select.options[select.selectedIndex].text
+            renderizarLista();
+            odontogramaModal.hide();
+            formDente.reset();
         });
 
-        const botaoDente = document.querySelector(`.tooth-btn[data-tooth="${numeroDente}"]`);
-        if (botaoDente) botaoDente.classList.add('tooth-active');
-
-        renderizarLista();
-        odontogramaModal.hide();
-        formDente.reset();
-    });
-
-    function calcularTotal() {
-        let total = procedimentosSelecionados.reduce((sum, item) => sum + parseFloat(item.valor), 0);
-        let desconto = parseFloat(document.getElementById('desconto').value) || 0;
-        let totalFinal = total - desconto;
-        document.getElementById('total_orcamento').value = totalFinal.toFixed(2);
-    }
-
-    document.getElementById('desconto').addEventListener('input', calcularTotal);
-
-    window.removerItem = function(index) {
-        const item = procedimentosSelecionados[index];
-        procedimentosSelecionados.splice(index, 1);
-        if (!procedimentosSelecionados.some(p => p.dente == item.dente)) {
-            const botaoDente = document.querySelector(`.tooth-btn[data-tooth="${item.dente}"]`);
-            if (botaoDente) botaoDente.classList.remove('tooth-active');
+        function calcularTotal() {
+            let total = procedimentosSelecionados.reduce((sum, item) => sum + parseFloat(item.valor), 0);
+            let desconto = parseFloat(document.getElementById('desconto').value) || 0;
+            let totalFinal = total - desconto;
+            document.getElementById('total_orcamento').value = totalFinal.toFixed(2);
         }
-        renderizarLista();
-    };
 
-    function renderizarLista() {
-        if (procedimentosSelecionados.length === 0) {
-            listaContainer.innerHTML = '<h6 class="text-muted mb-0">Procedimentos vinculados aparecerão aqui...</h6>';
-        } else {
-            listaContainer.innerHTML = '<h6 class="mb-3">Procedimentos vinculados</h6>';
-            procedimentosSelecionados.forEach((item, index) => {
-                listaContainer.innerHTML += `
+        document.getElementById('desconto').addEventListener('input', calcularTotal);
+
+        window.removerItem = function(index) {
+            const item = procedimentosSelecionados[index];
+            procedimentosSelecionados.splice(index, 1);
+            if (!procedimentosSelecionados.some(p => p.dente == item.dente)) {
+                const botaoDente = document.querySelector(`.tooth-btn[data-tooth="${item.dente}"]`);
+                if (botaoDente) botaoDente.classList.remove('tooth-active');
+            }
+            renderizarLista();
+        };
+
+        function renderizarLista() {
+            if (procedimentosSelecionados.length === 0) {
+                listaContainer.innerHTML = '<h6 class="text-muted mb-0">Procedimentos vinculados aparecerão aqui...</h6>';
+            } else {
+                listaContainer.innerHTML = '<h6 class="mb-3">Procedimentos vinculados</h6>';
+                procedimentosSelecionados.forEach((item, index) => {
+                    listaContainer.innerHTML += `
                     <div class="list-group-item rounded-3 d-flex justify-content-between align-items-center gap-3">
                         <div>
                             <strong>Dente ${item.dente}</strong>
@@ -346,11 +362,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         <input type="hidden" name="procedimentos[${index}][valor]" value="${item.valor}">
                     </div>
                 `;
-            });
+                });
+            }
+            calcularTotal();
         }
-        calcularTotal();
-    }
-});
+    });
 </script>
 
 @endsection
