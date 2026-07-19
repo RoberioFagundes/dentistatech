@@ -205,6 +205,7 @@ class AtendimentoController extends Controller implements HasMiddleware
                             'atendimento_id' => $atendimento->id,
                             'procedimento_dentes_id' => $procDente->id,
                             'procedimento_id' => $item['procedimento_id'],
+                             'saldo_restante' => $request->total_orcamento
                         ]);
 
                         // Itens do orçamento

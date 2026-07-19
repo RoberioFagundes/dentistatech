@@ -12,6 +12,7 @@ use App\Http\Controllers\FilaAgendamentoEsperaController;
 use App\Http\Controllers\OrcamentoController;
 use App\Http\Controllers\RemacacaoController;
 use App\Http\Controllers\FilaAtendimentoController;
+use App\Http\Controllers\PagamentoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -48,13 +49,19 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('dentista', DentistaController::class);
     Route::resource('agendamento', AgendamentoController::class);
     Route::resource('procedimento', ProcedimentoController::class);
+    // ✅ ROTAS PERSONALIZADAS PRIMEIRO (nunca depois do resource)
+    Route::get('/pagamento/confirmacao/{id}', [PagamentoController::class, 'pagamento_confirmacao'])->name('pagamento.confirmacao');
+    Route::post('/pagamento/confirmar/{id}', [PagamentoController::class, 'confirmar'])->name('pagamento.confirmar');
+
+    // ✅ DEPOIS coloque o resource (se usar, exclua o conflito)
+    Route::resource('pagamento', PagamentoController::class)->except(['show']);
     Route::resource('financeiro', FinanceiroController::class);
     Route::resource('atendimento', AtendimentoController::class);
     Route::resource('remarcacao', RemacacaoController::class);
     Route::resource('filaAtendimento', FilaAtendimentoController::class);
     Route::resource('orcamento', OrcamentoController::class);
     Route::get('/atendimento/{atendimento}/pdf', [AtendimentoController::class, 'gerarPdf'])->name('atendimento.pdf');
-  
+
 
     // Rotas específicas da Fila de Espera (Mantendo apenas um grupo limpo)
     Route::prefix('filaAgendamentoEspera')->group(function () {
@@ -66,21 +73,23 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/salvar', [FilaAgendamentoEsperaController::class, 'storeFilaEsperaAgendamento'])->name('filaAgendamentoEspera.store');
     });
 
-     Route::delete(
+    Route::delete(
         '/fila/agendar-selecionados',
         [FilaAgendamentoEsperaController::class, 'agendarSelecionados']
     )->middleware('auth')
         ->name('fila.agendarSelecionados');
 
     Route::delete('/filaAgendamentoEspera/{id}', [FilaAgendamentoEsperaController::class, 'deleteFilaEsperaAgendamento'])->middleware('auth')->name('fila-delete-espera');
-    
-    Route::post('/fila-atendimento/adicionar',
-    [FilaAtendimentoController::class,'store'])->middleware('auth')
-    ->name('fila.adicionar');
+
+    Route::post(
+        '/fila-atendimento/adicionar',
+        [FilaAtendimentoController::class, 'store']
+    )->middleware('auth')
+        ->name('fila.adicionar');
 });
 
 
 
 
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

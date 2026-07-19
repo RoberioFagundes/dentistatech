@@ -16,28 +16,25 @@ class PagamentoController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Pagamento::with(['paciente', 'orcamento', 'formaPagamento']);
+        $query = Pagamento::with(['orcamentoPaciente.paciente', 'usuario']);
 
-        // Filtro por período (Padrão: registros de hoje se nenhum intervalo for passado)
-        $dataInicio = $request->get('data_inicio', today()->toDateString());
-        $dataFim = $request->get('data_fim', today()->toDateString());
-
-        $query->whereBetween('data_pagamento', [$dataInicio . ' 00:00:00', $dataFim . ' 23:59:59']);
-
-        // Filtro opcional por Paciente
-        if ($request->has('paciente_id')) {
-            $query->where('paciente_id', $request->paciente_id);
+        // ✅ Busca por nome ou CPF do paciente
+        if ($request->filled('busca')) {
+            $termo = $request->input('busca');
+            $query->whereHas('orcamentoPaciente.paciente', function ($q) use ($termo) {
+                $q->where('nome', 'LIKE', "%{$termo}%")
+                    ->orWhere('sobrenome', 'LIKE', "%{$termo}%")
+                    ->orWhere('cpf', 'LIKE', "%{$termo}%");
+            });
         }
 
-        // Filtro opcional por Status do Pagamento (Pago, Pendente, Estornado)
-        if ($request->has('status_pagamento')) {
-            $query->where('status_pagamento', $request->status_pagamento);
-        }
+        $pagamentos = $query->latest()->paginate(15);
 
-        $pagamentos = $query->orderBy('data_pagamento', 'desc')->paginate(15);
+        // ✅ Mantém o termo de busca na paginação
+        $pagamentos->appends(['busca' => $termo ?? '']);
 
-        return response()->json($pagamentos);
-        // Se usar Blade: return view('financeiro.pagamentos.index', compact('pagamentos'));
+        // Envia os dados para a view Blade
+        return view('dentista.pagamento.index', compact('pagamentos'));
     }
 
     /**
@@ -50,65 +47,133 @@ class PagamentoController extends Controller
     }
 
     /**
-     * Registra a entrada de um novo pagamento no sistema.
+     * função responsavel por criar o pagamento do responsavel 
      */
-    public function store(Request $request)
+    public function pagamento_confirmacao($id)
     {
-        // 1. Validação rigorosa dos dados financeiros de entrada
-        $request->validate([
-            'paciente_id' => 'required|exists:pacientes,id',
-            'orcamento_id' => 'required|exists:orcamento_pacientes,id',
-            'forma_pagamento_id' => 'required|exists:forma_pagamentos,id',
-            'valor_pago' => 'required|numeric|min:0.01',
-            'status_pagamento' => 'required|string|in:Pendente,Pago',
-            'observacoes' => 'nullable|string|max:255'
-        ]);
+        $orcamento = OrcamentoPaciente::findOrFail($id);
+        $formasPagamento = FormaPagamento::where('ativo', true)->orderBy('nome')->get();
 
-        // 2. Regra de Negócio: Impede que o pagamento ultrapasse o saldo devedor do orçamento
-        $orcamento = OrcamentoPaciente::find($request->orcamento_id);
-
-        // Calcula quanto já foi pago neste orçamento anteriormente (apenas considerando status 'Pago')
-        $totalJaPago = Pagamento::where('orcamento_id', $orcamento->id)
-            ->where('status_pagamento', 'Pago')
-            ->sum('valor_pago');
-
-        $saldoDevedor = $orcamento->valor_liquido - $totalJaPago;
-
-        if ($request->status_pagamento === 'Pago' && $request->valor_pago > $saldoDevedor) {
-            return response()->json([
-                'error' => 'O valor informado (R$ ' . number_format($request->valor_pago, 2, ',', '.') . ') é maior do que o saldo devedor restante deste orçamento (R$ ' . number_format($saldoDevedor, 2, ',', '.') . ').'
-            ], 422);
-        }
-
-        // 3. Processamento atômico do pagamento
-        $pagamento = DB::transaction(function () use ($request, $orcamento, $saldoDevedor) {
-
-            $pagamento = Pagamento::create([
-                'paciente_id' => $request->paciente_id,
-                'orcamento_id' => $request->orcamento_id,
-                'forma_pagamento_id' => $request->forma_pagamento_id,
-                'valor_pago' => $request->valor_pago,
-                'data_pagamento' => now(),
-                'status_pagamento' => $request->status_pagamento,
-                'observacoes' => $request->observacoes
-            ]);
-
-            // Se o valor pago liquidar o saldo devedor exato, altera o status do orçamento pai para 'Finalizado'
-            if ($request->status_pagamento === 'Pago' && bcsub($saldoDevedor, $request->valor_pago, 2) <= 0) {
-                $orcamento->update(['status' => 'Finalizado']);
-            }
-
-            return $pagamento;
-        });
-
-        return response()->json([
-            'message' => 'Pagamento registrado com sucesso!',
-            'data' => $pagamento
-        ], 201);
+        return view('dentista.pagamento.formulario', compact('orcamento', 'formasPagamento'));
     }
 
     /**
-     * Exibe o recibo/detalhes de uma transação específica.
+     * Função auxiliar: Recalcula saldo e status do orçamento.
+     */
+
+
+    /**
+     * Confirma pagamento total de um orçamento.
+     */
+    public function confirmar(Request $request, $id)
+    {
+        $orcamento = OrcamentoPaciente::findOrFail($id);
+
+        $dados = $request->validate([
+            'forma_pagamento' => 'required|string|max:45',
+            'observacao' => 'nullable|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            Pagamento::create([
+                'orcamento_paciente_id' => $orcamento->id,
+                'valor_pago' => $orcamento->valor_total,
+                'forma_pagamento' => $dados['forma_pagamento'],
+                'status_pagamento' => 'PAGO',
+                'data_pagamento' => now(),
+                'observacao' => $dados['observacao'],
+            ]);
+
+            $this->atualizarSaldoOrcamento($orcamento);
+
+            DB::commit();
+            return redirect()->route('pagamento.index')
+                ->with('sucesso', 'Pagamento confirmado e orçamento quitado com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors('Erro ao confirmar: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Registra novo pagamento (parcial ou total).
+     * valor_pago	decimal(10,2)			Não	Nenhum			Muda Muda	Eliminar Eliminar	
+	3	forma_pagamento	varchar(45)	utf8mb4_unicode_ci		Não	Nenhum			Muda Muda	Eliminar Eliminar	
+	4	status_pagamento	enum('PENDENTE', 'PAGO', 'CANCELADO', 'ESTORNADO')	utf8mb4_unicode_ci		Não	PENDENTE			Muda Muda	Eliminar Eliminar	
+	5	data_pagamento	timestamp			Sim	NULL			Muda Muda	Eliminar Eliminar	
+	6	observacao	varchar(255)	utf8mb4_unicode_ci		Sim	NULL			Muda Muda	Eliminar Eliminar	
+	7	orcamento_paciente_id Índice	bigint		UNSIGNED	Não	Nenhum			Muda Muda	Eliminar Eliminar	
+	8	user_id Índice
+     */
+
+    private function atualizarSaldoOrcamento(OrcamentoPaciente $orcamento)
+    {
+        $valorBase = (float) ($orcamento->valor_liquido ?? $orcamento->total_orcamento ?? 0);
+
+        // ✅ Soma PAGO + PENDENTE, ignora cancelados/estornados
+        $totalPago = (float) Pagamento::where('orcamento_paciente_id', $orcamento->id)
+            ->whereIn('status_pagamento', ['PAGO', 'PENDENTE'])
+            ->sum('valor_pago');
+
+        $saldoRestante = max($valorBase - $totalPago, 0);
+
+        // ✅ Salva com precisão decimal
+        $orcamento->updateQuietly([
+            'saldo_restante' => number_format($saldoRestante, 2, '.', '')
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $dados = $request->validate([
+            'orcamento_paciente_id' => 'required|exists:orcamento_pacientes,id',
+            'valor_pago' => [
+                'required',
+                'numeric',
+                'min:0.01',
+                function ($atributo, $valor, $falha) use ($request) {
+                    $orcamento = OrcamentoPaciente::findOrFail($request->orcamento_paciente_id);
+                    $valorBase = $orcamento->valor_liquido ?? $orcamento->total_orcamento ?? 0;
+
+                    // ✅ ALINHADO: mesma regra do método de atualização
+                    $totalPago = Pagamento::where('orcamento_paciente_id', $orcamento->id)
+                        ->whereIn('status_pagamento', ['PAGO', 'PENDENTE'])
+                        ->sum('valor_pago');
+
+                    $saldoRestante = $valorBase - $totalPago;
+
+                    if ($valor > $saldoRestante) {
+                        $falha("O valor pago não pode ultrapassar o saldo restante de R$ " . number_format($saldoRestante, 2, ',', '.'));
+                    }
+                },
+            ],
+            'forma_pagamento' => 'required|string|max:45',
+            'status_pagamento' => 'required|in:PENDENTE,PAGO,CANCELADO,ESTORNADO',
+            'observacao' => 'nullable|string|max:255',
+        ]);
+
+        $dados['user_id'] = auth()->id();
+
+        DB::beginTransaction();
+        try {
+            $orcamento = OrcamentoPaciente::findOrFail($dados['orcamento_paciente_id']);
+            $pagamento = Pagamento::create($dados);
+
+            // ✅ Atualiza saldo com a regra correta
+            $this->atualizarSaldoOrcamento($orcamento);
+
+            DB::commit();
+            return redirect()->route('pagamento.index')
+                ->with('sucesso', 'Pagamento salvo e saldo atualizado com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            dd('ERRO FINAL:', $e->getMessage());
+            return back()->withErrors('Erro: ' . $e->getMessage());
+        }
+    }
+    /**
+     * Exibe detalhes de um pagamento.
      */
     public function show(Pagamento $pagamento)
     {
@@ -117,79 +182,87 @@ class PagamentoController extends Controller
     }
 
     /**
-     * Retorna os dados para edição do pagamento.
+     * Retorna dados para edição.
      */
     public function edit(Pagamento $pagamento)
     {
-        return response()->json($pagamento);
+        // ✅ Carrega todos os relacionamentos necessários
+        $pagamento->load(['orcamentoPaciente.paciente', 'orcamentoPaciente.pagamentos']);
+
+        // ✅ Cria a variável $orcamento que a view espera
+        $orcamento = $pagamento->orcamentoPaciente;
+
+        // ✅ Usa a mesma view para cadastro e edição
+        return view('dentista.pagamento.formulario', compact('pagamento', 'orcamento'));
     }
 
     /**
-     * Permite atualizar observações ou confirmar um pagamento que estava 'Pendente'.
+     * Atualiza dados de um pagamento existente.
      */
     public function update(Request $request, Pagamento $pagamento)
     {
-        // Se o pagamento já foi efetuado ou estornado, impede alterações de valores retroativos
-        if ($pagamento->status_pagamento === 'Estornado') {
-            return response()->json(['error' => 'Não é permitido modificar um registro financeiro que foi estornado.'], 422);
+        $dados = $request->validate([
+            'orcamento_paciente_id' => 'required|exists:orcamento_pacientes,id',
+            'valor_pago' => [
+                'required',
+                'numeric',
+                'min:0.01',
+                function ($atributo, $valor, $falha) use ($request, $pagamento) {
+                    $orcamento = OrcamentoPaciente::findOrFail($request->orcamento_paciente_id);
+                    $valorBase = $orcamento->valor_liquido ?? $orcamento->total_orcamento ?? 0;
+
+                    // Soma pagamentos do orçamento, EXCLUINDO o pagamento atual (para permitir alterar valor)
+                    $totalPago = Pagamento::where('orcamento_paciente_id', $orcamento->id)
+                        ->where('id', '!=', $pagamento->id) // ✅ Ignora o próprio registro na soma
+                        ->whereIn('status_pagamento', ['PAGO', 'PENDENTE'])
+                        ->sum('valor_pago');
+
+                    $saldoRestante = $valorBase - $totalPago;
+
+                    if ($valor > $saldoRestante) {
+                        $falha("O valor pago não pode ultrapassar o saldo restante de R$ " . number_format($saldoRestante, 2, ',', '.'));
+                    }
+                },
+            ],
+            'forma_pagamento' => 'required|string|max:45',
+            'status_pagamento' => 'required|in:PENDENTE,PAGO,CANCELADO,ESTORNADO',
+            'observacao' => 'nullable|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $pagamento->update($dados);
+
+            // Atualiza saldo do orçamento após alteração
+            $this->atualizarSaldoOrcamento($pagamento->orcamentoPaciente);
+
+            DB::commit();
+            return redirect()->route('pagamento.index')
+                ->with('sucesso', 'Pagamento atualizado e saldo do orçamento ajustado!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            dd('ERRO NA EDIÇÃO:', $e->getMessage());
+            return back()->withErrors('Erro ao atualizar: ' . $e->getMessage());
         }
-
-        $request->validate([
-            'status_pagamento' => 'required|string|in:Pendente,Pago,Estornado',
-            'observacoes' => 'nullable|string|max:255'
-        ]);
-
-        DB::transaction(function () use ($request, $pagamento) {
-
-            // Se o status mudou para 'Estornado', precisamos reavaliar o status do orçamento pai
-            if ($request->status_pagamento === 'Estornado' && $pagamento->status_pagamento === 'Pago') {
-                $orcamento = $pagamento->orcamento;
-                if ($orcamento->status === 'Finalizado') {
-                    // Retorna o orçamento para 'Aprovado' (Ativo mas com saldo pendente de quitação)
-                    $orcamento->update(['status' => 'Aprovado']);
-                }
-            }
-
-            $pagamento->update([
-                'status_pagamento' => $request->status_pagamento,
-                'observacoes' => $request->observacoes
-            ]);
-        });
-
-        return response()->json([
-            'message' => 'Registro de pagamento atualizado com sucesso!'
-        ]);
     }
-
     /**
-     * Remove ou realiza o estorno do pagamento no caixa da clínica.
+     * Exclui ou estorna pagamento (regra fiscal).
      */
     public function destroy(Pagamento $pagamento)
     {
-        // Regra de Auditoria Fiscal: Registros de pagamentos efetivados ('Pago') não devem ser apagados fisicamente 
-        // do banco de dados para evitar fraudes no fluxo de caixa. Em vez disso, altera-se o status para 'Estornado'.
-        if ($pagamento->status_pagamento === 'Pago') {
-            DB::transaction(function () use ($pagamento) {
-                $pagamento->update([
-                    'status_pagamento' => 'Estornado',
-                    'observacoes' => '[ESTORNO AUTOMÁTICO] Registro estornado em ' . now()->format('d/m/Y H:i')
-                ]);
+        DB::beginTransaction();
+        try {
+            $orcamento = $pagamento->orcamentoPaciente;
+            $pagamento->delete();
 
-                // Ajusta o orçamento pai se ele estivesse concluído
-                $orcamento = $pagamento->orcamento;
-                if ($orcamento && $orcamento->status === 'Finalizado') {
-                    $orcamento->update(['status' => 'Aprovado']);
-                }
-            });
+            // ✅ Atualiza saldo após exclusão
+            $this->atualizarSaldoOrcamento($orcamento);
 
-            return response()->json([
-                'message' => 'O pagamento não foi excluído fisicamente por segurança fiscal. Seu status foi atualizado para Estornado.'
-            ], 200);
+            DB::commit();
+            return redirect()->route('pagamento.index')->with('sucesso', 'Pagamento excluído e saldo atualizado!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors('Erro ao excluir: ' . $e->getMessage());
         }
-
-        // Se o pagamento estivesse meramente 'Pendente' (Sem entrada de dinheiro real), a exclusão física é permitida
-        $pagamento->delete();
-
-        return response()->json(['message' => 'Registro de pagamento pendente excluído com sucesso.']);
     }
 }

@@ -37,7 +37,7 @@ class Atendimento extends Model
     /**
      * Relacionamento: Atendimento tem um Orçamento do Paciente
      */
-    public function orcamento(): HasOne
+    public function orcamento()
     {
         return $this->hasOne(OrcamentoPaciente::class, 'atendimento_id');
     }

@@ -13,16 +13,27 @@ class Pagamento extends Model
     use HasFactory;
     // Define explicitamente o nome da tabela
     protected $table = "pagamentos";
+    /*
+    	valor_pago	decimal(10,2)			Não	Nenhum			Muda Muda	Eliminar Eliminar	
+	3	forma_pagamento	varchar(45)	utf8mb4_unicode_ci		Não	Nenhum			Muda Muda	Eliminar Eliminar	
+	4	status_pagamento	enum('PENDENTE', 'PAGO', 'CANCELADO', 'ESTORNADO')	utf8mb4_unicode_ci		Não	PENDENTE			Muda Muda	Eliminar Eliminar	
+	5	data_pagamento	timestamp			Sim	NULL			Muda Muda	Eliminar Eliminar	
+	6	observacao	varchar(255)	utf8mb4_unicode_ci		Sim	NULL			Muda Muda	Eliminar Eliminar	
+	7	orcamento_paciente_id Índice	bigint		UNSIGNED	Não	Nenhum			Muda Muda	Eliminar Eliminar	
+	8	user_id Índice	bigint		UNSIGNED	Sim	NULL			Muda Muda	Eliminar Eliminar	
+	9	created_at	timestamp			Sim	NULL			Muda Muda	Eliminar Eliminar	
+	10	updated_at
+    */
 
     protected $fillable = [
         'paciente_id',
-        'orcamento_id',       // ID do orçamento pai (OrcamentoPaciente)
-        'forma_pagamento_id', // ID da modalidade (Pix, Crédito, etc.)
+        'orcamento_paciente_id',       // ID do orçamento pai (OrcamentoPaciente)
+        'forma_pagamento', // ID da modalidade (Pix, Crédito, etc.)
         'valor_pago',
         'user_id',
         'data_pagamento',
         'status_pagamento',   // Ex: 'Pendente', 'Pago', 'Estornado'
-        'observacoes'
+        'observacao'
     ];
 
     /**
@@ -49,6 +60,18 @@ class Pagamento extends Model
     public function orcamento(): BelongsTo
     {
         return $this->belongsTo(OrcamentoPaciente::class, 'orcamento_id');
+    }
+
+     // ✅ RELACIONAMENTO CORRETO: Um pagamento pertence a um orçamento
+    public function orcamentoPaciente(): BelongsTo
+    {
+        return $this->belongsTo(OrcamentoPaciente::class, 'orcamento_paciente_id');
+    }
+
+    // ✅ RELACIONAMENTO COM USUÁRIO: Um pagamento pertence a um usuário
+    public function usuario(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**

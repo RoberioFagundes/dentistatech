@@ -63,12 +63,14 @@
                                     <a href="{{ route('atendimento.pdf', $atendimento->id) }}" class="btn btn-outline-primary" title="Gerar PDF">
                                         <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
-                                    <form action="{{ route('orcamento.create', $atendimento->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-outline-primary" title="Gerar Orçamento">
-                                            <i class="bi bi-receipt"></i>
-                                        </button>
-                                    </form>
+
+                                    @if($atendimento->orcamento)
+                                    <a href="{{ route('pagamento.confirmacao', $atendimento->orcamento->id) }}"
+                                        class="btn btn-outline-primary">
+                                        <i class="bi bi-receipt"></i>
+                                    </a>
+                                    @endif
+
                                     <a href="{{ route('atendimento.edit', $atendimento->id) }}" class="btn btn-outline-secondary" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </a>
@@ -133,8 +135,13 @@
                             <span class="small">{{ $atendimento->diagnostico ?? 'Sem diagnóstico' }}</span>
                         </div>
 
-                        <div class="d-flex gap-2">
-
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form action="{{ route('orcamento.create', $atendimento->id) }}" method="POST" class="flex-grow-1">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" title="Gerar confirmação de pagamento">
+                                    Confirmação
+                                </button>
+                            </form>
                             <a href="{{ route('atendimento.pdf', $atendimento->id) }}" target="_blank" class="btn btn-sm btn-outline-primary flex-grow-1">
                                 Orçamento
                             </a>
