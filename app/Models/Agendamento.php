@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory; // <--- ADICIONE ESTA IMPORTAÇÃO
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Agendamento extends Model
 {
     use HasFactory;
+
     protected $table = "agendamentos";
 
+    // ✅ Todos os campos que existem na tabela, liberados para edição
     protected $fillable = [
         'data',
         'hora_inicio',
@@ -26,42 +26,42 @@ class Agendamento extends Model
         'user_id',
     ];
 
-    // Garante que o Laravel entenda os campos de hora/data corretamente
+    // ✅ Conversão automática de tipos
     protected $casts = [
-        'data' => 'date',
+        'data' => 'date:Y-m-d',
+        'hora_inicio' => 'datetime:H:i',
+        'hora_fim' => 'datetime:H:i',
     ];
 
-    /**
-     * Retorna o Paciente que realizou este agendamento.
-     */
+    // ✅ Relacionamentos existentes e confirmados
     public function paciente(): BelongsTo
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');
     }
 
-    /**
-     * Retorna o Dentista responsável por este agendamento.
-     */
     public function dentista(): BelongsTo
     {
         return $this->belongsTo(Dentista::class, 'dentista_id');
     }
 
-    /**
-     * Retorna o Procedimento/Atendimento vinculado a este agendamento.
-     * AJUSTADO: Como o agendamento possui a coluna 'atendimento_id', ele belongsTo Atendimento.
-     */
     public function atendimento(): BelongsTo
     {
         return $this->belongsTo(Atendimento::class, 'atendimento_id');
     }
 
+    public function procedimento(): BelongsTo
+    {
+        return $this->belongsTo(Procedimento::class, 'procedimento_id');
+    }
 
-public function procedimento(){
-    
-    return $this->belongsTo(Procedimento::class, 'procedimento_id');
-}
+    public function usuario(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
-// existe essa?
-
+    // ✅ Relacionamento com remarcações (histórico)
+    public function remarcacoes()
+    {
+        return $this->hasMany(Remarcacao::class, 'agendamento_id');
+    }
 }

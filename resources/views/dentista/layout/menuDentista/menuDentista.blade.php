@@ -70,8 +70,8 @@
                 ['route' => 'financeiro.index', 'icon' => 'bi-people-fill', 'label' => 'Funcionários', 'pattern' => 'financeiro.*']
             ],
             'Financeiro' => [
-                ['route' => 'financeiro.index', 'icon' => 'bi-person-badge', 'label' => 'Pagamentos', 'pattern' => 'financeiro.*'],
-                ['route' => 'financeiro.index', 'icon' => 'bi-person-badge', 'label' => 'Orçamentos', 'pattern' => 'financeiro.*']
+                ['route' => 'pagamento.index', 'icon' => 'bi-person-badge', 'label' => 'Pagamentos', 'pattern' => 'pagamento.*'],
+                ['route' => 'orcamento.index', 'icon' => 'bi-person-badge', 'label' => 'Orçamentos', 'pattern' => 'orcamento.*']
             ],
             'Serviços' => [
                 ['route' => 'dentista.index', 'icon' => 'bi-person-badge', 'label' => 'Dentistas', 'pattern' => 'dentista.*'],
