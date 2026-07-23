@@ -20,12 +20,12 @@ class AgendamentoController extends Controller
         $nomeFiltro = $request->get('nome');
         $dataFiltro = $request->get('data');
 
-        $query = Agendamento::query();
+        // 🔒 Filtra estritamente pelo ID do usuário autenticado
+        $query = Agendamento::where('user_id', auth()->id());
 
         // Filtro por Nome (Busca Parcial e Case-Insensitive)
         if (!empty($nomeFiltro)) {
             $query->whereHas('paciente', function ($q) use ($nomeFiltro) {
-                // O uso de 'LIKE' com '%' permite buscar partes do nome
                 $q->where('nome', 'LIKE', '%' . $nomeFiltro . '%');
             });
         }
@@ -45,16 +45,13 @@ class AgendamentoController extends Controller
      */
     public function create()
     {
-        // 1. Busca os dados necessários para preencher os <select> do formulário
-        $pacientes = Paciente::all();
-        $dentistas = Dentista::all();
-        $procedimentos = Procedimento::all(); // <--- Faltava essa linha!
+        // 1. Busca os dados necessários filtrando estritamente pelo usuário autenticado
+        $pacientes     = Paciente::where('user_id', auth()->id())->get();
+        $dentistas     = Dentista::where('user_id', auth()->id())->get();
+        $procedimentos = Procedimento::where('user_id', auth()->id())->get();
 
         // 2. Envia TODAS as variáveis para a view dentro do compact
         return view('dentista.agendamento.formulario', compact('pacientes', 'dentistas', 'procedimentos'));
-
-        // return response()->json(compact('pacientes', 'dentistas'));
-        // Caso use Blade: return view('agendamentos.create', compact('pacientes', 'dentistas'));
     }
 
     /**
@@ -126,31 +123,15 @@ class AgendamentoController extends Controller
     /**
      * Exibe o formulário de edição pré-carregando os dados.
      */
-    public function edit(Agendamento $agendamento)
+    public function edit($id)
     {
+        $agendamento = Agendamento::where('user_id', auth()->id())->findOrFail($id);
 
-        if ($agendamento->user_id != auth()->id()) {
-            abort(404);
-        }
+        $pacientes = Paciente::where('user_id', auth()->id())->get();
+        $dentistas = Dentista::where('user_id', auth()->id())->get();
+        $procedimentos = Procedimento::where('user_id', auth()->id())->get();
 
-        $pacientes = Paciente::where('user_id', auth()->id())
-            ->orderBy('nome')
-            ->get();
-
-        $dentistas = Dentista::where('user_id', auth()->id())
-            ->orderBy('nome')
-            ->get();
-
-        $procedimentos = Procedimento::where('user_id', auth()->id())
-            ->orderBy('nome')
-            ->get();
-
-        return view('dentista.agendamento.formulario', compact(
-            'agendamento',
-            'pacientes',
-            'dentistas',
-            'procedimentos'
-        ));
+        return view('dentista.agendamento.formulario', compact('agendamento', 'pacientes', 'dentistas', 'procedimentos'));
     }
     /**
      * Atualiza os dados ou o Status do agendamento (Ex: Mudar de 'Agendado' para 'Confirmado').

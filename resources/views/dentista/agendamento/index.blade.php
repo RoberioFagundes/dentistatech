@@ -3,11 +3,11 @@
 @section('pagina')
 
 @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
 @endif
 <div class="container-fluid mt-0 px-4">
     <form action="{{ route('agendamento.index') }}" method="GET" class="row">
@@ -45,6 +45,7 @@
                         <th scope="col" class="px-3 py-3">Dentista / Profissional</th>
                         <th scope="col" class="px-3 py-3">Procedimento</th>
                         <th scope="col" class="px-3 py-3">Status</th>
+                        <th scope="col" class="px-3 py-3">usuario</th>
                         <th scope="col" class="px-3 py-3">Obs.</th>
                         <th scope="col" class="px-4 py-3 text-end">Ações</th>
                     </tr>
@@ -99,13 +100,16 @@
                         </td>
 
                         <td class="px-3 py-3 text-muted small text-truncate" style="max-width: 150px;" title="{{ $item->observacao }}">
+                            {{ $item->usuario->id ?? '-' }}
+                        </td>
+
+                        <td class="px-3 py-3 text-muted small text-truncate" style="max-width: 150px;" title="{{ $item->observacao }}">
                             {{ $item->observacao ?? '-' }}
                         </td>
 
                         <td class="px-4 py-3 text-end">
                             <div class="d-flex justify-content-end gap-1">
-                                <form action="{{ route('remarcacao.create') }}" method="POST" class="d-inline">
-                                    @csrf
+                                <form action="{{ route('remarcacao.create') }}" method="GET" class="d-inline">
                                     <input type="hidden" name="agendamento_id" value="{{ $item->id }}">
                                     <input type="hidden" name="paciente_id" value="{{ $item->paciente_id }}">
                                     <button type="submit" class="btn btn-sm btn-outline-secondary border-0 text-primary p-1.5" title="Remarcar">

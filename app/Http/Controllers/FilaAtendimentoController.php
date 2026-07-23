@@ -16,15 +16,21 @@ class FilaAtendimentoController extends Controller
 
     public function index(Request $request)
     {
-        // Verifica se o usuário está logado
         $user = auth()->user();
 
-        // Consulta filtrando pela data, status e opcionalmente pelo ID do dentista
-        $fila = FilaAtendimento::with(['paciente', 'dentista'])
+        // 🧹 Opcional: Remove automaticamente da tabela da fila os registros cujos agendamentos foram cancelados
+        FilaAtendimento::whereHas('agendamento', function ($q) {
+            $q->where('status', 'CANCELADO'); // Ajuste para o texto exato do seu status de cancelado
+        })->delete();
+
+        // Consulta principal filtrando a fila e garantindo que o agendamento NÃO está cancelado
+        $fila = FilaAtendimento::with(['paciente', 'dentista', 'agendamento'])
             ->whereDate('chegada_em', today())
             ->whereIn('status_fila', ['AGUARDANDO', 'EM_ATENDIMENTO'])
-            // Se você precisar que o dentista veja APENAS os pacientes dele:
-            // ->where('dentista_id', $user->dentista_id) 
+            // 🛑 Garante estritamente que o agendamento associado não esteja cancelado
+            ->whereHas('agendamento', function ($q) {
+                $q->where('status', '!=', 'CANCELADO'); // Ajuste o termo se necessário
+            })
             ->orderBy('prioridade', 'desc')
             ->orderBy('chegada_em', 'asc')
             ->paginate(15);
@@ -49,10 +55,20 @@ class FilaAtendimentoController extends Controller
             'agendamento_id' => 'required|exists:agendamentos,id',
         ]);
 
-        // 1. Busca o agendamento para garantir que ele existe e obter o ID do paciente vinculado
+        // 1. Busca o agendamento para garantir que ele existe e obter dados
         $agendamento = Agendamento::findOrFail($request->agendamento_id);
 
-        // 2. Verifica se o agendamento já está na fila
+        // 🛑 2. Impede se o agendamento estiver cancelado
+        if ($agendamento->status === 'CANCELADO') { // Ajuste para o texto exato do seu status cancelado
+            return redirect()->back()
+                ->with('error', 'Não é possível adicionar à fila um agendamento que está cancelado.');
+        }
+
+        // 🧹 3. Se por acaso já existir um registro na fila para este agendamento, remove ou limpa
+        // Opção A: Removendo o registro anterior da fila
+        FilaAtendimento::where('agendamento_id', $request->agendamento_id)->delete();
+
+        // (Ou se preferir apenas verificar duplicidade ativa como antes, mantemos a checagem:)
         $filaExistente = FilaAtendimento::where('agendamento_id', $request->agendamento_id)
             ->whereIn('status_fila', ['AGUARDANDO', 'EM_ATENDIMENTO'])
             ->first();
@@ -63,10 +79,10 @@ class FilaAtendimentoController extends Controller
                 ->with('error', 'Este paciente já está na fila.');
         }
 
-        // 3. Cria o registro na fila salvando tanto o agendamento_id quanto o paciente_id
+        // 4. Cria o registro na fila salvando tanto o agendamento_id quanto o paciente_id
         $fila = FilaAtendimento::create([
             'agendamento_id' => $request->agendamento_id,
-            'paciente_id' => $agendamento->paciente_id, // <--- ADICIONADO AQUI
+            'paciente_id' => $agendamento->paciente_id,
             'status_fila' => 'AGUARDANDO',
             'prioridade' => 0,
             'chegada_em' => now(),

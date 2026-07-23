@@ -16,7 +16,8 @@ class DentistaController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Dentista::query();
+        // 🔒 Inicia a query filtrando estritamente pelo ID do usuário autenticado
+        $query = Dentista::where('user_id', auth()->id());
 
         // 🔍 Filtro por status (se tiver o campo)
         if ($request->filled('status')) {
@@ -187,7 +188,7 @@ class DentistaController extends Controller
     /**
      * Remove ou desativa o dentista do sistema.
      */
-  
+
 
     public function destroy($id)
     {

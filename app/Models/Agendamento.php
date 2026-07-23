@@ -29,8 +29,8 @@ class Agendamento extends Model
     // ✅ Conversão automática de tipos
     protected $casts = [
         'data' => 'date:Y-m-d',
-        'hora_inicio' => 'datetime:H:i',
-        'hora_fim' => 'datetime:H:i',
+        // 'hora_inicio' => 'datetime:H:i',
+        // 'hora_fim' => 'datetime:H:i',
     ];
 
     // ✅ Relacionamentos existentes e confirmados

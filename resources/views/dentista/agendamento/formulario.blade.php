@@ -136,7 +136,7 @@
                                 <option value="">Selecione o Dentista</option>
                                 @foreach($dentistas as $dentista)
                                     <option value="{{ $dentista->id }}" {{ old('dentista_id', $isEdit ? $agendamento->dentista_id : '') == $dentista->id ? 'selected' : '' }}>
-                                        Dr(a). {{ $dentista->nome }}
+                                        Dr(a). {{$dentista->nome }}
                                     </option>
                                 @endforeach
                             </select>
