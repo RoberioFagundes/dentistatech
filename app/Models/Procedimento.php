@@ -37,6 +37,6 @@ class Procedimento extends Model
      */
     public function itensOrcamento(): HasMany
     {
-        return $this->hasMany(OrcamentoItem::class, 'procedimento_id');
+        return $this->hasMany(OrcamentoItem::class, 'procedimento_dente_id');
     }
 }

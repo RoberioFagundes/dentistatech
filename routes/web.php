@@ -24,14 +24,14 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Rotas públicas de Planos e Assinatura (sempre liberadas)
+// Rotas públicas de Planos e Assinatura
 Route::get('/planos', [PlanoController::class, 'index'])->name('planos');
 Route::post('/assinatura/criar', [PlanoController::class, 'criarAssinatura'])->name('assinatura.criar');
 
-// Webhook do Asaas (NÃO pode ter middleware de auth!)
+// Webhook do Asaas
 Route::post('webhook/asaas', [WebhookAsaasController::class, 'receber'])->name('webhook.asaas');
 
-// Dashboard Centralizado
+// Dashboard
 Route::get('/dashboard', function () {
     return match (Auth::user()->tipo) {
         'recepcionista' => view('recepcionista.dashboardRecepcionista'),
@@ -49,14 +49,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// 🔐 Todas as rotas protegidas por Assinatura/Teste
-Route::middleware(['auth', 'verificar.assinatura'])->group(function () {
+// 🔐 Grupo principal protegido — ALTERADO AQUI
+Route::middleware(['auth', \App\Http\Middleware\VerificarAssinatura::class])->group(function () {
     Route::resource('paciente', PacienteController::class);
     Route::resource('dentista', DentistaController::class);
     Route::resource('agendamento', AgendamentoController::class);
     Route::resource('procedimento', ProcedimentoController::class);
 
-    // Rotas de Pagamento
     Route::get('/pagamento/confirmacao/{id}', [PagamentoController::class, 'pagamento_confirmacao'])->name('pagamento.confirmacao');
     Route::post('/pagamento/confirmar/{id}', [PagamentoController::class, 'confirmar'])->name('pagamento.confirmar');
     Route::resource('pagamento', PagamentoController::class)->except(['show']);
@@ -65,14 +64,10 @@ Route::middleware(['auth', 'verificar.assinatura'])->group(function () {
     Route::resource('atendimento', AtendimentoController::class);
     Route::get('/atendimento/{atendimento}/pdf', [AtendimentoController::class, 'gerarPdf'])->name('atendimento.pdf');
 
-    // Remarcação
-    Route::resource('remarcacao', RemarcacaoController::class)
-        ->only(['index', 'create', 'store', 'show', 'destroy']);
-
+    Route::resource('remarcacao', RemarcacaoController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     Route::resource('filaAtendimento', FilaAtendimentoController::class);
     Route::resource('orcamento', OrcamentoController::class);
 
-    // Fila de Espera
     Route::prefix('filaAgendamentoEspera')->name('filaAgendamentoEspera.')->group(function () {
         Route::get('/', [FilaAgendamentoEsperaController::class, 'index'])->name('index');
         Route::get('create', [FilaAgendamentoEsperaController::class, 'create'])->name('create');
@@ -87,8 +82,8 @@ Route::middleware(['auth', 'verificar.assinatura'])->group(function () {
     Route::post('/fila-atendimento/adicionar', [FilaAtendimentoController::class, 'store'])->name('fila.adicionar');
 });
 
-// Rotas só para Dentistas/Administradores
-Route::middleware(['auth', 'dentista', 'verificar.assinatura'])->group(function () {
+// Rotas só para Dentistas — ALTERADO AQUI TAMBÉM
+Route::middleware(['auth', 'dentista', \App\Http\Middleware\VerificarAssinatura::class])->group(function () {
     Route::get('/funcionarios', [FuncionarioController::class, 'index'])->name('funcionarios.index');
     Route::get('/funcionarios/novo', [FuncionarioController::class, 'create'])->name('funcionarios.create');
     Route::post('/funcionarios', [FuncionarioController::class, 'store'])->name('funcionarios.store');

@@ -21,9 +21,10 @@ class Dentista extends Model
     /**
      * Retorna os registros de contato deste profissional.
      */
-    public function contatos(): HasMany
+    // ✅ Agora retorna UM registro apenas
+    public function contatos(): HasOne
     {
-        return $this->hasMany(ContatoDentista::class, 'dentista_id');
+        return $this->hasOne(ContatoDentista::class, 'dentista_id');
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Procedimento;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ProcedimentoController extends Controller
 {
@@ -12,24 +13,18 @@ class ProcedimentoController extends Controller
      */
     public function index(Request $request)
     {
-        // Inicia a query filtrando estritamente pelo ID do usuário autenticado
-        $query = Procedimento::where('user_id', auth()->id()); // <-- Ajuste aqui para 'dentista_id' se for o caso no seu banco
+        $query = Procedimento::where('user_id', auth()->id());
 
-        // Filtro por status (ex: buscar apenas procedimentos 'Ativos')
         if ($request->has('ativo')) {
             $query->where('ativo', $request->boolean('ativo'));
         }
 
-        // Filtro por termo de busca (Nome ou Código Clínico/TUSS) mantendo o escopo fechado
+        // ✅ Busca APENAS por nome (campo que realmente existe)
         if ($request->has('busca')) {
             $busca = $request->busca;
-            $query->where(function ($q) use ($busca) {
-                $q->where('nome', 'like', "%{$busca}%")
-                ->orWhere('codigo_clinico', 'like', "%{$busca}%");
-            });
+            $query->where('nome', 'like', "%{$busca}%");
         }
 
-        // Traz os procedimentos ordenados em ordem alfabética e paginados
         $procedimentos = $query->orderBy('nome', 'asc')->paginate(20);
 
         return view('dentista.procedimento.index', compact('procedimentos'));
@@ -38,7 +33,7 @@ class ProcedimentoController extends Controller
     /**
      * Exibe o formulário de criação (Útil caso use views Blade).
      */
-   public function create()
+    public function create()
     {
         return view('dentista.procedimento.formulario');
     }
@@ -103,30 +98,33 @@ class ProcedimentoController extends Controller
     /**
      * Atualiza os dados de um procedimento no catálogo.
      */
-   
+
 
     /**
      * Remove ou desativa um procedimento do catálogo.
      */
     public function destroy(Procedimento $procedimento)
     {
-        // Regra de Negócio: Se o procedimento já foi inserido em algum item de orçamento de paciente,
-        // ele NÃO pode ser deletado fisicamente do banco de dados para evitar inconsistência financeira e quebra de relatórios históricos.
+        // Verifica se o procedimento já foi utilizado em algum orçamento
         $jaFoiUtilizado = $procedimento->itensOrcamento()->exists();
 
         if ($jaFoiUtilizado) {
-            // Em vez de apagar, altera o status para 'false' (Inativo)
-            // Assim ele some de novas listagens de venda, mas mantém o passado intacto
-            $procedimento->update(['ativo' => false]);
 
-            return response()->json([
-                'message' => 'Este procedimento já possui vínculos em orçamentos e não pode ser deletado. Seu status foi alterado para Inativo no catálogo.'
-            ], 200);
+            // Apenas inativa o procedimento para preservar o histórico
+            $procedimento->update([
+                'ativo' => false
+            ]);
+
+            return redirect()
+                ->route('procedimento.index')
+                ->with('warning', 'O procedimento não pode ser excluído porque já foi utilizado em um ou mais orçamentos. Ele foi apenas inativado e não ficará mais disponível para novos atendimentos.');
         }
 
-        // Se nunca tiver sido utilizado em nenhum orçamento clínico, realiza a exclusão física
+        // Caso nunca tenha sido utilizado, exclui definitivamente
         $procedimento->delete();
 
-        return response()->json(['message' => 'Procedimento excluído com sucesso do sistema.']);
+        return redirect()
+            ->route('procedimento.index')
+            ->with('success', 'Procedimento excluído com sucesso.');
     }
 }

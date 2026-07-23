@@ -534,7 +534,7 @@
 
                             {{-- BOTÕES DE AÇÃO --}}
                             <div class="mt-4 pt-3 border-top d-flex justify-content-between">
-                                <a href="{{ url('/dentista/paciente') }}" class="btn btn-light border">
+                                <a href="{{ route('paciente.index') }}" class="btn btn-light border">
                                     <i class="bi bi-arrow-left me-1"></i> Voltar
                                 </a>
                                 <button type="submit" class="btn btn-primary px-4">

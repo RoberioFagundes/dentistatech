@@ -8,6 +8,7 @@ use App\Models\ContatoDentista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+
 class DentistaController extends Controller
 {
     /**
@@ -17,27 +18,36 @@ class DentistaController extends Controller
     {
         $query = Dentista::query();
 
-        // Permite filtrar por status (ex: buscar apenas os 'Ativos')
-        if ($request->has('status')) {
+        // 🔍 Filtro por status (se tiver o campo)
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Busca por nome ou especialidade
-        if ($request->has('busca')) {
+        // 🔍 Busca por nome completo, nome, sobrenome, especialidade ou CRO
+        if ($request->filled('busca')) {
             $busca = $request->busca;
             $query->where(function ($q) use ($busca) {
-                $q->where('nome', 'like', "%{$busca}%")
-                    ->orWhere('especialidade', 'like', "%{$busca}%");
+                // ✅ Busca no nome completo (nome + espaço + sobrenome)
+                $q->whereRaw("CONCAT(nome, ' ', sobrenome) LIKE ?", ["%{$busca}%"])
+                    // Ou busca só no nome
+                    ->orWhere('nome', 'like', "%{$busca}%")
+                    // Ou busca só no sobrenome
+                    ->orWhere('sobrenome', 'like', "%{$busca}%")
+                    ->orWhere('especialidade', 'like', "%{$busca}%")
+                    ->orWhere('cro', 'like', "%{$busca}%");
             });
         }
 
-        // Traz os dentistas paginados com a contagem de contatos cadastrados
-        $dentistas = $query->withCount('contatos')
+        // Traz os dados com contagem de contatos e ordenados
+        $dentistas = $query
+            ->withCount('contatos')
             ->orderBy('nome', 'asc')
             ->paginate(10);
 
+        // Mantém os parâmetros de busca na paginação
+        $dentistas->appends($request->all());
+
         return view('dentista.dentista.index', compact('dentistas'));
-        // Se usar Blade: return view('dentistas.index', compact('dentistas'));
     }
 
     /**
@@ -143,56 +153,70 @@ class DentistaController extends Controller
     /**
      * Atualiza os dados cadastrais do dentista.
      */
-   public function update(Request $request, $id)
-{
-    // 1. Busca o dentista pelo ID bruto enviado pela rota
-    $dentista = Dentista::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        // 1. Busca o dentista pelo ID bruto enviado pela rota
+        $dentista = Dentista::findOrFail($id);
 
-    // 2. Validação com as regras corretas (incluindo os campos de contato e endereço do formulário)
-    $dadosValidados = $request->validate([
-        'nome'          => 'required|string|max:255',
-        'sobrenome'     => 'required|string|max:255',
-        'cro'           => 'required|string|max:20|unique:dentistas,cro,' . $dentista->id, // Ignora o próprio ID
-        'cro_uf'        => 'required|string|size:2',
-        'especialidade' => 'required|string|max:150',
-        'telefone'      => 'required|string|max:20',
-        'whatsapp'      => 'required|string|max:20',
-        'email'         => 'required|email|max:255',
-        'cep'           => 'required|string|max:10',
-        'pais'          => 'required|string|max:100',
-        'estado'        => 'required|string|max:100',
-        'cidade'        => 'required|string|max:100',
-        'bairro'        => 'required|string|max:100',
-        'rua'           => 'required|string|max:255',
-        'numero'        => 'required|integer',
-    ]);
+        // 2. Validação com as regras corretas (incluindo os campos de contato e endereço do formulário)
+        $dadosValidados = $request->validate([
+            'nome'          => 'required|string|max:255',
+            'sobrenome'     => 'required|string|max:255',
+            'cro'           => 'required|string|max:20|unique:dentistas,cro,' . $dentista->id, // Ignora o próprio ID
+            'cro_uf'        => 'required|string|size:2',
+            'especialidade' => 'required|string|max:150',
+            'telefone'      => 'required|string|max:20',
+            'whatsapp'      => 'required|string|max:20',
+            'email'         => 'required|email|max:255',
+            'cep'           => 'required|string|max:10',
+            'pais'          => 'required|string|max:100',
+            'estado'        => 'required|string|max:100',
+            'cidade'        => 'required|string|max:100',
+            'bairro'        => 'required|string|max:100',
+            'rua'           => 'required|string|max:255',
+            'numero'        => 'required|integer',
+        ]);
 
-    // 3. Atualiza os dados no banco
-    $dentista->update($dadosValidados);
+        // 3. Atualiza os dados no banco
+        $dentista->update($dadosValidados);
 
-    // 4. Redireciona de volta para a listagem com mensagem de sucesso
-    return redirect()->route('dentista.index')->with('success', 'Cadastro do dentista atualizado com sucesso!');
-}
+        // 4. Redireciona de volta para a listagem com mensagem de sucesso
+        return redirect()->route('dentista.index')->with('success', 'Cadastro do dentista atualizado com sucesso!');
+    }
 
     /**
      * Remove ou desativa o dentista do sistema.
      */
-    public function destroy(Dentista $dentista)
+  
+
+    public function destroy($id)
     {
-        // Regra de Negócio: Se o dentista já tiver históricos clínicos (agendamentos ou prontuários),
-        // ele NÃO pode ser deletado fisicamente do banco de dados para não quebrar a integridade referencial.
-        $possuiVinculos = $dentista->agendamentos()->exists() || $dentista->prontuarios()->exists();
+        try {
+            $dentista = Dentista::findOrFail($id);
 
-        if ($possuiVinculos) {
-            // Em vez de deletar, altera o status para 'Inativo' salvaguardando os dados históricos da clínica
-            $dentista->update(['status' => 'Inativo']);
+            // ⛔ BLOQUEIA SE TIVER HISTÓRICO IMPORTANTE
+            if ($dentista->agendamentos()->exists() || $dentista->prontuarios()->exists()) {
+                return redirect()->route('dentista.index')
+                    ->with('erro', '❌ Não pode apagar: existem agendamentos ou prontuários vinculados!');
+            }
 
-            return redirect()->route('dentista.index')->with('success', 'Dentista desativado com sucesso!');
+            // ✅ APAGA TODOS OS RELACIONADOS PRIMEIRO (FORÇADO)
+            DB::table('contato_dentistas')->where('dentista_id', $id)->delete();
+            DB::table('endereco_dentista_atendimentos')->where('dentista_id', $id)->delete();
+
+            // ✅ AGORA SIM APAGA O DENTISTA
+            $apagou = $dentista->delete();
+
+            if ($apagou) {
+                return redirect()->route('dentista.index')
+                    ->with('success', '✅ APAGADO DO BANCO COM SUCESSO!');
+            } else {
+                return redirect()->route('dentista.index')
+                    ->with('erro', '⚠️ O registro não pôde ser removido.');
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('dentista.index')
+                ->with('erro', '🚨 ERRO: ' . $e->getMessage());
         }
-
-        // Se não houver histórico atrelado, a exclusão física é liberada
-        $dentista->delete();
-
-        return redirect()->route('dentista.index')->with('success', 'Dentista removido com sucesso!');
     }
 }

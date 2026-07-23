@@ -111,7 +111,7 @@
                                         class="text-danger">*</span></label>
                                 <input type="text"
                                     class="form-control mask-telefone @error('telefone') is-invalid @enderror" id="telefone"
-                                    name="telefone" value="{{ old('telefone', $dentista->telefone ?? '') }}" required
+                                    name="telefone" value="{{ old('telefone', $dentista->contatos->telefone ?? '') }}" required
                                     placeholder="(00) 0000-0000">
                                 @error('telefone')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -123,7 +123,7 @@
                                         class="text-danger">*</span></label>
                                 <input type="text"
                                     class="form-control mask-telefone @error('whatsapp') is-invalid @enderror" id="whatsapp"
-                                    name="whatsapp" value="{{ old('whatsapp', $dentista->whatsapp ?? '') }}" required
+                                    name="whatsapp" value="{{ old('whatsapp', $dentista->contatos->whatsapp ?? '') }}" required
                                     placeholder="(00) 00000-0000">
                                 @error('whatsapp')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -134,7 +134,7 @@
                                 <label for="email" class="form-label fw-semibold text-secondary small">E-mail Comercial
                                     <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                                    name="email" value="{{ old('email', $dentista->email ?? '') }}" required
+                                    name="email" value="{{ old('email', $dentista->contatos->email ?? '') }}" required
                                     placeholder="dentista@clinica.com">
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -152,7 +152,7 @@
                                 <label for="cep" class="form-label fw-semibold text-secondary small">CEP <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control mask-cep @error('cep') is-invalid @enderror" id="cep"
-                                    name="cep" value="{{ old('cep', $dentista->cep ?? '') }}" required
+                                    name="cep" value="{{ old('cep', $dentista->endereco->cep ?? '') }}" required
                                     placeholder="00000-000">
                                 @error('cep')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -164,7 +164,7 @@
                                 <label for="pais" class="form-label fw-semibold text-secondary small">País <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('pais') is-invalid @enderror" id="pais"
-                                    name="pais" value="{{ old('pais', $dentista->pais ?? 'Brasil') }}" required
+                                    name="pais" value="{{ old('pais', $dentista->endereco->pais ?? 'Brasil') }}" required
                                     placeholder="Ex: Brasil">
                                 @error('pais')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -175,7 +175,7 @@
                                 <label for="estado" class="form-label fw-semibold text-secondary small">Estado <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('estado') is-invalid @enderror" id="estado"
-                                    name="estado" value="{{ old('estado', $dentista->estado ?? '') }}" required
+                                    name="estado" value="{{ old('estado', $dentista->endereco->estado ?? '') }}" required
                                     placeholder="Ex: São Paulo">
                                 @error('estado')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -186,7 +186,7 @@
                                 <label for="cidade" class="form-label fw-semibold text-secondary small">Cidade <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('cidade') is-invalid @enderror" id="cidade"
-                                    name="cidade" value="{{ old('cidade', $dentista->cidade ?? '') }}" required
+                                    name="cidade" value="{{ old('cidade', $dentista->endereco->cidade ?? '') }}" required
                                     placeholder="Ex: Capital">
                                 @error('cidade')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -197,7 +197,7 @@
                                 <label for="bairro" class="form-label fw-semibold text-secondary small">Bairro <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('bairro') is-invalid @enderror" id="bairro"
-                                    name="bairro" value="{{ old('bairro', $dentista->bairro ?? '') }}" required
+                                    name="bairro" value="{{ old('bairro', $dentista->endereco->bairro ?? '') }}" required
                                     placeholder="Ex: Centro">
                                 @error('bairro')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -208,7 +208,7 @@
                                 <label for="rua" class="form-label fw-semibold text-secondary small">Rua <span
                                         class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('rua') is-invalid @enderror" id="rua"
-                                    name="rua" value="{{ old('rua', $dentista->rua ?? '') }}" required
+                                    name="rua" value="{{ old('rua', $dentista->endereco->rua ?? '') }}" required
                                     placeholder="Ex: Rua Exemplo">
                                 @error('rua')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -219,7 +219,7 @@
                                 <label for="numero" class="form-label fw-semibold text-secondary small">Número <span
                                         class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('numero') is-invalid @enderror" id="numero"
-                                    name="numero" value="{{ old('numero', $dentista->numero ?? '') }}" required
+                                    name="numero" value="{{ old('numero', $dentista->endereco->numero ?? '') }}" required
                                     placeholder="Ex: 123">
                                 @error('numero')
                                     <div class="invalid-feedback">{{ $message }}</div>

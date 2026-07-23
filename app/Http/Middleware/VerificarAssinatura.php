@@ -10,36 +10,31 @@ class VerificarAssinatura
 {
     public function handle(Request $request, Closure $next)
     {
-        // Se não estiver logado, segue normal
-        if (!Auth::check()) {
-            return $next($request);
-        }
+        $user = auth()->user();
 
-        $user = Auth::user();
-        $clinica = $user->clinica;
-
-        // ✅ Permite acesso a essas páginas SEMPRE
-        $rotasPermitidas = ['planos', 'assinatura.criar', 'login', 'register', 'home', 'logout'];
-        if (in_array($request->route()->getName(), $rotasPermitidas)) {
-            return $next($request);
-        }
-
-        // ✅ Se for administrador (se tiver) libera tudo
+        // Permitir acesso se for admin
         if ($user->role === 'admin') {
             return $next($request);
         }
 
-        // ✅ Se assinatura ativa → segue normalmente
+        // Buscar a clínica vinculada ao usuário (ajuste a relação conforme seu modelo)
+        $clinica = $user->clinica; // ou Clinica::where('user_id', $user->id)->first();
+
+        // Tratar caso a clínica não exista
+        if (!$clinica) {
+            auth()->logout();
+            return redirect()->route('login')->with('erro', 'Clínica não encontrada para este usuário.');
+        }
+
+        // Agora $clinica está garantida como existente
         if ($clinica->assinaturaAtiva()) {
             return $next($request);
         }
 
-        // ✅ Se ainda está no teste → segue normalmente
         if ($clinica->onTrial()) {
             return $next($request);
         }
 
-        // ⛔ Se chegou aqui: teste acabou / assinatura vencida
         return redirect()->route('planos')->with('aviso', 'Seu período de teste expirou ou sua assinatura está vencida. Assine para continuar usando o sistema.');
     }
 }
