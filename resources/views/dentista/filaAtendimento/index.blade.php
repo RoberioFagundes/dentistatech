@@ -54,14 +54,14 @@
 
                         <td>
                             <div class="d-flex justify-content-center gap-2">
-                                @can('dentista-only')
+                               
                                 <a href="{{ route('atendimento.create', [
                                     'paciente_id' => $filas->agendamento->paciente_id ?? null,
                                     'agendamento_id' => $filas->agendamento_id
                                 ]) }}" class="btn btn-sm btn-success d-flex align-items-center">
                                     <i class="fa fa-check me-1"></i> Atender
                                 </a>
-                                @endcan
+                        
 
                                 <form action="{{ route('filaAtendimento.destroy', $filas->id) }}" method="POST" class="ajax-form"
                                     data-confirm="Tem certeza que deseja remover esta pessoa da fila?">

@@ -13,3 +13,8 @@ Schedule::command('backup:run')->dailyAt('01:00');
 
 // Limpa backups muito antigos todos os dias à 2h da manhã
 Schedule::command('backup:clean')->dailyAt('02:00');
+
+// Seu comando para verificar testes vencidos
+Schedule::command('verificar:testes-expirados')->dailyAt('00:05');
+
+

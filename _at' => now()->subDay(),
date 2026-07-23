@@ -1,0 +1,14 @@
+[90m= [39m[34;4mApp\Models\Clinica[39;24m {#9471
+    [34mid[39m: [35m3[39m,
+    [34mrazao_social[39m: [32m"[39m[32mcarmelita[39m[32m"[39m,
+    [34mcnpj[39m: [32m"[39m[32m46699600000198[39m[32m"[39m,
+    [34mtelefone[39m: [32m"[39m[32m77998585609[39m[32m"[39m,
+    [34mendereco[39m: [32m"[39m[32mrua jose de alençar, 530[39m[32m"[39m,
+    [34mcreated_at[39m: [32m"[39m[32m2026-07-23 01:35:44[39m[32m"[39m,
+    [34mupdated_at[39m: [32m"[39m[32m2026-07-23 01:35:44[39m[32m"[39m,
+    [34mtrial_ends_at[39m: [32m"[39m[32m2026-08-07[39m[32m"[39m,
+    [34mtrial_used[39m: [35m1[39m,
+    [34mstatus_assinatura[39m: [32m"[39m[32mtrial[39m[32m"[39m,
+    [34masaas_customer[39m: [36mnull[39m,
+    [34masaas_subscription[39m: [36mnull[39m,
+  }

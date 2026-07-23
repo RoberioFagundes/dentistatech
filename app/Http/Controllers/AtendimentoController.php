@@ -122,12 +122,10 @@ class AtendimentoController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         try {
-            // 1. Captura os dados
             $dados = $request->all();
             $temProcedimentosValidos = false;
 
             if (!empty($dados['procedimentos']) && is_array($dados['procedimentos'])) {
-                // ✅ FILTRA PELO NOME CORRETO: procedimento_id (não id_procedimento)
                 $dados['procedimentos'] = array_values(array_filter(
                     $dados['procedimentos'],
                     fn($item) => !empty($item['procedimento_id'])
@@ -137,7 +135,6 @@ class AtendimentoController extends Controller implements HasMiddleware
 
             $request->merge($dados);
 
-            // 2. VALIDAÇÃO CORRIGIDA: usa procedimento_id
             $request->validate([
                 'dentista_id' => 'required|exists:dentistas,id',
                 'paciente_id' => 'required|exists:pacientes,id',
@@ -150,14 +147,12 @@ class AtendimentoController extends Controller implements HasMiddleware
                 'total_orcamento' => 'nullable|numeric',
                 'desconto' => 'nullable|numeric',
                 'procedimentos' => 'nullable|array',
-                // ✅ TROQUEI id_procedimento POR procedimento_id
                 'procedimentos.*.procedimento_id' => 'required|exists:procedimentos,id',
                 'procedimentos.*.dente' => 'required|string',
                 'procedimentos.*.valor' => 'required|numeric',
                 'procedimentos.*.observacao' => 'nullable|string',
             ]);
 
-            // 3. Transação
             return DB::transaction(function () use ($request, $dados, $temProcedimentosValidos) {
 
                 $atendimento = Atendimento::create($request->except([
@@ -169,31 +164,37 @@ class AtendimentoController extends Controller implements HasMiddleware
                     'desconto'
                 ]));
 
+                // ✅ ATUALIZAÇÃO NA FILA DE ATENDIMENTO
+                if ($request->agendamento_id) {
+                    // Opção 1: Marcar como FINALIZADO (recomendado, mantém histórico)
+                    \DB::table('fila_atendimentos')
+                        ->where('agendamento_id', $request->agendamento_id)
+                        ->update([
+                            'status_fila' => 'FINALIZADO',
+                            'chamado_em' => now(),
+                            'user_id' => auth()->id(),
+                            'updated_at' => now()
+                        ]);
+
+                    // Se preferir EXCLUIR da fila ao invés de marcar:
+                    // \DB::table('fila_atendimentos')
+                    //     ->where('agendamento_id', $request->agendamento_id)
+                    //     ->delete();
+                }
+
                 if ($temProcedimentosValidos) {
                     foreach ($dados['procedimentos'] as $item) {
-                        // ✅ BUSCA PELO NOME CORRETO
                         $procedimento = \App\Models\Procedimento::findOrFail($item['procedimento_id']);
                         $valorUnitario = $item['valor'] ?? $procedimento->valor;
 
-                        // Tabela pivô
-                        $atendimento->procedimentos()->attach($item['procedimento_id'], [
-                            'dente' => $item['dente'],
-                            'valor' => $valorUnitario,
-                            'observacao' => $item['observacao'] ?? null,
-                            'user_id' => auth()->id(),
-                        ]);
-
-                        // ProcedimentoDente
                         $procDente = \App\Models\ProcedimentoDente::create([
                             'atendimento_id' => $atendimento->id,
                             'numero_dente' => $item['dente'],
                             'procedimento_id' => $item['procedimento_id'],
                             'observacao' => $item['observacao'] ?? null,
-                            'valor' => $valorUnitario,
                             'user_id' => auth()->id(),
                         ]);
 
-                        // Orçamento
                         $orcamento = OrcamentoPaciente::create([
                             'paciente_id' => $request->paciente_id,
                             'user_id' => auth()->id(),
@@ -205,10 +206,9 @@ class AtendimentoController extends Controller implements HasMiddleware
                             'atendimento_id' => $atendimento->id,
                             'procedimento_dentes_id' => $procDente->id,
                             'procedimento_id' => $item['procedimento_id'],
-                             'saldo_restante' => $request->total_orcamento
+                            'saldo_restante' => $request->total_orcamento
                         ]);
 
-                        // Itens do orçamento
                         \DB::table('orcamento_items')->insert([
                             'orcamento_paciente_id' => $orcamento->id,
                             'procedimento_dente_id' => $procDente->id,
@@ -224,8 +224,14 @@ class AtendimentoController extends Controller implements HasMiddleware
                     }
                 }
 
+                // Atualiza status do agendamento
+                if ($request->agendamento_id) {
+                    Agendamento::where('id', $request->agendamento_id)
+                        ->update(['status' => 'ATENDIDO']);
+                }
+
                 return redirect()->route('atendimento.index')
-                    ->with('success', 'Salvo com sucesso! Procedimentos: ' . ($temProcedimentosValidos ? count($dados['procedimentos']) . ' registrados' : 'nenhum informado'));
+                    ->with('success', 'Salvo com sucesso! Procedimentos: ' . ($temProcedimentosValidos ? count($dados['procedimentos']) . ' registrados' : 'nenhum informado') . ' — paciente removido da fila.');
             });
         } catch (\Throwable $e) {
             dd('Erro: ' . $e->getMessage(), 'Linha: ' . $e->getLine());
@@ -423,12 +429,19 @@ class AtendimentoController extends Controller implements HasMiddleware
      */
     public function destroy($id)
     {
-        // 1. Primeiro, deleta os agendamentos vinculados
-        \App\Models\Agendamento::where('atendimento_id', $id)->delete();
+        DB::transaction(function () use ($id) {
+            // Atualiza o agendamento para voltar à fila
+            Agendamento::where('atendimento_id', $id)
+                ->update([
+                    'atendimento_id' => null,
+                    'status' => 'AGENDADO'
+                ]);
 
-        // 2. Depois, deleta o atendimento
-        \App\Models\Atendimento::destroy($id);
+            // Apaga o atendimento — procedimentos são apagados automaticamente!
+            Atendimento::destroy($id);
+        });
 
-        return redirect()->back()->with('success', 'Atendimento e agendamentos removidos com sucesso!');
+        return redirect()->route('atendimento.index')
+            ->with('success', 'Atendimento removido com sucesso!');
     }
 }

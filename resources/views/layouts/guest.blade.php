@@ -15,7 +15,7 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('logintemplate/fonts/iconic/css/material-design-iconic-font.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('logintemplate/css/util.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('logintemplate/css/main.css') }}">
-    
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -34,9 +34,19 @@
             justify-content: center;
             align-items: center;
             background: radial-gradient(circle at top left, #eef6ff, #ffffff 45%),
-                        linear-gradient(135deg, #f8fbff, #edf5ff);
+                linear-gradient(135deg, #f8fbff, #edf5ff);
             overflow-x: hidden;
             position: relative;
+        }
+
+        /* Ajuste no container do card de registro */
+        .card,
+        .w-full.sm\:max-w-md {
+            max-height: 75vh;
+            /* Limita a altura a 85% da tela */
+            overflow-y: auto;
+            /* Ativa a barra de rolagem se passar do limite */
+            scrollbar-width: thin;
         }
 
         /* Fundo com ondas */
@@ -80,6 +90,9 @@
         .logo-container {
             text-align: center;
             margin-bottom: 20px;
+            height: 40px;
+            margin-top:-60px;
+            width: 500px;
         }
 
         .slogan {
@@ -102,24 +115,45 @@
             margin: 0 25px;
         }
 
+
         /* Card Customizado que envolve o Formulário */
         .login-card {
             width: 100%;
             max-width: 620px;
             background: #fff;
             border-radius: 28px;
-            padding: 45px;
-            box-shadow: 0 30px 60px rgba(12,71,140,.12);
+            padding: 40px;
+            box-shadow: 0 30px 60px rgba(12, 71, 140, .12);
+            margin-top: 60px;
+
+            /* Adicionado para permitir rolagem interna caso o conteúdo seja extenso */
+            max-height: 75vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
         }
 
-        @media(max-width:768px){
+        /* Estilização da barra de rolagem para navegadores baseados em Webkit (Chrome, Edge, Safari) */
+        .login-card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .login-card::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        @media(max-width:768px) {
             .slogan {
                 font-size: 16px;
                 letter-spacing: 2px;
             }
-            .slogan::before, .slogan::after {
+
+            .slogan::before,
+            .slogan::after {
                 width: 40px;
             }
+
             .login-card {
                 padding: 30px;
             }
@@ -130,7 +164,7 @@
 <body>
 
     <div class="login-page">
-        
+
         <header class="logo-container">
             <a href="{{ url('/') }}" aria-label="Ir para a página inicial">
                 <x-application-logo class="w-32 h-32 mx-auto fill-current text-gray-500 hover:text-gray-700 transition-colors duration-200" />
@@ -152,4 +186,5 @@
     <script src="{{ asset('logintemplate/js/main.js') }}"></script>
 
 </body>
+
 </html>

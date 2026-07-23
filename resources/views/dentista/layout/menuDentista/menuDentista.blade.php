@@ -1,5 +1,5 @@
 <style>
-    :root{
+   :root{
         --sidebar-bg:#ffffff;
         --sidebar-border:#e9ecef;
         --sidebar-hover:#f4f8ff;
@@ -10,45 +10,48 @@
     }
 
     .patch-sidebar{
-        display:block;
-        max-height:calc(100vh - 90px);
-        overflow-y:auto;
-        overflow-x:hidden;
-        padding:8px;
-        scrollbar-width:thin;
-        scrollbar-color:#b9c6da transparent;
+        display: block;
+        height: calc(100vh - 80px); /* Garante altura exata baseada na viewport */
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: #b9c6da transparent;
     }
 
-    .patch-sidebar::-webkit-scrollbar{ width:6px; }
-    .patch-sidebar::-webkit-scrollbar-thumb{ background:#c7d2e2; border-radius:20px; }
-    .patch-sidebar::-webkit-scrollbar-thumb:hover{ background:#9fb5d8; }
+    .patch-sidebar::-webkit-scrollbar{ width: 6px; }
+    .patch-sidebar::-webkit-scrollbar-thumb{ background: #c7d2e2; border-radius: 20px; }
+    .patch-sidebar::-webkit-scrollbar-thumb:hover{ background: #9fb5d8; }
 
     .nav-small-cap{
-        margin-top:18px; margin-bottom:8px; padding:0 14px;
-        font-size:.72rem; color:#8b95a5!important;
-        font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+        margin-top: 14px; margin-bottom: 6px; padding: 0 14px;
+        font-size: .72rem; color: #8b95a5!important;
+        font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
     }
 
     .sidebar-link{
-        display:flex; align-items:center; gap:14px; padding:12px 14px;
-        border-radius:12px; color:var(--sidebar-text)!important;
-        transition:.25s; position:relative; text-decoration:none;
+        display: flex; align-items: center; gap: 14px; padding: 10px 14px; /* Padding reduzido levemente para caber tudo */
+        border-radius: 12px; color: var(--sidebar-text)!important;
+        transition: .25s; position: relative; text-decoration: none;
     }
 
-    .sidebar-link:hover{ background:var(--sidebar-hover); color:var(--sidebar-active)!important; }
+    .sidebar-link:hover{ background: var(--sidebar-hover); color: var(--sidebar-active)!important; }
 
     .sidebar-link.active{
-        background:linear-gradient(90deg,#0d6efd,#4b8dff)!important;
-        color:#fff!important;
-        box-shadow:0 8px 22px rgba(13,110,253,.22);
+        background: linear-gradient(90deg,#0d6efd,#4b8dff)!important;
+        color: #fff!important;
+        box-shadow: 0 8px 22px rgba(13,110,253,.22);
     }
 </style>
 
 <ul id="sidebarnav" class="nav flex-column patch-sidebar">
     
+    
     <li class="nav-small-cap mt-2 mb-1">
         <span class="hide-menu ms-1">Home</span>
     </li>
+
+    
 
     <li class="sidebar-item">
         <a class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
@@ -57,21 +60,13 @@
         </a>
     </li>
 
-    <li class="sidebar-item">
-        <a class="sidebar-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.edit') }}">
-            <i class="bi bi-person-gear fs-5"></i>
-            <span class="hide-menu fw-medium">Meu Perfil</span>
-        </a>
-    </li>
-
     @php
         $menuItems = [
             'Administrativo' => [
-                ['route' => 'financeiro.index', 'icon' => 'bi-people-fill', 'label' => 'Funcionários', 'pattern' => 'financeiro.*']
+                ['route' => 'funcionarios.index', 'icon' => 'bi-people-fill', 'label' => 'Funcionários', 'pattern' => 'funcionario.*']
             ],
             'Financeiro' => [
                 ['route' => 'pagamento.index', 'icon' => 'bi-person-badge', 'label' => 'Pagamentos', 'pattern' => 'pagamento.*'],
-                ['route' => 'orcamento.index', 'icon' => 'bi-person-badge', 'label' => 'Orçamentos', 'pattern' => 'orcamento.*']
             ],
             'Serviços' => [
                 ['route' => 'dentista.index', 'icon' => 'bi-person-badge', 'label' => 'Dentistas', 'pattern' => 'dentista.*'],
