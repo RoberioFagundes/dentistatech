@@ -17,6 +17,7 @@ class AgendamentoController extends Controller
      */
     public function index(Request $request)
     {
+        
         $nomeFiltro = $request->get('nome');
         $dataFiltro = $request->get('data');
 

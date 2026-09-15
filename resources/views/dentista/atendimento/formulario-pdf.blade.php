@@ -171,33 +171,32 @@
 </div>
 @endif
 
-<!-- Dados de Pagamento (CORRIGIDO O ERRO) -->
+<!-- Dados de Pagamento (CORRIGIDO) -->
 <div class="secao">
     <div class="titulo-secao">Dados de Pagamento</div>
 
     @php
-        $pagamento = optional($atendimento->orcamento?->paciente)->pagamentos;
-        // Se for coleção, pega o último registro
-        $pagamento = $pagamento instanceof \Illuminate\Database\Eloquent\Collection ? $pagamento->last() : $pagamento;
+        // ✅ Carrega o último pagamento vinculado ao orçamento do atendimento
+        $ultimoPagamento = $atendimento->orcamento?->pagamentos?->last();
     @endphp
 
-    @if($pagamento)
+    @if($ultimoPagamento)
     <div class="caixa-pagamento">
         <div class="linha">
             <span class="rotulo">Valor Pago:</span>
-            <span class="valor">R$ {{ number_format($pagamento->valor_pago ?? 0, 2, ',', '.') }}</span>
+            <span class="valor">R$ {{ number_format($ultimoPagamento->valor_pago ?? 0, 2, ',', '.') }}</span>
         </div>
         <div class="linha">
             <span class="rotulo">Forma de Pagamento:</span>
-            <span class="valor">{{ $pagamento->forma_pagamento ?? 'Não informada' }}</span>
+            <span class="valor">{{ $ultimoPagamento->forma_pagamento ?? 'Não informada' }}</span>
         </div>
         <div class="linha">
             <span class="rotulo">Status do Pagamento:</span>
-            <span class="valor">{{ $pagamento->status_pagamento ?? 'Não informado' }}</span>
+            <span class="valor">{{ $ultimoPagamento->status_pagamento ?? 'Não informado' }}</span>
         </div>
         <div class="linha">
             <span class="rotulo">Data do Pagamento:</span>
-            <span class="valor">{{ $pagamento->data_pagamento ? \Carbon\Carbon::parse($pagamento->data_pagamento)->format('d/m/Y') : 'Não informada' }}</span>
+            <span class="valor">{{ $ultimoPagamento->created_at ? \Carbon\Carbon::parse($ultimoPagamento->data_pagamento)->format('d/m/Y') : 'Não informada' }}</span>
         </div>
     </div>
     @else

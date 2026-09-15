@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="pt-br">
-
 <head>
     <meta charset="utf-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -39,16 +38,9 @@
             z-index: 1060;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0 1.5rem;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .app-topstrip h3 {
-            color: #ffffff;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin: 0;
-            letter-spacing: 0.5px;
         }
 
         /* Botão de Menu Mobile */
@@ -66,128 +58,6 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
-        /* Sidebar */
-        .left-sidebar {
-            width: 270px;
-            position: fixed;
-            top: 64px;
-            left: 0;
-            bottom: 0;
-            background: #ffffff;
-            border-right: 1px solid #e2e8f0;
-            z-index: 1050;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.02);
-        }
-
-        .brand-logo {
-            padding: 1.25rem 1rem;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #ffffff;
-        }
-
-        .brand-logo img {
-            height: 60px;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .brand-logo img:hover {
-            transform: scale(1.03);
-        }
-
-        /* Navegação */
-        .sidebar-nav {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem 0.85rem;
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 transparent;
-        }
-
-        .sidebar-nav::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .sidebar-nav::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-
-        /* Links do Menu */
-        .sidebar-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 11px 14px;
-            margin: 4px 0;
-            border-radius: 10px;
-            text-decoration: none;
-            color: #475569;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .sidebar-link i {
-            font-size: 1.15rem;
-            width: 22px;
-            text-align: center;
-            color: #64748b;
-            transition: color 0.2s ease;
-        }
-
-        .sidebar-link:hover {
-            background: #f1f5f9;
-            color: #0f172a;
-            padding-left: 18px;
-        }
-
-        .sidebar-link:hover i {
-            color: #0d6efd;
-        }
-
-        .sidebar-link.active {
-            background: linear-gradient(135deg, #0d6efd 0%, #2563eb 100%);
-            color: #ffffff !important;
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
-        }
-
-        .sidebar-link.active i {
-            color: #ffffff !important;
-        }
-
-        /* Área Inferior Fixada (Perfil e Sair) */
-        .sidebar-footer {
-            padding: 1rem 0.85rem;
-            border-top: 1px solid #f1f5f9;
-            background: #f8fafc;
-        }
-
-        .btn-logout {
-            width: 100%;
-            text-align: left;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .btn-logout:hover {
-            background: #fef2f2 !important;
-            color: #dc2626 !important;
-            padding-left: 18px;
-        }
-
-        .btn-logout:hover i {
-            color: #dc2626 !important;
-        }
-
         /* Conteúdo Principal */
         .body-wrapper {
             margin-left: 270px;
@@ -202,40 +72,11 @@
             margin: 0 auto;
         }
 
-        /* Overlay para mobile quando o menu abrir */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 1045;
-            backdrop-filter: blur(2px);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
         /* Responsividade para Telas Menores */
         @media (max-width: 991px) {
-            .left-sidebar {
-                transform: translateX(-100%);
-            }
-
-            .left-sidebar.active {
-                transform: translateX(0);
-            }
-
             .body-wrapper {
                 margin-left: 0 !important;
             }
-
             .container-fluid {
                 padding: 1.25rem;
             }
@@ -247,57 +88,34 @@
     <div class="page-wrapper" id="main-wrapper">
 
         <!-- Barra Superior -->
-        <header class="app-topstrip d-flex align-items-center justify-content-between px-4 py-3 bg-white shadow-sm border-bottom">
-
-            <!-- Lado Esquerdo: Menu Mobile e Logo/Título -->
-            <div class="d-flex align-items-center">
-                <button id="toggleSidebar" class="d-lg-none me-3 btn btn-light border-0 p-2" aria-label="Abrir Menu">
+        <header class="app-topstrip">
+            <!-- Lado Esquerdo: Botão Mobile e Identificação do Usuário -->
+            <div class="d-flex align-items-center gap-3">
+                <button id="toggleSidebar" class="d-lg-none" aria-label="Abrir Menu">
                     <i class="bi bi-list fs-5"></i>
                 </button>
-                <h3 class="m-0 fw-bold text-primary fs-4">Dentistatech</h3>
+                <div>
+                    <span class="text-white">Usuário:</span>
+                    <strong class="text-white text-truncate d-inline-block align-middle" style="max-width: 170px;">{{ auth()->user()->name }}</strong>
+                </div>
             </div>
 
-            <!-- Lado Direito: Ações do Usuário (Perfil e Sair) -->
+            <!-- Lado Direito: Perfil e Sair -->
             <div class="d-flex align-items-center gap-3">
-                <!-- Editar Perfil -->
-                <a href="{{ route('profile.edit') }}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 px-3 py-2 rounded-pill text-decoration-none">
-                    <i class="bi bi-person-gear fs-5"></i>
-                    <span class="d-none d-sm-inline">Meu Perfil</span>
+                <a class="text-white text-decoration-none" href="{{ route('profile.edit') }}">
+                    <i class="bi bi-person me-1"></i> <span class="d-none d-sm-inline">Meu Perfil</span>
                 </a>
-
-                <!-- Botão Sair -->
-                <form method="POST" action="{{ route('logout') }}" class="m-0">
+                <form action="{{ route('logout') }}" method="POST" class="m-0">
                     @csrf
-                    <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 px-3 py-2 rounded-pill">
-                        <i class="bi bi-box-arrow-right fs-6"></i>
-                        <span class="d-none d-sm-inline">Sair</span>
+                    <button type="submit" class="btn btn-link text-danger text-decoration-none p-0">
+                        <i class="bi bi-box-arrow-right me-1"></i> <span class="d-none d-sm-inline">Sair</span>
                     </button>
                 </form>
             </div>
-
         </header>
 
-        <aside class="left-sidebar" id="sidebar">
-            <!-- Logo no Topo -->
-            <div class="brand-logo">
-                <a href="{{ route('dashboard') }}">
-                    <img src="{{ asset('favicon.ico') }}" alt="Logo Dentistatech">
-                </a>
-            </div>
-
-
-
-            <!-- Itens do Menu Principal (Meio com Scroll) -->
-            <nav class="sidebar-nav">
-                @include('dentista.layout.menuDentista.menuDentista')
-            </nav>
-
-            <!-- Área Inferior: Perfil e Sair (Fixo na Base, um embaixo do outro) -->
-
-        </aside>
-
-        <!-- Overlay de Fundo para Mobile -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <!-- Sidebar - Apenas inclua o arquivo, todo estilo e lógica está nele -->
+        @include('dentista.layout.menuDentista.menuDentista')
 
         <!-- Conteúdo das Páginas -->
         <div class="body-wrapper">
@@ -310,37 +128,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('template/assets/libs/jquery/dist/jquery.min.js') }}"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const sidebar = document.getElementById("sidebar");
-            const toggle = document.getElementById("toggleSidebar");
-            const overlay = document.getElementById("sidebarOverlay");
-
-            function toggleMenu() {
-                sidebar.classList.toggle("active");
-                overlay.classList.toggle("active");
-            }
-
-            // Abre/fecha menu no mobile
-            toggle.addEventListener("click", function(e) {
-                e.stopPropagation();
-                toggleMenu();
-            });
-
-            // Fecha menu ao clicar no overlay escuro
-            overlay.addEventListener("click", function() {
-                toggleMenu();
-            });
-
-            // Fecha menu ao redimensionar para desktop
-            window.addEventListener("resize", function() {
-                if (window.innerWidth > 991) {
-                    sidebar.classList.remove("active");
-                    overlay.classList.remove("active");
-                }
-            });
-        });
-    </script>
 </body>
-
 </html>

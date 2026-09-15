@@ -36,9 +36,34 @@
         </div>
 
         <div class="mt-4">
-            <x-input-label for="endereco" :value="__('Endereço')" />
+            <x-input-label for="endereco" :value="__('Endereço (Rua, Avenida, etc)')" />
             <x-text-input id="endereco" class="block mt-1 w-full" type="text" name="endereco" :value="old('endereco')" required />
             <x-input-error :messages="$errors->get('endereco')" class="mt-2" />
+        </div>
+
+        <!-- CEP e Número (Novos campos obrigatórios para o Asaas) -->
+        <div class="grid grid-cols-2 gap-4 mt-4">
+            <div>
+                <x-input-label for="cep" :value="__('CEP (somente números)')" />
+                <x-text-input id="cep" class="block mt-1 w-full" type="text" name="cep" maxlength="8" :value="old('cep')" required placeholder="Ex: 01001000" />
+                <x-input-error :messages="$errors->get('cep')" class="mt-2" />
+            </div>
+             <div>
+                <x-input-label for="bairro" :value="__('bairro')" />
+                <x-text-input id="bairro" class="block mt-1 w-full" type="text" name="bairro" :value="old('bairro')" required />
+                <x-input-error :messages="$errors->get('bairro')" class="mt-2" />
+            </div>
+            <div>
+                <x-input-label for="complemento" :value="__('complemento')" />
+                <x-text-input id="complemento" class="block mt-1 w-full" type="text" name="complemento" :value="old('complemento')" required />
+                <x-input-error :messages="$errors->get('complemento')" class="mt-2" />
+            </div>
+
+            <div>
+                <x-input-label for="numero" :value="__('Número')" />
+                <x-text-input id="numero" class="block mt-1 w-full" type="text" name="numero" :value="old('numero')" required placeholder="Ex: 123 ou S/N" />
+                <x-input-error :messages="$errors->get('numero')" class="mt-2" />
+            </div>
         </div>
 
         <!-- Senha -->
@@ -61,7 +86,7 @@
             </a>
 
             <button class="btn btn-primary ms-3">
-                 {{ __('cadastrar') }}
+                 {{ __('Cadastrar') }}
             </button>
         </div>
     </form>

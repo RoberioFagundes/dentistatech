@@ -58,6 +58,9 @@ class Atendimento extends Model
         return $this->belongsTo(Paciente::class, 'paciente_id');
     }
 
+
+
+
     /**
      * Relacionamento: Atendimento pertence a um Dentista
      */

@@ -1,47 +1,79 @@
 @extends('dentista.layout.paginaDentista')
 
 @section('pagina')
-<a href="{{ route('funcionarios.create') }}">
-    Cadastrar Novo Funcionário
-</a>
-<h2 class="font-semibold text-xl text-gray-800 leading-tight">
-    Funcionários da Sua Clínica
-</h2>
 
-
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-            <div class="flex justify-between mb-4">
-                <h3 class="text-lg font-medium">Total: {{ $funcionarios->count() }} funcionários</h3>
-                <a href="{{ route('funcionarios.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Novo Funcionário</a>
-            </div>
-
-            <table class="w-full text-left">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="p-3">Nome</th>
-                        <th class="p-3">Cargo</th>
-                        <th class="p-3">Contato</th>
-                        <th class="p-3">Situação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($funcionarios as $f)
-                    <tr class="border-t">
-                        <td class="p-3">{{ $f->name }}</td>
-                        <td class="p-3">{{ ucfirst($f->cargo) }}</td>
-                        <td class="p-3">{{ $f->telefone ?? 'Não informado' }}</td>
-                        <td class="p-3">
-                            <span class="px-2 py-1 rounded text-xs {{ $f->ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ $f->ativo ? 'Ativo' : 'Inativo' }}
-                            </span>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+<div class="card p-4 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h2 class="fs-4 fw-bold text-dark mb-1">Funcionários da Sua Clínica</h2>
+            <p class="text-muted mb-0">Gerencie todos os profissionais cadastrados</p>
         </div>
+        <a href="{{ route('funcionarios.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Cadastrar Novo Funcionário
+        </a>
     </div>
 </div>
+
+<div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-semibold mb-0">Total: {{ $funcionarios->count() }} funcionários</h5>
+        <a href="{{ route('funcionarios.create') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-person-plus me-1"></i>Novo
+        </a>
+    </div>
+
+    @if($funcionarios->isEmpty())
+        <div class="alert alert-info text-center">
+            Nenhum funcionário cadastrado ainda.
+        </div>
+    @else
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome</th>
+                    <th>Cargo</th>
+                    <th>Contato</th>
+                    <th class="text-center">Situação</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($funcionarios as $f)
+                <tr>
+                    <td>{{ $f->name }}</td>
+                    <td>{{ ucfirst($f->cargo) }}</td>
+                    <td>{{ $f->telefone ?? 'Não informado' }}</td>
+                    <td class="text-center">
+                        @if($f->ativo)
+                            <span class="badge bg-success">Ativo</span>
+                        @else
+                            <span class="badge bg-danger">Inativo</span>
+                        @endif
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-1 justify-content-end">
+                            <a href="{{ route('funcionarios.show', $f->id) }}" class="btn btn-sm btn-outline-secondary" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ route('funcionarios.edit', $f->id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ route('funcionarios.destroy', $f->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
+</div>
+
 @endsection

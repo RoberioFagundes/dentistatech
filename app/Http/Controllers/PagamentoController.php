@@ -16,7 +16,11 @@ class PagamentoController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Pagamento::with(['orcamentoPaciente.paciente', 'usuario']);
+        $userId = auth()->id(); // ✅ Pega o ID do usuário logado
+
+        // ✅ Filtra APENAS os pagamentos do dentista/administrador logado
+        $query = Pagamento::with(['orcamentoPaciente.paciente', 'usuario'])
+            ->where('user_id', $userId); // ou onde for a coluna de vínculo
 
         // ✅ Busca por nome ou CPF do paciente
         if ($request->filled('busca')) {
@@ -33,17 +37,25 @@ class PagamentoController extends Controller
         // ✅ Mantém o termo de busca na paginação
         $pagamentos->appends(['busca' => $termo ?? '']);
 
-        // Envia os dados para a view Blade
         return view('dentista.pagamento.index', compact('pagamentos'));
     }
 
     /**
      * Auxilia a recepção trazendo os seletores para registrar um recebimento.
      */
-    public function create()
+    public function create($orcamento)
     {
+        $userId = auth()->id();
+
+        // ✅ Busca o orçamento garantindo que pertence ao dentista logado
+        $orcamento = OrcamentoPaciente::with('paciente')
+            ->where('id', $orcamento)
+            ->where('user_id', $userId)
+            ->firstOrFail();
+
         $formasPagamento = FormaPagamento::where('ativo', true)->orderBy('nome')->get();
-        return response()->json(compact('formasPagamento'));
+
+        return view('dentista.pagamento.formulario', compact('orcamento', 'formasPagamento'));
     }
 
     /**

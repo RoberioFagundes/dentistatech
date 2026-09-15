@@ -15,6 +15,7 @@
         "laravel/pulse": "*",
         "laravel/tinker": "^3.0",
         "masbug/flysystem-google-drive-ext": "*",
+        "ownerpro/asaas-php-sdk": "^3.0",
         "predis/predis": "^3.5",
         "spatie/laravel-backup": "^10.3"
     },

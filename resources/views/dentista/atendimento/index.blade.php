@@ -1,9 +1,9 @@
 @extends('dentista.layout.paginaDentista')
 
 @section('pagina')
-<div class="container-fluid my-4">
+<div class="container-fluid py-3">
 
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
         <div>
             <h4 class="fw-bold text-dark mb-1">Histórico de Atendimentos</h4>
             <p class="text-muted mb-0">Listagem de prontuários e intervenções clínicas.</p>
@@ -12,10 +12,10 @@
 
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-0">
-            <!-- Tabela normal para telas maiores -->
+            {{-- Tabela para telas maiores --}}
             <div class="d-none d-md-block table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-uppercase fs-7 fw-bold text-muted">
+                    <thead class="bg-light text-uppercase small fw-bold text-muted">
                         <tr>
                             <th class="ps-4" style="width: 80px;">ID</th>
                             <th style="width: 130px;">Data</th>
@@ -23,30 +23,36 @@
                             <th>Dentista</th>
                             <th>Queixa Principal</th>
                             <th>Diagnóstico</th>
-                            <th class="text-end pe-4" style="width: 140px;">Ações</th>
+                            <th class="text-end pe-4" style="width: 220px;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if(isset($atendimentos) && count($atendimentos) > 0)
-                        @foreach($atendimentos as $atendimento)
+                        @forelse($atendimentos as $atendimento)
                         <tr>
                             <td class="ps-4 fw-medium text-secondary">#{{ $atendimento->id }}</td>
                             <td>
                                 @if($atendimento->created_at)
-                                <span class="fw-medium text-dark">{{ $atendimento->created_at->format('d/m/Y') }}</span>
-                                <small class="d-block text-muted">{{ $atendimento->created_at->format('H:i') }}</small>
+                                    <span class="fw-medium text-dark">{{ $atendimento->created_at->format('d/m/Y') }}</span>
+                                    <small class="d-block text-muted">{{ $atendimento->created_at->format('H:i') }}</small>
                                 @else
-                                <span class="text-muted">-</span>
+                                    <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
-                                <div class="fw-semibold text-dark">{{ $atendimento->paciente->nome ?? 'Não informado' }}</div>
+                                <div class="fw-semibold text-dark">
+                                    {{ $atendimento->paciente->nome ?? 'Não informado' }}
+                                    {{ $atendimento->paciente->sobrenome ?? '' }}
+                                </div>
                                 @if($atendimento->agendamento_id)
-                                <small class="text-primary"><i class="bi bi-calendar-check me-1"></i>Agendado</small>
+                                    <small class="text-primary">
+                                        <i class="bi bi-calendar-check me-1"></i>Agendado
+                                    </small>
                                 @endif
                             </td>
                             <td>
-                                <span class="text-muted fs-7 fw-medium">{{ $atendimento->dentista->nome ?? 'Não informado' }}</span>
+                                <span class="text-muted small fw-medium">
+                                    Dr(a). {{ $atendimento->dentista->nome ?? 'Não informado' }}
+                                </span>
                             </td>
                             <td>
                                 <span class="text-dark d-inline-block text-truncate" style="max-width: 180px;" title="{{ $atendimento->queixa_principal }}">
@@ -60,20 +66,31 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm" role="group">
+                                    {{-- Gerar Orçamento: só aparece se NÃO houver orçamento --}}
+                                    @if(!$atendimento->orcamento)
+                                        <a href="{{ route('orcamento.create', $atendimento->id) }}" class="btn btn-outline-success" title="Gerar orçamento">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </a>
+                                    @endif
+
+                                    {{-- Pagar e Ver Pagamento: só aparecem se EXISTIR orçamento --}}
+                                    @if($atendimento->orcamento)
+                                        <a href="{{ route('pagamento.create', $atendimento->orcamento->id) }}" class="btn btn-outline-success" title="Pagar orçamento">
+                                            <i class="bi bi-cash-coin"></i>
+                                        </a>
+                                        <a href="{{ route('pagamento.confirmacao', $atendimento->orcamento->id) }}" class="btn btn-outline-primary" title="Visualizar pagamento">
+                                            <i class="bi bi-receipt"></i>
+                                        </a>
+                                    @endif
+
                                     <a href="{{ route('atendimento.pdf', $atendimento->id) }}" class="btn btn-outline-primary" title="Gerar PDF">
                                         <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
 
-                                    @if($atendimento->orcamento)
-                                    <a href="{{ route('pagamento.confirmacao', $atendimento->orcamento->id) }}"
-                                        class="btn btn-outline-primary">
-                                        <i class="bi bi-receipt"></i>
-                                    </a>
-                                    @endif
-
                                     <a href="{{ route('atendimento.edit', $atendimento->id) }}" class="btn btn-outline-secondary" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+
                                     <form action="{{ route('atendimento.destroy', $atendimento->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Excluir este atendimento permanentemente?')">
                                         @csrf
                                         @method('DELETE')
@@ -84,49 +101,50 @@
                                 </div>
                             </td>
                         </tr>
-                        @endforeach
-                        @else
+                        @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="7" class="text-center py-4 text-muted">
                                 <i class="bi bi-clipboard-x fs-1 d-block mb-2 text-secondary"></i>
-                                Nenhum atendimento registrado ou dados não enviados pelo Controller.
+                                <h5 class="fw-semibold mb-1">Nenhum atendimento registrado</h5>
+                                <p class="mb-0">Não há prontuários ou intervenções clínicas cadastradas no momento.</p>
                             </td>
                         </tr>
-                        @endif
+                        @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <!-- Cards responsivos para celular -->
+            {{-- Cards responsivos para telas menores --}}
             <div class="d-md-none p-3">
-                @if(isset($atendimentos) && count($atendimentos) > 0)
-                @foreach($atendimentos as $atendimento)
+                @forelse($atendimentos as $atendimento)
                 <div class="card mb-3 border shadow-sm">
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="fw-bold text-secondary">#{{ $atendimento->id }}</span>
                             <span class="small text-muted">
-                                @if($atendimento->created_at)
-                                {{ $atendimento->created_at->format('d/m/Y H:i') }}
-                                @else
-                                -
-                                @endif
+                                {{ $atendimento->created_at?->format('d/m/Y H:i') ?? '-' }}
                             </span>
                         </div>
 
                         <div class="mb-2">
-                            <div class="fw-semibold">{{ $atendimento->paciente->nome ?? 'Não informado' }}</div>
+                            <div class="fw-semibold">
+                                {{ $atendimento->paciente->nome ?? 'Não informado' }}
+                                {{ $atendimento->paciente->sobrenome ?? '' }}
+                            </div>
                             @if($atendimento->agendamento_id)
-                            <small class="text-primary d-block"><i class="bi bi-calendar-check me-1"></i>Agendado</small>
+                                <small class="text-primary d-block">
+                                    <i class="bi bi-calendar-check me-1"></i>Agendado
+                                </small>
                             @endif
                         </div>
 
                         <div class="text-muted small mb-2">
-                            <i class="bi bi-person-badge me-1"></i>{{ $atendimento->dentista->nome ?? 'Não informado' }}
+                            <i class="bi bi-person-badge me-1"></i>
+                            Dr(a). {{ $atendimento->dentista->nome ?? 'Não informado' }}
                         </div>
 
                         <div class="mb-2">
-                            <small class="text-uppercase text-muted fw-semibold d-block">Queixa:</small>
+                            <small class="text-uppercase text-muted fw-semibold d-block">Queixa Principal:</small>
                             <span class="small">{{ $atendimento->queixa_principal ?? '-' }}</span>
                         </div>
 
@@ -135,37 +153,54 @@
                             <span class="small">{{ $atendimento->diagnostico ?? 'Sem diagnóstico' }}</span>
                         </div>
 
+                        {{-- Botões padronizados --}}
                         <div class="d-flex gap-2 flex-wrap">
-                            <form action="{{ route('orcamento.create', $atendimento->id) }}" method="POST" class="flex-grow-1">
-                                @csrf
-                                <button type="submit" class="btn btn-sm btn-outline-primary w-100" title="Gerar confirmação de pagamento">
-                                    Confirmação
-                                </button>
-                            </form>
+                            @if(!$atendimento->orcamento)
+                                <a href="{{ route('orcamento.create', $atendimento->id) }}" class="btn btn-sm btn-outline-success flex-grow-1">
+                                    <i class="bi bi-file-earmark-text me-1"></i>Gerar Orçamento
+                                </a>
+                            @endif
+
+                            @if($atendimento->orcamento)
+                                <a href="{{ route('pagamento.create', $atendimento->orcamento->id) }}" class="btn btn-sm btn-outline-success flex-grow-1">
+                                    <i class="bi bi-cash-coin me-1"></i>Pagar Orçamento
+                                </a>
+                                <a href="{{ route('pagamento.confirmacao', $atendimento->orcamento->id) }}" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="bi bi-receipt me-1"></i>Ver Pagamento
+                                </a>
+                            @endif
+
                             <a href="{{ route('atendimento.pdf', $atendimento->id) }}" target="_blank" class="btn btn-sm btn-outline-primary flex-grow-1">
-                                Orçamento
+                                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                             </a>
-                            <a href="{{ route('atendimento.edit', $atendimento->id) }}" class="btn btn-sm btn-outline-secondary flex-grow-1">Editar</a>
+
+                            <a href="{{ route('atendimento.edit', $atendimento->id) }}" class="btn btn-sm btn-outline-secondary flex-grow-1">
+                                <i class="bi bi-pencil me-1"></i>Editar
+                            </a>
+
                             <form action="{{ route('atendimento.destroy', $atendimento->id) }}" method="POST" class="flex-grow-1" onsubmit="return confirm('Excluir este atendimento permanentemente?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">Excluir</button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                    <i class="bi bi-trash me-1"></i>Excluir
+                                </button>
                             </form>
                         </div>
                     </div>
                 </div>
-                @endforeach
-                @else
-                <div class="text-center py-5 text-muted">
+                @empty
+                <div class="text-center py-4 text-muted">
                     <i class="bi bi-clipboard-x fs-1 d-block mb-2 text-secondary"></i>
-                    Nenhum atendimento registrado.
+                    <h5 class="fw-semibold mb-1">Nenhum atendimento registrado</h5>
+                    <p class="mb-0">Não há prontuários ou intervenções clínicas cadastradas no momento.</p>
                 </div>
-                @endif
+                @endforelse
             </div>
         </div>
 
-        @if(isset($atendimentos) && method_exists($atendimentos, 'hasPages') && $atendimentos->hasPages())
-        <div class="card-footer bg-white border-0 py-3 px-3 px-md-0">
+        {{-- Paginação --}}
+        @if($atendimentos instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <div class="card-footer bg-white border-0 py-2 px-3 px-md-0">
             {{ $atendimentos->appends(request()->query())->links() }}
         </div>
         @endif

@@ -138,11 +138,9 @@ class FilaAtendimentoController extends Controller
      */
     public function destroy(FilaAtendimento $filaAtendimento)
     {
-        // Se o paciente já estiver em atendimento dentro do consultório, bloqueia a remoção seca
+        // Se o paciente já estiver em atendimento dentro do consultório, bloqueia a remoção
         if ($filaAtendimento->status_fila === 'Em Atendimento') {
-            return response()->json([
-                'error' => 'O paciente já está em consulta com o dentista e não pode ser removido da fila desta forma.'
-            ], 422);
+            return back()->with('erro', 'O paciente já está em consulta com o dentista e não pode ser removido da fila desta forma.');
         }
 
         // Se veio de um agendamento, desfaz a confirmação de presença se necessário
@@ -154,6 +152,6 @@ class FilaAtendimentoController extends Controller
         // $filaAtendimento->update(['status_fila' => 'Desistiu']);
         $filaAtendimento->delete();
 
-        return response()->json(['message' => 'Paciente removido da fila de atendimento com sucesso.']);
+        return back()->with('sucesso', 'Paciente removido da fila de atendimento com sucesso.');
     }
 }

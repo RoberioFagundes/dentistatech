@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5384f9ed080f87f611b96db5cc7dae7a",
+    "content-hash": "9efa35ef01e7de7b4182fa4c7b085273",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -3832,6 +3832,92 @@
                 }
             ],
             "time": "2026-02-16T23:10:27+00:00"
+        },
+        {
+            "name": "ownerpro/asaas-php-sdk",
+            "version": "v3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/OwnerPro-Software/asaas-php-sdk.git",
+                "reference": "d55a8e50cfa4fc9c25e390205af45476ccef361f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/OwnerPro-Software/asaas-php-sdk/zipball/d55a8e50cfa4fc9c25e390205af45476ccef361f",
+                "reference": "d55a8e50cfa4fc9c25e390205af45476ccef361f",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/http": "^12.0|^13.0",
+                "illuminate/support": "^12.0|^13.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "driftingly/rector-laravel": "^2.2",
+                "laravel/pint": "^1.29",
+                "orchestra/testbench": "^10.0|^11.0",
+                "pestphp/pest": "^4.4",
+                "pestphp/pest-plugin-mutate": "^4.0",
+                "pestphp/pest-plugin-type-coverage": "^4.0",
+                "rector/rector": "^2.3",
+                "symfony/var-dumper": "^7.0|^8.0",
+                "tomasvotruba/cognitive-complexity": "^1.1",
+                "vimeo/psalm": "^6.16"
+            },
+            "suggest": {
+                "symfony/var-dumper": "Redacts API keys, PANs and documents from dump()/dd() output and framework error pages (already present in every Laravel app)."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Asaas": "OwnerPro\\Asaas\\Asaas"
+                    },
+                    "providers": [
+                        "OwnerPro\\Asaas\\AsaasServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap/redaction.php"
+                ],
+                "psr-4": {
+                    "OwnerPro\\Asaas\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jonathan Martins",
+                    "email": "web@jonathanmartins.com.br",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Clean PHP SDK for the Asaas payment platform API",
+            "homepage": "https://github.com/OwnerPro-Software/asaas-php-sdk",
+            "keywords": [
+                "Asaas",
+                "asaas-sdk",
+                "billing",
+                "boleto",
+                "brasil",
+                "brazil",
+                "credit-card",
+                "laravel",
+                "payment",
+                "payment-gateway",
+                "pix",
+                "sdk"
+            ],
+            "support": {
+                "issues": "https://github.com/OwnerPro-Software/asaas-php-sdk/issues",
+                "source": "https://github.com/OwnerPro-Software/asaas-php-sdk"
+            },
+            "time": "2026-07-23T06:36:16+00:00"
         },
         {
             "name": "phpoption/phpoption",

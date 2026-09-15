@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\Models\FilaAgendamento;
+use App\Models\FilaEsperaAgendamento;
 use App\Models\Paciente;
 use App\Models\FilaAtendimento;
 use App\Models\Agendamento;
@@ -273,7 +274,7 @@ class FilaAgendamentoEsperaController extends Controller
         $fila = FilaAgendamento::findOrFail($id);
         $pacientes = Paciente::where('user_id', auth()->id())->get();
 
-        return view('seu.caminho.formulario', compact('fila', 'pacientes'));
+        return view('dentista.filaesperaagendamento.formulario', compact('fila', 'pacientes'));
     }
 
     public function update(Request $request, $id)

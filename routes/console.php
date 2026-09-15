@@ -18,3 +18,4 @@ Schedule::command('backup:clean')->dailyAt('02:00');
 Schedule::command('verificar:testes-expirados')->dailyAt('00:05');
 
 
+

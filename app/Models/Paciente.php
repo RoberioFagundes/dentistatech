@@ -120,6 +120,12 @@ class Paciente extends Model
         return $this->hasMany(Agendamento::class, 'paciente_id');
     }
 
+    public function atendimentos()
+    {
+        return $this->hasMany(Atendimento::class, 'paciente_id');
+    }
+
+
     /**
      * Retorna todos os orçamentos e planos de tratamento gerados para o paciente.
      */

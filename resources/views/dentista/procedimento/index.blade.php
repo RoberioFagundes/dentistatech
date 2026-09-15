@@ -1,124 +1,127 @@
 @extends('dentista.layout.paginaDentista')
 
 @section('pagina')
-<div class="container mt-4">
+<div class="container py-4">
 
-    <!-- Cabeçalho com Botão de Criar Novo -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Procedimentos Cadastrados</h2>
-        <a href="{{ route('procedimento.create') }}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Novo Procedimento
+    <!-- Cabeçalho -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <h2 class="fs-3 fw-bold mb-0">Procedimentos Cadastrados</h2>
+        <a href="{{ route('procedimento.create') }}" class="btn btn-success d-flex align-items-center gap-2 shadow-sm">
+            <i class="bi bi-plus-lg"></i> Novo Procedimento
         </a>
     </div>
 
-    <!-- Mensagens de Sucesso do Sistema -->
+    <!-- Alerta de Sucesso -->
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show mb-4 d-flex align-items-center gap-2" role="alert">
+        <i class="bi bi-check-circle-fill fs-5"></i>
+        <div>{{ session('success') }}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
     @endif
 
-    <!-- Tabela de procedimento -->
-    <div class="table-responsive card shadow-sm">
-        <form method="GET" action="{{ route('procedimento.index') }}" class="mb-4">
-            <div class="row g-2">
-                <!-- Campo de Busca por Nome/Código -->
-                <div class="col-md-6">
-                    <input
-                        type="text"
-                        name="busca"
-                        class="form-control"
-                        placeholder="Buscar por nome ou código clínico..."
-                        value="{{ request('busca') }}">
+    <!-- Área de Busca e Filtro -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body pb-0">
+            <form method="GET" action="{{ route('procedimento.index') }}" class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" name="busca" class="form-control"
+                               placeholder="Buscar por nome ou código clínico..."
+                               value="{{ request('busca') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <select name="ativo" class="form-select">
+                            <option value="">Todos os status</option>
+                            <option value="1" {{ request('ativo') === '1' ? 'selected' : '' }}>Apenas Ativos</option>
+                            <option value="0" {{ request('ativo') === '0' ? 'selected' : '' }}>Apenas Inativos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                        <a href="{{ route('procedimento.index') }}" class="btn btn-outline-secondary w-100">Limpar</a>
+                    </div>
                 </div>
+            </form>
+        </div>
 
-                <!-- Filtro de Status (Ativo/Inativo) -->
-                <div class="col-md-4">
-                    <select name="ativo" class="form-select">
-                        <option value="">Todos os status</option>
-                        <option value="1" {{ request('ativo') === '1' ? 'selected' : '' }}>Apenas Ativos</option>
-                        <option value="0" {{ request('ativo') === '0' ? 'selected' : '' }}>Apenas Inativos</option>
-                    </select>
-                </div>
-
-                <!-- Botões -->
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary w-100">Buscar</button>
-                    <a href="{{ route('procedimento.index') }}" class="btn btn-secondary w-100">Limpar</a>
-                </div>
-            </div>
-        </form>
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col" style="width: 5%;">ID</th>
-                    <th scope="col" style="width: 25%;">Procedimento</th>
-                    <th scope="col" style="width: 30%;">Descrição</th>
-                    <th scope="col" style="width: 12%;">Valor</th>
-                    <th scope="col" style="width: 10%;">Duração</th>
-                    <th scope="col" style="width: 8%;">Status</th>
-                    <th scope="col" style="width: 10%;" class="text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($procedimentos as $procedimento)
-                <tr>
-                    <td>{{ $procedimento->id }}</td>
-                    <td><strong>{{ $procedimento->nome }}</strong></td>
-                    <td>
-                        <span class="text-muted text-truncate d-inline-block" style="max-width: 250px;"
-                            title="{{ $procedimento->descricao }}">
-                            {{ $procedimento->descricao ?? 'Sem descrição' }}
-                        </span>
-                    </td>
-                    <!-- Formatação do Decimal (8,2) para moeda brasileira -->
-                    <td>R$ {{ number_format($procedimento->valor, 2, ',', '.') }}</td>
-                    <!-- Exibição do Inteiro de minutos -->
-                    <td>{{ $procedimento->duracao_minutos }} min</td>
-                    <!-- Badge dinâmica baseada no tinyint (0 ou 1) -->
-                    <td>
-                        @if($procedimento->ativo)
-                        <span class="badge bg-success">Ativo</span>
-                        @else
-                        <span class="badge bg-danger">Inativo</span>
-                        @endif
-                    </td>
-                    <!-- Botões de Ação -->
-                    <td class="text-center">
-                        <div class="btn-group btn-group-sm" role="group">
-                            <!-- Link para o formulário de edição (passando o ID) -->
-                            <a href="{{ route('procedimento.edit', $procedimento->id) }}" class="btn btn-primary"
-                                title="Editar">
-                                Editar
-                            </a>
-
-                            <!-- Formulário para exclusão segura com método DELETE -->
-                            <form action="{{ route('procedimento.destroy', $procedimento->id) }}" method="POST"
-                                onsubmit="return confirm('Tem certeza que deseja excluir este procedimento?');"
-                                style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger" title="Excluir">
-                                    Excluir
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
-                        Nenhum procedimento encontrado.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <!-- Tabela Responsiva -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th scope="col" class="ps-4" style="width: 8%;">ID</th>
+                        <th scope="col" style="width: 25%;">Procedimento</th>
+                        <th scope="col" class="d-none d-lg-table-cell" style="width: 30%;">Descrição</th>
+                        <th scope="col" style="width: 15%;">Valor</th>
+                        <th scope="col" class="d-none d-md-table-cell" style="width: 12%;">Duração</th>
+                        <th scope="col" style="width: 10%;">Status</th>
+                        <th scope="col" class="pe-4 text-center" style="width: 15%;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($procedimentos as $procedimento)
+                    <tr>
+                        <td class="ps-4 text-muted">{{ $procedimento->id }}</td>
+                        <td>
+                            <strong>{{ $procedimento->nome }}</strong>
+                            <small class="d-lg-none text-muted d-block" title="{{ $procedimento->descricao ?? 'Sem descrição' }}">
+                                {{ Str::limit($procedimento->descricao, 40) ?? 'Sem descrição' }}
+                            </small>
+                        </td>
+                        <td class="d-none d-lg-table-cell">
+                            <span class="text-muted text-truncate d-inline-block" style="max-width: 280px;"
+                                  title="{{ $procedimento->descricao }}">
+                                {{ $procedimento->descricao ?? 'Sem descrição' }}
+                            </span>
+                        </td>
+                        <td class="fw-semibold text-primary">R$ {{ number_format($procedimento->valor, 2, ',', '.') }}</td>
+                        <td class="d-none d-md-table-cell">{{ $procedimento->duracao_minutos }} min</td>
+                        <td>
+                            @if($procedimento->ativo)
+                            <span class="badge bg-success">Ativo</span>
+                            @else
+                            <span class="badge bg-danger">Inativo</span>
+                            @endif
+                        </td>
+                        <td class="pe-4 text-center">
+                            <div class="d-flex flex-column flex-sm-row justify-content-center gap-1">
+                                <a href="{{ route('procedimento.edit', $procedimento->id) }}"
+                                   class="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center gap-1"
+                                   title="Editar procedimento">
+                                    <i class="bi bi-pencil"></i>
+                                    <span class="d-none d-sm-inline">Editar</span>
+                                </a>
+                                <form action="{{ route('procedimento.destroy', $procedimento->id) }}" method="POST"
+                                      onsubmit="return confirm('Tem certeza que deseja excluir este procedimento?');"
+                                      class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center gap-1"
+                                            title="Excluir procedimento">
+                                        <i class="bi bi-trash"></i>
+                                        <span class="d-none d-sm-inline">Excluir</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-clipboard-x text-secondary opacity-50" style="font-size: 3rem;"></i>
+                            <h5 class="text-secondary fw-semibold mt-2 mb-1">Nenhum procedimento encontrado</h5>
+                            <p class="text-muted small mb-0">Cadastre um novo procedimento para começar.</p>
+                        </td>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- Links de Paginação (Caso use ->paginate() no Controller) -->
-    <div class="mt-3">
+    <!-- Paginação -->
+    <div class="mt-4 d-flex justify-content-center justify-content-md-end">
         {{ $procedimentos->links() }}
     </div>
 

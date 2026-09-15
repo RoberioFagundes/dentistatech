@@ -7,6 +7,7 @@ use App\Models\Agendamento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+
 class RemarcacaoController extends Controller // ✅ Nome correto da classe
 {
     public function index(Request $request)
@@ -64,48 +65,44 @@ class RemarcacaoController extends Controller // ✅ Nome correto da classe
 
     public function store(Request $request)
     {
-        // 1. Validação dos campos enviados pelo formulário
-        $request->validate([
-            'agendamento_id'     => 'required|exists:agendamentos,id',
-            'data_anterior'      => 'required|date',
-            'data_nova'          => 'required|date|after_or_equal:today',
-            'hora_inicio_nova'   => 'required',
-            'hora_fim_nova'      => 'required|after:hora_inicio_nova',
-            'motivo'             => 'nullable|max:255',
+        // Validação dos dados
+        $dados = $request->validate([
+            'agendamento_id'   => 'required|exists:agendamentos,id',
+            'data_anterior'    => 'required|date',
+            'data_nova'        => 'required|date|after:data_anterior',
+            'hora_inicio_nova' => 'required',
+            'hora_fim_nova'    => 'required|after:hora_inicio_nova',
+            'motivo'           => 'nullable|string|max:255',
+        ], [
+            'data_nova.after'       => 'A nova data deve ser posterior à data original.',
+            'hora_fim_nova.after'   => 'O horário de fim deve ser depois do horário de início.',
+            'agendamento_id.exists' => 'O agendamento selecionado não existe no sistema.',
         ]);
 
-        // 2. Busca o agendamento pertencente ao usuário autenticado
-        $agendamento = Agendamento::where('user_id', auth()->id())->findOrFail($request->agendamento_id);
+        // Combina data e hora para salvar no campo datetime
+        $dados['data_anterior'] = $dados['data_anterior'] . ' ' . $request->hora_inicio_nova;
+        $dados['data_nova']     = $dados['data_nova'] . ' ' . $request->hora_inicio_nova;
+        $dados['user_id']       = auth()->id(); // Usuário logado que fez a remarcação
 
-        // 🛑 Garante que não vai remarcar um agendamento cancelado
-        if ($agendamento->status === 'CANCELADO') {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Não é possível remarcar um agendamento cancelado.');
+        // Inicia transação para garantir integridade
+        DB::beginTransaction();
+        try {
+            // Salva o registro de remarcação
+            $remarcacao = Remarcacao::create($dados);
+
+            // (Opcional) Atualiza o status do agendamento original se precisar
+            $agendamento = Agendamento::findOrFail($request->agendamento_id);
+            // $agendamento->status = 'remarcado'; // se tiver campo status
+            // $agendamento->save();
+
+            DB::commit();
+
+            return redirect()->route('remarcacao.index')
+                ->with('sucesso', 'Remarcação realizada com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('erro', 'Erro ao salvar: ' . $e->getMessage());
         }
-
-        // 3. Atualiza os dados do agendamento com a nova data e horários
-        $agendamento->update([
-            'data'        => $request->data_nova,
-            'hora_inicio' => $request->hora_inicio_nova,
-            'hora_fim'    => $request->hora_fim_nova,
-            // Se sua tabela tiver o campo status ou observação para histórico, pode atualizar aqui também:
-            // 'observacao' => 'Remarcado: ' . $request->motivo,
-        ]);
-
-        // 4. (Opcional) Se você tiver a model Remarcacao para salvar o histórico, salve aqui:
-        // Remarcacao::create([
-        //     'agendamento_id' => $agendamento->id,
-        //     'user_id'        => auth()->id(),
-        //     'data_anterior'  => $request->data_anterior,
-        //     'data_nova'      => $request->data_nova,
-        //     'motivo'         => $request->motivo,
-        // ]);
-
-        // 5. Redireciona de volta com mensagem de sucesso
-        return redirect()
-            ->route('agendamento.index') // Ou route('remarcacao.index') dependendo de onde prefere cair
-            ->with('success', 'Agendamento remarcado com sucesso!');
     }
 
     public function show(Remarcacao $remarcacao)

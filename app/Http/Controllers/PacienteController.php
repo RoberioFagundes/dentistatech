@@ -10,6 +10,7 @@ use App\Models\HistoricoBucal;
 use App\Models\HistoricoMedico;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PacienteController extends Controller
 {
@@ -53,11 +54,16 @@ class PacienteController extends Controller
      */
     public function store(Request $request)
     {
+        $userId = auth()->id();
         // 1. Validação com os nomes exatos que vêm do formulário
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'sobrenome' => 'required|string|max:255',
-            'cpf' => 'required|string|max:14|unique:pacientes,cpf',
+            'cpf' => [
+        'required',
+        'string',
+        Rule::unique('pacientes', 'cpf')->where('user_id', $userId),
+    ],
             'rg' => 'required|string|max:14',
             'data_nascimento' => 'required|date|before:today',
             'sexo' => 'nullable|string|in:Masculino,Feminino,Outro',

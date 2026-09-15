@@ -16,43 +16,23 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class AtendimentoController extends Controller implements HasMiddleware
+class AtendimentoController extends Controller
 {
-    /**
-     * Exibe o histórico de atendimentos realizados na clínica.
-     */
-    public static function middleware(): array
+     public function __construct()
     {
-        return [
-            'auth',
-        ];
+        $this->middleware('auth');
     }
 
     public function gerarPdf(Atendimento $atendimento)
     {
-        // Carrega apenas os dados vinculados ao atendimento em questão
         $atendimento->load([
-            'procedimentos' => function ($q) {
-                $q->withPivot('numero_dente', 'observacao');
-            },
+            'procedimentos' => fn($q) => $q->withPivot('numero_dente', 'observacao'),
             'paciente',
             'dentista',
             'agendamento',
             'orcamento'
         ]);
 
-        // SE a sua view 'formulario-pdf' não usa as listas de pacientes, 
-        // dentistas e agendamentos, REMOVA estas linhas abaixo:
-        /*
-    $userId = auth()->id();
-    $dentista = Dentista::where('user_id', $userId)->first();
-    $agendamentos = ...
-    $pacientes = ...
-    $procedimentoDentes = ...
-    $dentistas = ...
-    */
-
-        // Gera o PDF enviando apenas o atendimento carregado
         $pdf = Pdf::loadView('dentista.atendimento.formulario-pdf', compact('atendimento'))
             ->setPaper('A4', 'portrait');
 
@@ -61,64 +41,100 @@ class AtendimentoController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $query = Atendimento::with([
-            'paciente',
-            'dentista',
-            'agendamento',
-        ])->where('user_id', auth()->id());
+        $query = Atendimento::with(['paciente', 'dentista', 'agendamento'])
+            ->where('user_id', auth()->id());
 
-        if ($request->filled('paciente_id')) {
-            $query->where('paciente_id', $request->paciente_id);
-        }
+        if ($request->filled('paciente_id')) $query->where('paciente_id', $request->paciente_id);
+        if ($request->filled('dentista_id')) $query->where('dentista_id', $request->dentista_id);
 
-        if ($request->filled('dentista_id')) {
-            $query->where('dentista_id', $request->dentista_id);
-        }
-
-        $atendimentos = $query->orderBy('created_at', 'desc')->paginate(15);
-
-        $pacientes = Paciente::orderBy('nome')->get();
-        $dentistas = Dentista::orderBy('nome')->get();
+        $atendimentos = $query->orderByDesc('created_at')->paginate(15);
+        $pacientes = Paciente::orderBy('nome')->get(['id', 'nome']);
+        $dentistas = Dentista::orderBy('nome')->get(['id', 'nome']);
 
         return view('dentista.atendimento.index', compact('atendimentos', 'pacientes', 'dentistas'));
     }
 
-    /**
-     * Tela para abertura manual de atendimento.
-     */
     public function create(Request $request)
     {
-        $userId = auth()->id();
-        $dentista = Dentista::where('user_id', $userId)->first();
+        $usuarioLogadoId = auth()->id();
+
+        $dentista = Dentista::where('user_id', $usuarioLogadoId)->first();
 
         $agendamentos = $dentista
             ? Agendamento::where('status', 'AGENDADO')
             ->where('dentista_id', $dentista->id)
-            ->with('paciente') // Carrega os dados do paciente de uma vez
-            ->get(['id', 'paciente_id', 'data']) // Apenas campos que existem na tabela
+            ->with('paciente')
+            ->get(['id', 'paciente_id', 'data', 'hora_inicio', 'hora_fim'])
+            : collect();
+
+        // ✅ FORMA SEGURA: SEM DEPENDER DE RELACIONAMENTO NO PACIENTE
+        $idsAgendamentos = Agendamento::where('dentista_id', $dentista?->id)
+            ->pluck('paciente_id');
+        $idsAtendimentos = Atendimento::where('user_id', $usuarioLogadoId)
+            ->pluck('paciente_id');
+
+        $pacientes = Paciente::where('user_id', $usuarioLogadoId)
+            ->orWhereIn('id', $idsAgendamentos)
+            ->orWhereIn('id', $idsAtendimentos)
+            ->distinct()
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'sobrenome']);
+
+        $procedimentoDentes = Procedimento::where('ativo', 1)
+            ->where('user_id', $usuarioLogadoId)
+            ->distinct()
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'valor']);
+
+        $dentistas = Dentista::where('user_id', $usuarioLogadoId)
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
+
+        return view('dentista.atendimento.formulario', [
+            'agendamentos' => $agendamentos,
+            'pacientes' => $pacientes,
+            'procedimentoDentes' => $procedimentoDentes,
+            'dentistas' => $dentistas,
+            'pacienteId' => $request->paciente_id,
+            'agendamentoId' => $request->agendamento_id
+        ]);
+    }
+
+    public function edit($id)
+    {
+        try {
+            $atendimento = Atendimento::findOrFail($id);
+        } catch (\Exception $e) {
+            return redirect()->route('atendimento.index')->with('error', 'Atendimento não encontrado.');
+        }
+
+        $dentista = Dentista::where('user_id', auth()->id())->first();
+
+        $atendimento->load([
+            'procedimentos' => fn($q) => $q->distinct()->withPivot('numero_dente', 'observacao'),
+            'paciente'
+        ]);
+
+        $agendamentos = $dentista
+            ? Agendamento::where('status', 'AGENDADO')->where('dentista_id', $dentista->id)->get(['id', 'paciente_id', 'data', 'hora_inicio', 'hora_fim'])
             : collect();
 
         $pacientes = Paciente::orderBy('nome')->get(['id', 'nome']);
-        $procedimentoDentes = Procedimento::all();
+
+        // ✅ Mesmo filtro: ativos + sem repetição
+        $procedimentoDentes = Procedimento::where('ativo', 1)
+            ->where('user_id', auth()->id()) // ✅ SÓ OS DESTE USUÁRIO
+            ->distinct()
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'valor']);
+
         $dentistas = Dentista::orderBy('nome')->get(['id', 'nome']);
 
-        // Pega os parâmetros da URL
-        $pacienteId = $request->paciente_id;
-        $agendamentoId = $request->agendamento_id;
+        if ($dentista && $atendimento->dentista_id !== $dentista->id) abort(403, 'Sem permissão para editar.');
 
-        return view('dentista.atendimento.formulario', compact(
-            'agendamentos',
-            'pacientes',
-            'procedimentoDentes',
-            'dentistas',
-            'pacienteId',
-            'agendamentoId'
-        ));
+        return view('dentista.atendimento.formulario', compact('atendimento', 'pacientes', 'agendamentos', 'procedimentoDentes', 'dentistas'));
     }
 
-    /**
-     * Inicia oficialmente o atendimento clínico (Salva o rascunho/abertura).
-     */
     public function store(Request $request)
     {
         try {
@@ -164,10 +180,8 @@ class AtendimentoController extends Controller implements HasMiddleware
                     'desconto'
                 ]));
 
-                // ✅ ATUALIZAÇÃO NA FILA DE ATENDIMENTO
                 if ($request->agendamento_id) {
-                    // Opção 1: Marcar como FINALIZADO (recomendado, mantém histórico)
-                    \DB::table('fila_atendimentos')
+                    DB::table('fila_atendimentos')
                         ->where('agendamento_id', $request->agendamento_id)
                         ->update([
                             'status_fila' => 'FINALIZADO',
@@ -175,19 +189,17 @@ class AtendimentoController extends Controller implements HasMiddleware
                             'user_id' => auth()->id(),
                             'updated_at' => now()
                         ]);
-
-                    // Se preferir EXCLUIR da fila ao invés de marcar:
-                    // \DB::table('fila_atendimentos')
-                    //     ->where('agendamento_id', $request->agendamento_id)
-                    //     ->delete();
                 }
 
                 if ($temProcedimentosValidos) {
                     foreach ($dados['procedimentos'] as $item) {
-                        $procedimento = \App\Models\Procedimento::findOrFail($item['procedimento_id']);
+                        $procedimento = Procedimento::findOrFail($item['procedimento_id']);
                         $valorUnitario = $item['valor'] ?? $procedimento->valor;
+                        $totalOrcamento = $request->total_orcamento ?? $valorUnitario;
+                        $desconto = $request->desconto ?? 0;
+                        $valorLiquido = $totalOrcamento - $desconto;
 
-                        $procDente = \App\Models\ProcedimentoDente::create([
+                        $procDente = ProcedimentoDente::create([
                             'atendimento_id' => $atendimento->id,
                             'numero_dente' => $item['dente'],
                             'procedimento_id' => $item['procedimento_id'],
@@ -195,22 +207,23 @@ class AtendimentoController extends Controller implements HasMiddleware
                             'user_id' => auth()->id(),
                         ]);
 
+                        // ✅ CORREÇÃO: ATRIBUI A VARIÁVEL PARA USAR DEPOIS
                         $orcamento = OrcamentoPaciente::create([
                             'paciente_id' => $request->paciente_id,
                             'user_id' => auth()->id(),
                             'validade' => $request->validade,
                             'valor' => $valorUnitario,
-                            'total_orcamento' => $request->total_orcamento,
-                            'desconto' => $request->desconto,
-                            'valor_liquido' => $request->total_orcamento - ($request->desconto ?? 0),
+                            'total_orcamento' => $totalOrcamento,
+                            'desconto' => $desconto,
+                            'valor_liquido' => $valorLiquido,
+                            'saldo_restante' => $valorLiquido,
                             'atendimento_id' => $atendimento->id,
                             'procedimento_dentes_id' => $procDente->id,
                             'procedimento_id' => $item['procedimento_id'],
-                            'saldo_restante' => $request->total_orcamento
                         ]);
 
-                        \DB::table('orcamento_items')->insert([
-                            'orcamento_paciente_id' => $orcamento->id,
+                        DB::table('orcamento_items')->insert([
+                            'orcamento_paciente_id' => $orcamento->id, // AGORA EXISTE!
                             'procedimento_dente_id' => $procDente->id,
                             'dente' => $item['dente'],
                             'face' => $item['face'] ?? null,
@@ -224,72 +237,18 @@ class AtendimentoController extends Controller implements HasMiddleware
                     }
                 }
 
-                // Atualiza status do agendamento
                 if ($request->agendamento_id) {
-                    Agendamento::where('id', $request->agendamento_id)
-                        ->update(['status' => 'ATENDIDO']);
+                    Agendamento::where('id', $request->agendamento_id)->update(['status' => 'ATENDIDO']);
                 }
 
                 return redirect()->route('atendimento.index')
-                    ->with('success', 'Salvo com sucesso! Procedimentos: ' . ($temProcedimentosValidos ? count($dados['procedimentos']) . ' registrados' : 'nenhum informado') . ' — paciente removido da fila.');
+                    ->with('success', 'Salvo! Procedimentos: ' . ($temProcedimentosValidos ? count($dados['procedimentos']) . ' registrados' : 'nenhum') . ' — orçamento gerado com sucesso!');
             });
         } catch (\Throwable $e) {
             dd('Erro: ' . $e->getMessage(), 'Linha: ' . $e->getLine());
         }
     }
 
-    /**
-     * Carrega a tela com os dados para o dentista editar ou finalizar a consulta.
-     */
-    public function edit($id)
-    {
-        try {
-            $atendimento = Atendimento::findOrFail($id);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return redirect()->route('atendimento.index')
-                ->with('error', 'Atendimento não encontrado.');
-        }
-
-        $userId = auth()->id();
-        $dentista = Dentista::where('user_id', $userId)->first();
-
-        // ✅ Carregamento ÚNICO e CORRETO com campos da Pivot
-        $atendimento->load([
-            'procedimentos' => function ($query) {
-                $query->withPivot('numero_dente', 'observacao'); // Apenas os campos válidos
-            },
-            'paciente'
-        ]);
-
-        $agendamentos = $dentista
-            ? Agendamento::where('status', 'AGENDADO')
-            ->where('dentista_id', $dentista->id)
-            ->get(['id', 'paciente_id', 'data', 'hora_inicio', 'hora_fim'])
-            : collect();
-
-        $pacientes = Paciente::orderBy('nome')->get(['id', 'nome']);
-
-        // ✅ Confirme o modelo correto: se é ProcedimentoDente ou Procedimento
-        $procedimentoDentes = \App\Models\Procedimento::orderBy('nome')->get(['id', 'nome', 'valor']);
-
-        $dentistas = Dentista::orderBy('nome')->get(['id', 'nome']);
-
-        if ($dentista && $atendimento->dentista_id !== $dentista->id) {
-            abort(403, 'Você não tem permissão para editar este atendimento.');
-        }
-
-        return view('dentista.atendimento.formulario', compact(
-            'atendimento',
-            'pacientes',
-            'agendamentos',
-            'procedimentoDentes',
-            'dentistas'
-        ));
-    }
-
-    /**
-     * Salva as alterações intermediárias do atendimento (Salvar Rascunho).
-     */
     public function update(Request $request, Atendimento $atendimento)
     {
         $dadosValidados = $request->validate([
@@ -313,24 +272,20 @@ class AtendimentoController extends Controller implements HasMiddleware
         $dadosValidados['user_id'] = auth()->id();
         $atendimento->update($dadosValidados);
 
-        // Salva os procedimentos na tabela pivot
         if ($request->has('procedimentos')) {
             $dadosProcedimentos = [];
-
             foreach ($request->procedimentos as $proc) {
                 $dadosProcedimentos[$proc['procedimento_id']] = [
                     'numero_dente' => $proc['dente'],
                     'observacao' => $proc['observacao'] ?? null,
-                    'user_id' => auth()->id(), // ✅ Campo obrigatório adicionado
+                    'user_id' => auth()->id(),
                 ];
             }
-
             $atendimento->procedimentos()->sync($dadosProcedimentos);
         } else {
             $atendimento->procedimentos()->detach();
         }
 
-        // Atualiza orçamento
         $atendimento->orcamento()->updateOrCreate(
             ['atendimento_id' => $atendimento->id],
             [
@@ -340,13 +295,9 @@ class AtendimentoController extends Controller implements HasMiddleware
             ]
         );
 
-        return redirect()->route('atendimento.index')->with('success', 'Alterações salvas com sucesso!');
+        return redirect()->route('atendimento.index')->with('success', 'Alterações salvas!');
     }
 
-    /**
-     * REGRA DE NEGÓCIO SEPARADA: Finaliza o atendimento de vez e gera o prontuário.
-     * Mapear esta função para uma rota específica, ex: Route::post('/atendimento/{atendimento}/finalizar', ...)
-     */
     public function finalizar(Request $request, Atendimento $atendimento)
     {
         $request->validate([
@@ -357,14 +308,12 @@ class AtendimentoController extends Controller implements HasMiddleware
         ]);
 
         DB::transaction(function () use ($request, $atendimento) {
-            // 1. Atualiza o status do Atendimento definitivo
             $atendimento->update([
                 'status_atendimento' => $request->status_atendimento,
                 'observacoes_clinicas' => $request->observacoes_finais,
                 'hora_fim' => now(),
             ]);
 
-            // 2. Cria o Prontuário clínico permanente
             Prontuario::create([
                 'paciente_id' => $atendimento->paciente_id,
                 'dentista_id' => $atendimento->dentista_id,
@@ -374,23 +323,18 @@ class AtendimentoController extends Controller implements HasMiddleware
                 'data_registro' => now(),
             ]);
 
-            // 3. Atualiza a fila de atendimento
             FilaAtendimento::where('paciente_id', $atendimento->paciente_id)
                 ->where('status_fila', 'Em Atendimento')
                 ->update(['status_fila' => 'Atendido']);
 
-            // 4. Se veio de agendamento, marca o horário como concluído
             if ($atendimento->agendamento_id) {
                 Agendamento::where('id', $atendimento->agendamento_id)->update(['status' => 'Concluido']);
             }
         });
 
-        return redirect()->route('atendimento.index')->with('success', 'Atendimento finalizado e histórico clínico consolidado com sucesso!');
+        return redirect()->route('atendimento.index')->with('success', 'Atendimento finalizado!');
     }
 
-    /**
-     * Salva via AJAX o dente clicado no Odontograma da View.
-     */
     public function salvarProcedimentoDente(Request $request)
     {
         $request->validate([
@@ -399,49 +343,32 @@ class AtendimentoController extends Controller implements HasMiddleware
             'observacao' => 'nullable|string',
         ]);
 
-        // Cria o registro na tabela que definimos
         $procedimentoDente = ProcedimentoDente::create([
             'numero_dente' => $request->numero_dente,
             'procedimento_id' => $request->procedimento_id,
             'observacao' => $request->observacao,
         ]);
 
-        // Retorna o ID criado para o JavaScript colocar no input oculto 'procedimento_dente_id'
         return response()->json([
             'success' => true,
             'id' => $procedimentoDente->id,
-            'message' => 'Procedimento do dente mapeado!',
+            'message' => 'Procedimento vinculado!',
         ]);
     }
 
-    /**
-     * Exibe os detalhes de um atendimento específico (Modal ou Auditoria).
-     */
     public function show(Atendimento $atendimento)
     {
         $atendimento->load(['paciente', 'dentista', 'prontuario']);
-
         return response()->json($atendimento);
     }
 
-    /**
-     * Remove ou cancela um registro de atendimento.
-     */
     public function destroy($id)
     {
         DB::transaction(function () use ($id) {
-            // Atualiza o agendamento para voltar à fila
-            Agendamento::where('atendimento_id', $id)
-                ->update([
-                    'atendimento_id' => null,
-                    'status' => 'AGENDADO'
-                ]);
-
-            // Apaga o atendimento — procedimentos são apagados automaticamente!
+            Agendamento::where('atendimento_id', $id)->update(['atendimento_id' => null, 'status' => 'AGENDADO']);
             Atendimento::destroy($id);
         });
 
-        return redirect()->route('atendimento.index')
-            ->with('success', 'Atendimento removido com sucesso!');
+        return redirect()->route('atendimento.index')->with('success', 'Atendimento removido!');
     }
 }

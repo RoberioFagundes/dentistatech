@@ -12,26 +12,25 @@ class VerificarAssinatura
     {
         $user = auth()->user();
 
-        // Permitir acesso se for admin
-        if ($user->role === 'admin') {
-            return $next($request);
+        if (!$user) {
+            return redirect()->route('login');
         }
 
-        // Buscar a clínica vinculada ao usuário (ajuste a relação conforme seu modelo)
-        $clinica = $user->clinica; // ou Clinica::where('user_id', $user->id)->first();
+        // ✅ Administradores e Dentistas podem ter livre acesso ou regras próprias
+        // Ajuste aqui caso dentistas precisem validar assinatura
+        // if (in_array($user->tipo, ['administrador', 'dentista', 'recepcionista'])) {
+        //     return $next($request);
+        // }
 
-        // Tratar caso a clínica não exista
+        // Buscar a clínica vinculada ao usuário (para pacientes ou outros perfis)
+        $clinica = $user->clinica ?? null;
+
         if (!$clinica) {
-            auth()->logout();
             return redirect()->route('login')->with('erro', 'Clínica não encontrada para este usuário.');
         }
 
-        // Agora $clinica está garantida como existente
-        if ($clinica->assinaturaAtiva()) {
-            return $next($request);
-        }
-
-        if ($clinica->onTrial()) {
+        // Verifica assinatura ativa ou período de testes
+        if ($clinica->assinaturaAtiva() || $clinica->onTrial()) {
             return $next($request);
         }
 

@@ -94,9 +94,9 @@ Você já possui a estrutura de tabelas criada para esse relacionamento (como um
 * falta arrumar o modal que mostrar dados do paciente 7
 
 ## colocar 
-* No create orçamento colocar os procedimentos há ser feitos no dentes e os valores 
+* No create orçamento colocar os procedimentos há ser feitos no dentes e os valores ok
 
-como criar um login para funcionario estando logado no laravel
+como criar um login para funcionario estando logado no laravel ok
 
 Para criar um sistema onde um usuário já logado (geralmente um administrador ou gestor) possa criar um login para um funcionário, você deve seguir o fluxo de criação de registros padrão do Laravel, mas com uma atenção especial à segurança e ao envio de senha.
 

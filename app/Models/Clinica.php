@@ -16,6 +16,10 @@ class Clinica extends Model
         'cnpj',
         'telefone',
         'endereco',
+        'cep',          // Adicionado
+        'numero',       // Adicionado
+        'complemento',  // Adicionado
+        'bairro',       // Adicionado
         'trial_ends_at',
         'trial_used',
         'status_assinatura',
