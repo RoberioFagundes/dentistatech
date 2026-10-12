@@ -1,62 +1,111 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+🦷 DentistaTech — Plataforma de Gestão Odontológica
+Sistema Web completo para gestão integrada de consultórios odontológicos.
+Disponível em: https://dentistatech.com.br/
+📋 Descrição
+O DentistaTech é uma plataforma desenvolvida para centralizar e simplificar a rotina de clínicas e consultórios odontológicos. Reúne em um só lugar o controle de pacientes, agendamentos, orçamentos, pagamentos e prontuários, com uma interface moderna, rápida e totalmente responsiva.
+✨ Principais Funcionalidades
+Tabela
+Módulo	Descrição
+📅 Atendimentos do Dia	Acompanhamento em tempo real da agenda e fluxo de atendimentos programados
+💰 Orçamentos	Elaboração de orçamentos detalhados vinculados ao cadastro do paciente, com cálculos automáticos e descontos
+💳 Gestão de Pagamentos	Registro de recebimentos por diferentes formas de pagamento, com confirmações
+📇 Controle de Pacientes	Cadastro completo com histórico, contatos, CPF e dados essenciais
+🧭 Menu Modular	Navegação organizada por perfis (dentista, recepção) com acesso rápido às rotinas
+📱 Totalmente Responsivo	Acesso via computador, tablet ou celular — interface adaptada para todos os tamanhos de tela
+🛠️ Tecnologias Utilizadas
+plaintext
+Frontend:
+  ├── HTML5           → Estrutura semântica e acessível
+  ├── CSS3 / SCSS     → Estilização, variáveis e layout responsivo
+  ├── JavaScript      → Interatividade, validações e dinâmicas de interface
+  └── Bootstrap 5     → Componentes e grid adaptável
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend:
+  ├── PHP 8.x         → Lógica de negócio e comunicação com o banco
+  └── Laravel 10.x    → Estrutura organizada, rotas, autenticação e segurança
 
-## About Laravel
+Banco de Dados:
+  ├── MySQL 8.x       → Armazenamento estruturado de pacientes, agendas, orçamentos
+  └── Eloquent ORM    → Modelagem e relacionamentos entre entidades
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Infraestrutura & Ferramentas:
+  ├── Git             → Controle de versões
+  ├── Docker (estudo) → Ambiente de desenvolvimento isolado
+  └── Figma / Adobe XD → Prototipagem e design de interface
+📐 Arquitetura do Sistema
+plaintext
+dentistatech/
+├── public/              # Arquivos acessíveis publicamente
+│   ├── css/             # Estilos compilados
+│   ├── js/              # Scripts do frontend
+│   ├── img/             # Imagens e ícones
+│   └── index.php        # Ponto de entrada
+├── app/                 # Lógica da aplicação
+│   ├── Models/          # Entidades: Paciente, Atendimento, Orçamento...
+│   ├── Http/
+│   │   ├── Controllers/ # Controladores das ações
+│   │   └── Middleware/  # Filtros de acesso e segurança
+│   └── Views/           # Camada de apresentação
+├── database/
+│   ├── migrations/      # Estrutura e criação de tabelas
+│   └── seeders/         # Dados padrão do sistema
+├── resources/
+│   └── views/           # Arquivos de interface
+├── routes/              # Definição de endpoints
+└── composer.json        # Dependências do projeto
+Principais Entidades
+Paciente → nome, CPF, contato, endereço, histórico
+Atendimento → data, profissional, status, observações
+Orçamento → itens, valores, descontos, situação
+Pagamento → forma, valor recebido, data de confirmação
+🚀 Instalação e Execução Local
+bash
+# 1. Clonar o repositório
+git clone https://github.com/RoberioFagundes/dentistatech.git
+cd dentistatech
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+# 2. Instalar dependências do PHP
+composer install
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+# 3. Copiar arquivo de configuração
+cp .env.example .env
 
-## Learning Laravel
+# 4. Gerar chave da aplicação
+php artisan key:generate
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# 5. Configurar banco de dados no arquivo .env
+DB_HOST=localhost
+DB_DATABASE=dentistatech
+DB_USERNAME=seu_usuario
+DB_PASSWORD=sua_senha
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 6. Executar criação das tabelas
+php artisan migrate
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-
-## backup 
-https://gemini.google.com/app/89b2345ea4e10676?utm_source=app_launcher&utm_medium=owned&utm_campaign=base_all
+# 7. Iniciar servidor de desenvolvimento
+php artisan serve
+Acessar em: http://localhost:8000
+📅 Cronograma de Desenvolvimento
+Tabela
+Etapa	Período	Status
+Modelagem do banco de dados	Jan/2025	✅ Concluído
+Protótipo de interface	Fev/2025	✅ Concluído
+Desenvolvimento do core (cadastros)	Mar/2025	✅ Concluído
+Módulo de orçamentos	Abr/2025	✅ Concluído
+Módulo de pagamentos	Mai/2025	✅ Concluído
+Interface responsiva	Jun/2025	✅ Concluído
+Disponibilização em produção	Jul/2025	✅ Concluído
+Período de teste gratuito	Ago/2025 → atual	🟡 Em andamento
+👤 Autor
+Robério Fagundes dos Santos
+Desenvolvedor Web Full-Stack
+Palmas de Monte Alto – Bahia
+🔗 Portfólio: https://dentistatech.com.br/
+📧 Contato: roberiopma@hotmail.com
+📄 Licença
+Este projeto é de uso próprio e demonstração. Código-fonte disponível para fins de avaliação e portfólio.
+🎯 Finalidade
+Este repositório foi criado para:
+✅ Demonstração de habilidades em desenvolvimento full-stack
+✅ Comprovação de projeto publicado em operação
+✅ Apoio à participação em processos seletivos e oportunidades profissionais
